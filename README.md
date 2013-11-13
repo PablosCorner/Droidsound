@@ -18,5 +18,6 @@ Added features compared to Google Play version:
  * Option to change File-Cache size (16MB - 4096MB)
  * Option to clean directory list cache.
 
- * Needs lots of work still. 
+--------------------------------------------------------------------------------------------
+Needs lots of work still. 
  
