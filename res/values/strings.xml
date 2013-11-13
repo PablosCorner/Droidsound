@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="app_name">Droidsound</string>
+<string name="create_moddir_failed">Could not create MODS directory on sdcard!</string>
+<string name="sdcard_not_found">Could not access sdcard!</string>
+<string name="search_hint">Search title</string>
+<string name="scan_db">Rescan database</string>
+<string name="about_droidsound">"By sasq64@gmail.com"</string>
+<string name="recreate_confirm">This will recreate the entire database. It may take a long time. Are you absolutely sure?</string>
+<string-array name="scan_opts">
+    <item>Full</item>
+</string-array>
+<string name="details">Details</string>
+<string name="favorite">Favorite</string>
+<string name="go_to_dir">Go to directory</string>
+<string name="remove">Remove</string>
+<string name="cut">Cut</string>
+<string name="paste">Paste</string>
+<string name="remove_all">Remove all</string>
+<string name="do_remove_all">Really clear playlist?</string>
+<string name="del_dir">Delete</string>
+<string name="del_file">Delete</string>
+<string name="del_plist">Delete</string>
+<string name="make_wav">Create Ringtone</string>
+<string name="do_del_plist">Really delete playlist?</string>
+<string name="do_del_dir">Really delete directory?</string>
+<string name="do_del_file">Really delete file?</string>
+<string name="do_make_wav">Really Set as Ringtone?</string>
+<string name="ringtone_set">New ringtone set</string>
+<string name="ringtone_created">New ringtone created</string>
+<string name="rescan">Rescan</string>
+<string name="scan_dir">Rescan</string>
+<string name="abort_scan">Abort scan</string>
+<string name="about">About</string>
+<string name="new_">New</string>
+<string name="quit">Quit</string>
+<string name="scanning">Scanning</string>
+<string name="title">Title</string>
+<string name="info">Info</string>
+<string name="composer">Composer</string>
+<string name="copyright">Copyright</string>
+<string name="add_to_plist">Add to \'[playlist]\'</string>
+<string name="create_playlist">Create playlist</string>
+<string name="set_plist">Set current playlist</string>
+<string name="name_playlist">Playlist name</string>
+<string name="name_folder">Folder name</string>
+<string name="name_link">Link name (http://)</string>
+<string name="settings">Settings</string>
+
+<string name="next">Next</string>
+<string name="prev">Previous</string>
+<string name="stop">Stop</string>
+<string name="play">Play</string>
+<string name="pause">Pause</string>
+
+<!-- 
+<string name="hvsc_desc">The High Voltage Sid Collection (230 MB)</string>
+<string name="csdb_desc">The CSDb Scene Database (660 KB)</string>
+<string name="testmods_desc">Some test mods</string>
+<string name="stop">STOP</string>
+<string name="will_be_downloaded">will be downloaded.</string>
+<string name="is_downloading">is currently downloading…</string>
+<string name="is_downloaded">is already downloaded.</string>
+<string name="is_queued">is queued for downloading.</string>
+<string name="upgrade_db">Database format has changed. Old database will be dropped and recreated.</string>
+<string name="database_cleared">Database cleared</string>
+<string name="clearing_database">Clearing database</string>
+<string name="database_busy">Database busy!</string>
+ -->
+ 
+<string name="zip_import_failed">Failed to import zip file.</string>
+<string name="zip_import_replace">Will not replace existing zip file. Remove it first.</string>
+<string name="ask_speech">You do not have speech installed - install it from Market now?</string>
+<string name="notification">Droidsound playing</string>
+
+<string name="sort_name">Sorting on Title</string>
+<string name="sort_author">Sorting on Composer</string>
+<string name="sort_date">Sorting on Date</string>
+
+
+<string name="player_crash">The player stopped unexpectedly. This usually means that a plugin crashed because it couldn\'t handle a song.</string>
+<string name="could_not_play">The song could not be played by any available plugin.</string>
+
+<string name="unpack_examples">Since this looks like the first time you are running this version of Droidsound I have extracted some example
+music for you.\n\nIf you do not want it, simply long click \'Examples\' and select Delete.\n\nAlso check out \'Download\' in the Settings
+to download more music from the web.</string>
+
+<string-array name="fav_opts">
+	<item>Default subtune</item>
+	<item>Current subtune</item>
+	<item>All subtunes</item>
+</string-array>
+
+
+<string-array name="new_opts">
+	<item>Folder</item>
+	<item>Playlist</item>
+	<item>Network Link</item>
+</string-array>
+
+<string-array name="indexing_opts">
+	<item>None</item>
+	<item>Basic</item>
+	<item>Full</item>
+</string-array>
+
+<string-array name="panning_opts">
+	<item>Mono</item>
+	<item>Some</item>
+	<item>50/50</item>
+	<item>Lots</item>
+	<item>Full Stereo</item>
+</string-array>
+
+<string-array name="panning_vals">
+	<item>0</item>
+	<item>1</item>
+	<item>2</item>
+	<item>3</item>
+	<item>4</item>
+</string-array>
+
+<string-array name="buffer_opts">
+	<item>Short</item>
+	<item>Medium</item>
+	<item>Long</item>
+	<item>Very long</item>
+</string-array>
+
+<string-array name="engine_opts">
+<item>VICE</item>
+<item>Sidplay2</item>
+</string-array>
+
+
+<string-array name="videomode_opts">
+<item>PAL</item>
+<item>NTSC</item>
+<item>PAL (forced)</item>
+<item>NTSC (forced)</item>
+</string-array>
+
+<string-array name="resampling_opts">
+<item>Fastest (cycle skipping)</item>
+<item>Fast (no cycle skipping)</item>
+<item>Slow (SINC)</item>
+<item>Slowest (SINC)</item>
+</string-array>
+
+<string-array name="filter_bias_opts">
+<item>Lightest filter</item>
+<item>Light filter</item>
+<item>Normal filter</item>
+<item>Dark filter</item>
+<item>Darkest filter</item>
+</string-array>
+
+<string-array name="sid_model_opts">
+<item>6581</item>
+<item>8580</item>
+<item>6581 (forced)</item>
+<item>8580 (forced)</item>
+</string-array>
+
+<string-array name="videomode_vals">
+<item>0</item>
+<item>1</item>
+<item>2</item>
+<item>3</item>
+</string-array>
+
+<string-array name="resampling_vals">
+<item>0</item>
+<item>1</item>
+<item>3</item>
+<item>2</item>
+</string-array>
+
+<string-array name="filter_bias_vals">
+<item>500</item>
+<item>250</item>
+<item>0</item>
+<item>-250</item>
+<item>-500</item>
+</string-array>
+
+<string-array name="sid_model_vals">
+<item>0</item>
+<item>1</item>
+<item>2</item>
+<item>3</item>
+</string-array>
+
+<string-array name="psf_opts">
+<item>HighlyEXP</item>
+<item>SexyPSF</item>
+</string-array>
+
+<string-array name="filecache_opts">
+<item>16</item>
+<item>32</item>
+<item>64</item>
+<item>128</item>
+<item>256</item>
+<item>512</item>
+<item>1024</item>
+<item>2048</item>
+<item>4096</item>
+</string-array>
+
+<string-array name="filecache_vals">
+<item>0</item>
+<item>1</item>
+<item>2</item>
+<item>3</item>
+<item>4</item>
+<item>5</item>
+<item>6</item>
+<item>7</item>
+<item>8</item>
+</string-array>
+
+</resources>

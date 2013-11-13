@@ -1,0 +1,277 @@
+
+/************************************** DROIDSOUND GUI FAKE CSS *********************************************/
+
+/* This first part of the CSS is used to theme the android GUI. It is NOT compatible with real css. */
+
+
+/* Application default colors */
+root {
+	background-color : #cccccc;	
+	text-color : #000000;
+}
+
+/* Top view flipper */
+flipper {
+	hilight-color : #000000;	
+	text-color : #888888;
+	footer-color : #000000;
+}
+
+/* Browser header (Displaying current directory) */
+browser-header {
+	color: #000000;
+	background: #3b67a2;
+	padding-left: 2dp;	
+}
+
+browser-header.title {
+	font-weight:bold;
+	font-size:"28sp";
+}
+
+browser-header.subtitle {
+	font-size: "16sp";
+}
+
+/* Search header (Displaying current search) */
+search-header {
+	color: #ffffff;
+	background: #555555;
+	padding-left: 2dp;	
+}
+
+search-header.title {
+	font-weight:bold;
+	font-size:28sp;
+}
+
+search-header.subtitle {
+	font-size:16sp;
+}
+
+/* Separating line between play info and controls */
+control-separator {
+	background-color: #000000;
+	height: 2dp;
+}
+ 
+/* Play controls */
+ 
+ 
+/* Parent (default) settings for all play controls */
+controls {
+	font : "fonts/led.ttf";
+	color : #000000;
+	font-size : 24dp;
+}
+
+controls.seconds {
+}
+
+controls.total {
+}
+
+controls.subtunes {
+}
+
+controls.shuffle {
+	color : #3b67a2;
+}
+
+controls.repeat {
+	color : #3b67a2;
+}
+
+controls.plus {
+	color : #ff6060;
+	font-size: 36dp;
+}
+
+controls.forward {
+	background : (img/mg_forward.png, img/mg_forward_h.png);
+}
+
+controls.back {
+	background : (img/mg_back.png, img/mg_back_h.png);
+}
+
+controls.play {
+	background : (img/mg_play.png, img/mg_play_h.png);
+}
+
+controls.stop {
+	background : (img/mg_stop.png, img/mg_stop_h.png);
+}
+
+controls.pause {
+	background : (img/mg_pause.png, img/mg_pause_h.png);
+}
+
+controls.seekbar {
+	progress-background: linear-gradient(left, #404060, #404040);
+	/*thumb-image: img/mg_stop.png;*/
+}
+
+
+/* Playlist item templates;
+
+-----------------------------
+TEXT
+subtext              sidetext
+-----------------------------    <-- divider
+TEXT
+subtext              sidetext
+*/
+
+/* Default for all items */
+item {
+	color : #000000;
+	background-color: #cccccc;
+	font: bold;
+	
+	1-padding-left: 8dp;
+	2-padding-left: 8dp;
+
+	1-color: #000000;
+	2-color: #000000;
+	3-color: #000000;
+	
+	1-font : "bold";
+	2-font : "bold";
+	3-font : "bold";
+	
+	1-font-size: "24sp";
+	2-font-size : "14sp";
+	3-font-size : "10sp";
+	
+	divider: #000000;
+	
+}
+
+/* Settings for specific file types */
+
+item.folder {
+	1-font-size: "20sp";
+	1-color : #666666;
+	0-image : "icons/gflat_folder.png";
+	1-padding-left: 0dp;
+	2-padding-left: 0dp;	
+}
+
+item.network {
+	1-font-size: "20sp";
+	1-color : #666666;
+	0-image : "icons/gflat_net_folder.png";
+	1-padding-left: 0dp;
+	2-padding-left: 0dp;
+}
+
+item.archive {
+	1-font-size: "20sp";
+	1-color : #666666;
+	0-image : "icons/gflat_package.png";
+	1-padding-left: 0dp;
+	2-padding-left: 0dp;
+}
+
+item.media {
+	1-font-size: "20sp";
+	1-color : #666666;
+	0-image : "icons/gflat_mus_folder.png";
+	1-padding-left: 0dp;
+	2-padding-left: 0dp;
+}
+
+item.csdb {
+	1-font-size: "20sp";
+	1-color : #666666;
+	0-image : "icons/gflat_bag.png";
+	1-padding-left: 0dp;
+	2-padding-left: 0dp;
+}
+
+item.playlist {
+	1-font-size: "20sp";
+	0-image : "icons/gflat_note3.png";
+	1-padding-left: 0dp;
+	2-padding-left: 0dp;
+}
+
+item.favorites {
+	1-font-size: "20sp";
+	1-color : #666666;
+	0-image : "icons/gflat_heart.png";
+	1-padding-left: 0dp;
+	2-padding-left: 0dp;
+}
+
+item:online {
+	1-color : #ffc0c0;
+}
+
+item:hilight {
+	background-color: #777777;
+	1-color : #ffa998;
+}
+
+
+/************************************** WEB CSS FOR TEMPLATES *********************************************/
+
+/* This is used by a real webview - use any webkit compatible css */
+
+body {
+	color: #000000;
+	background-color: #cccccc;
+	margin:0;
+	padding:0;
+}
+
+.song-header {
+	color: #ffffff;
+	background-color:  #2040a0;
+	background-color: #3b67a2;
+	padding-left: 2dp;	
+	height: 4.3em; 
+}
+
+
+.title {
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+	font-weight:bold;
+	font-size:16pt; 
+	padding-left: 4pt;
+	padding-top: 4pt;
+}
+
+.subtitle {
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden; 
+	padding-left: 4pt;
+	padding-bottom: 4pt;
+	padding-top: 4pt;
+}
+
+.infotitle {
+	color: #ffffff;
+	background-color: #000000;
+	height: 2px;
+}
+
+.content {
+	margin: 8dp;
+	padding: 8dp;
+}
+
+.heading {
+	color: #000000;
+	font-weight:bold;	
+}
+
+.comment {
+	color: #99aaff;
+	white-space: pre-wrap;
+	font-family: monospace;
+}

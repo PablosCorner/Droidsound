@@ -1,0 +1,50 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical" 
+	>
+
+
+    <LinearLayout
+        	android:id="@+id/title_bar"
+			android:background="#FF000080"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+	<TextView
+		android:id="@+id/dir_text"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:paddingLeft="4dp"
+		android:paddingTop="4dp"
+		android:text="Title"		
+		android:singleLine="true"
+		android:textColor="#FFFFFFFF"
+		android:textSize="20dp"
+		android:textStyle="bold" />
+
+	<TextView
+		android:id="@+id/path_text"
+		android:paddingLeft="4dp"
+		android:paddingBottom="4dp"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="Subtitle"
+		android:ellipsize="start"
+		android:singleLine="true"
+		android:textColor="#FFFFFFFF"
+		android:textSize="15dp" />
+
+	</LinearLayout>
+	
+	<com.ssb.droidsound.playlistview.PlayListView
+		android:id="@+id/play_list"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:fastScrollEnabled="true"
+		android:cacheColorHint="#ffffffff"
+	 />
+	
+		
+</LinearLayout>

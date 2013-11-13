@@ -1,0 +1,71 @@
+<html><head>
+<style type="text/css">
+${themeCSS}
+
+.content {
+	height: 100%;
+	${if artwork}
+		background-image:url('${artwork}');
+		background-size:100% 100%;
+		background-repeat:no-repeat;
+	${end}
+}
+
+</style>
+
+</head><body>
+<div class="song-header">
+<div class="title">${title}</div>
+<div class="subtitle">${composer}   ${copyright}</div>
+</div>
+<div class="infotitle">${song_source}</div>
+<div class="content">
+${if format}
+<span class="heading">Format: </span> ${format}<br/>
+${end}
+
+${if replayrate}
+<span class="heading">ReplayRate: </span> ${replayrate}<br/>
+${end}
+
+${if hardware}
+<span class="heading">Hardware: </span> ${hardware}<br/>
+${end}
+
+${if platform}
+<span class="heading">Platform: </span> ${platform}<br/>
+${end}
+
+${if can_asid}
+<span class="heading">Can aSID: </span> ${can_asid}<br/>
+${end}
+
+${if timer}
+<span class="heading">Uses Timer: </span> ${timer}<br/>
+${end}
+
+${if ripper}
+<span class="heading">Ripped by: </span> ${ripper}<br/>
+${end}
+
+${if converter}
+<span class="heading">Converted by: </span> ${converter}<br/>
+${end}
+
+
+${if channels}
+<span class="heading">Channels: </span> ${channels}<br/>
+${end}
+
+
+${if instruments}
+<span class="heading">Intruments</span>
+<span class="comment">
+${foreach instruments item}${item.index2} : ${item.text}<br/>${end}
+</span>
+${end}
+${if sizeText}
+<span class="heading">Size:</span> ${sizeText}<br/>
+${end}
+</div>
+</html></body>

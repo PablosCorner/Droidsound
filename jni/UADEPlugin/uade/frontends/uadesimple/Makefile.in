@@ -1,0 +1,23 @@
+
+CC = {CC}
+CFLAGS = -Wall -O2 -I../include -I../common {AOFLAGS} {DEBUGFLAGS} {ARCHFLAGS}
+CLIBS = {AOLIBS} {ARCHLIBS} -lm
+
+all:	uadesimple
+
+MODULES = uadesimple.o playloop.o audio.o ../common/libuade.a
+
+uadesimple:	$(MODULES)
+	$(CC) $(CFLAGS) -o $@ $(MODULES) $(CLIBS)
+
+clean:	
+	rm -f uadesimple *.o
+
+audio.o:	audio.c audio.h
+	$(CC) $(CFLAGS) -c $<
+
+playloop.o:	playloop.c playloop.h uadesimple.h ../common/uadecontrol.h ../../include/uadeipc.h ../common/songinfo.h $(PLAYERHEADERS)
+	$(CC) $(CFLAGS) -c $<
+
+uadesimple.o:	uadesimple.c uadesimple.h ../include/uade/uadeipc.h ../include/uade/amigafilter.h ../include/uade//amifilemagic.h ../include/uade/uadecontrol.h $(PLAYERHEADERS)
+	$(CC) $(CFLAGS) -c $<

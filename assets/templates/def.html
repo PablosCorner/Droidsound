@@ -1,0 +1,53 @@
+<html><head>
+<style type="text/css">
+${themeCSS}
+
+.content {
+	height: 100%;
+	${if artwork}
+		background-image:url('${artwork}');
+		background-size:100% 100%;
+		background-repeat:no-repeat;
+	${end}
+}
+
+</style>
+
+</head><body>
+<div class="song-header">
+<div class="title">${title}</div>
+<div class="subtitle">${composer}</div>
+</div>
+<div class="infotitle">${song_source}</div>
+<div class="content">
+${if copyright}
+<span class="heading">Copyright: </span> ${copyright}<br/>
+${end}
+
+${if year}
+<span class="heading">Year: </span> ${year}<br/>
+${end}
+
+${if genre}
+<span class="heading">Genre: </span> ${genre}<br/>
+${end}
+
+${if format}
+<span class="heading">Format: </span> ${format}<br/>
+${end}
+
+${if channels}
+<span class="heading">Channels: </span> ${channels}<br/>
+${end}
+
+${if instruments}
+<span class="heading">Intruments</span>
+<span class="comment">
+${foreach instruments item}${item.index2} : ${item.text}<br/>${end}
+</span>
+${end}
+${if sizeText}
+<span class="heading">Size:</span> ${sizeText}<br/>
+${end}
+</div>
+</html></body>
