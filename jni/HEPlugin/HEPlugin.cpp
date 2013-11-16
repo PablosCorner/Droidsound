@@ -8,13 +8,9 @@
 
 #include "com_ssb_droidsound_plugins_HEPlugin.h"
 
-#include "../common/Fifo.h"
 #include "../common/Misc.h"
 
 #include "../HEPlugin/he/misc.h"
-
-static Fifo *fifo = NULL;
-static bool playing = false;
 
 JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_HEPlugin_N_1load(JNIEnv *env, jobject obj, jstring fname)
 {
@@ -45,8 +41,6 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_HEPlugin_N_1load(JNIEnv 
 
 	const char *filename = env->GetStringUTFChars(fname, NULL);
 	
-	playing = false;
-			
 	char temp[1024];
 	strcpy(temp, filename);
 
@@ -111,7 +105,6 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_HEPlugin_N_1load(JNIEnv 
 JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_HEPlugin_N_1unload(JNIEnv *env, jobject obj, jlong song)
 {
 	psf1_load_state *state = (psf1_load_state*)song;
-	playing = false;
 	
 	if (state->version == 2)
 	{
@@ -127,18 +120,21 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_HEPlugin_N_1getSoundData(
 	psf1_load_state *state = (psf1_load_state*)song;
 	void * psx_state = state->emu;
 
-	playing = true;
 	int rtn = 0;			
-	signed short sample_buffer[22050 * 2]; 
 
-	uint32_t samples_cnt = 22050;
-	rtn = psx_execute( (void*)psx_state, 0x7FFFFFFF, sample_buffer, &samples_cnt, 0 );
-		
+	uint32_t samples_cnt = size / 2;
+	
 	jshort *dest = env->GetShortArrayElements(sArray, NULL);
-	memcpy((char *)dest,(char *)sample_buffer, 22050 * 4); // 22050 * 2 * sizeof(short)
+	
+	rtn = psx_execute( (void*)psx_state, 0x7FFFFFFF, dest, &samples_cnt, 0 );
+	if (samples_cnt < (size / 2))
+	{
+		size = samples_cnt * 2;
+	}
+	
 	env->ReleaseShortArrayElements(sArray, dest, 0);
 	
-	return 44100;
+	return size;
 }
 
 

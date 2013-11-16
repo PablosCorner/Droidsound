@@ -17,7 +17,7 @@ public class HQPlugin extends DroidSoundPlugin {
 	
 	@Override
 	public String getVersion() {
-		return "Highly Theoretical Replay for QSF";
+		return "Highly Quixotic Replay for QSF/MiniQSF";
 	}
 	
 	private long songRef;
@@ -32,7 +32,7 @@ public class HQPlugin extends DroidSoundPlugin {
 	@Override
 	public void getDetailedInfo(Map<String, Object> list)
 	{
-		list.put("plugin", "Highly Quixitical");
+		list.put("plugin", "Highly Quixotic");
 		list.put("format", extension);
 		if (tagMap == null)
 		{

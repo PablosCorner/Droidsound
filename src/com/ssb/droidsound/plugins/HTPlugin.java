@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.util.Log;
+
 import com.ssb.droidsound.file.FileSource;
 
 public class HTPlugin extends DroidSoundPlugin {
@@ -14,11 +16,13 @@ public class HTPlugin extends DroidSoundPlugin {
 
 	private static String extension = "";
 	
+	private static final String TAG = "HTPlugin";
+	
 	private static Map<String, String> tagMap = new HashMap<String, String>();
 	
 	@Override
 	public String getVersion() {
-		return "Highly Theoretical Replay for SSF/DSF";
+		return "Highly Theoretical Replay for DreamCast/Saturn formats";
 	}
 	
 	private long songRef;
@@ -104,6 +108,7 @@ public class HTPlugin extends DroidSoundPlugin {
 		if(libName != null)
 		{
 			lib_fs = fs.getRelative(libName);
+			Log.d(TAG,libName);
 			
 			File res = lib_fs.getFile();
 			if (res == null)

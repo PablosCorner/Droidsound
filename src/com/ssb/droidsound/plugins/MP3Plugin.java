@@ -2,6 +2,7 @@ package com.ssb.droidsound.plugins;
 
 import java.io.File;
 import java.io.IOException;
+
 import java.util.Locale;
 import java.util.Map;
 
@@ -182,7 +183,8 @@ public class MP3Plugin extends DroidSoundPlugin {
 	public byte [] getBinaryInfo(int what) {
 		
 		if(id3Tag != null)
-			return id3Tag.getBinaryInfo(0);
+			return null;
+			//return id3Tag.getBinaryInfo(0);
 		else
 			return null;
 	}
@@ -190,7 +192,8 @@ public class MP3Plugin extends DroidSoundPlugin {
 	@Override
 	public int getSoundData(short[] dest, int size) {
 
-		if(streamer != null) {
+		if(streamer != null)
+		{
 			return streamer.update();
 		}
 
@@ -211,7 +214,8 @@ public class MP3Plugin extends DroidSoundPlugin {
 	}
 
 	@Override
-	public boolean seekTo(int msec) {
+	public boolean seekTo(int msec)
+	{
 		mediaPlayer.seekTo(msec);
 		return true;
 	}
@@ -240,12 +244,14 @@ public class MP3Plugin extends DroidSoundPlugin {
 		prepared = false;
 		started = false;
 			
-		if(httpThread == null) {
+		if(httpThread == null)
+		{
 			mediaPlayer = new MediaPlayer();
 			Log.d(TAG, "Creating thread");
 			streamer = new MediaStreamer(songName , mediaPlayer, true);
 			httpThread = new Thread(streamer);
 			httpThread.start();
+
 		}
 		Log.d(TAG, "LOAD %s", songName);
 		id3Tag = null;
@@ -255,19 +261,24 @@ public class MP3Plugin extends DroidSoundPlugin {
 	}
 
 	@Override
-	public boolean load(FileSource fs) {
+	public boolean load(FileSource fs)
+	{
 		
 		webPage = null;
 
 		String ref = fs.getReference();
 		
 		if(ref.toLowerCase().startsWith("http"))
-			try {
+		{
+			try 
+			{
 				return loadStream(ref);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			} 
+			catch (IOException e1)
+				{
+					e1.printStackTrace();
+				}
+		}
 		
 		currentSong = -1;
 		description = null;
@@ -282,26 +293,34 @@ public class MP3Plugin extends DroidSoundPlugin {
 
 		PlaylistParser pls = null;
 		type = "MP3";
-		if(file.getName().toUpperCase(Locale.ENGLISH).endsWith(".M3U")) {
+		
+		if(file.getName().toUpperCase(Locale.ENGLISH).endsWith(".M3U"))
+		{
 			pls = new M3UParser(file);
 			type = "M3U";
 			webPage = pls.getVariable("webpage");
-		} else if(file.getName().toUpperCase(Locale.ENGLISH).endsWith(".PLS")) {
+		} 
+		
+		else if(file.getName().toUpperCase(Locale.ENGLISH).endsWith(".PLS"))
+		{
 			pls = new PLSParser(file);
 			type = "PLS";
 		}
 		
 		if(pls != null) {
 			if(pls.getMediaCount() > 0) {
-				try {
+				try
+				{
 					if(httpThread == null) {
 						mediaPlayer = new MediaPlayer();
 						Log.d(TAG, "Creating thread");
+						
 						streamer = new MediaStreamer(pls.getMediaList(), mediaPlayer, false);
 						description = pls.getDescription(0);
 						httpThread = new Thread(streamer);
 						// httpThread.setPriority(Thread.MAX_PRIORITY);
 						httpThread.start();
+						
 					}
 
 					Log.d(TAG, "LOAD %s", pls.getMedia(0));
@@ -309,7 +328,9 @@ public class MP3Plugin extends DroidSoundPlugin {
 					id3Tag = null;
 					cueFile = null;
 
-				} catch (Exception e) {
+				} 
+				catch (Exception e)
+				{
 					e.printStackTrace();
 					return false;
 				}
@@ -317,14 +338,15 @@ public class MP3Plugin extends DroidSoundPlugin {
 			}
 		}	
 
-		try {
+		try 
+		{
 			Log.d(TAG, "LOAD %s", file.getPath());
 			mediaPlayer = new MediaPlayer();
 			mediaPlayer.setDataSource(file.getPath());
 
 			mediaPlayer.prepare();
 			prepared = true;			
-			mediaPlayer.start();
+			//mediaPlayer.start();
 			started = true;
 			
 			id3Tag = new ID3Tag(file);
@@ -346,7 +368,9 @@ public class MP3Plugin extends DroidSoundPlugin {
 			if(cueFile.getTrackCount() <= 0) {
 				cueFile = null;
 			}
-		} catch (IOException e) {
+		} 
+		catch (IOException e)
+		{
 			return false;
 		}
 
@@ -360,12 +384,15 @@ public class MP3Plugin extends DroidSoundPlugin {
 		File file = fs.getFile();
 		Log.d(TAG, "LoadInfo %s", file.getPath());
 		type = "MP3";
-		if(file.getName().toUpperCase().endsWith(".M3U")) {
+		if(file.getName().toUpperCase().endsWith(".M3U"))
+		{
 			id3Tag = null;
 			//M3UParser m3u = new M3UParser(file);
 			type = "M3U";
 			return true;
-		} else if(file.getName().toUpperCase().endsWith(".PLS")) {
+		} 
+		else if(file.getName().toUpperCase().endsWith(".PLS"))
+		{
 			id3Tag = null;
 			//PLSParser pls = new PLSParser(file);
 			type = "PLS";

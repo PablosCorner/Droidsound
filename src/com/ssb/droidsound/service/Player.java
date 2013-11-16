@@ -75,7 +75,7 @@ public class Player implements Runnable
 	private Handler mHandler;
 	
 	private AsyncAudioPlayer audioPlayer;
-	
+	private MediaPlayer mp;
 	private int dataSize;
 
 	private DroidSoundPlugin currentPlugin;
@@ -278,7 +278,6 @@ public class Player implements Runnable
 	
 	private void reloadSong()
 	{
-
 		currentPlugin.unload();
 		String path = lastSong.getPath();
 		FileSource songSource = openSong(path);
@@ -309,6 +308,8 @@ public class Player implements Runnable
 	
 	private void startSong(SongFile song, boolean skipStart)
 	{
+		Message msg = null;
+		
 		if(currentPlugin != null)
 		{
 			currentPlugin.unload();
@@ -324,7 +325,7 @@ public class Player implements Runnable
 		FileSource songSource = openSong(path);		
 		if(songSource == null)
 		{
-			Message msg = mHandler.obtainMessage(MSG_FAILED, "Failed to open " + path);
+			msg = mHandler.obtainMessage(MSG_FAILED, "Failed to open " + path);
 			mHandler.sendMessage(msg);
 			return;
 		}
@@ -354,32 +355,13 @@ public class Player implements Runnable
 		long size = songSource.getLength();
 		songSource.close();
 		songSource = null;
-
+		
+		songDetails.clear();
+				
 		if(currentPlugin != null)
 		{
-			
-			frequency = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_FREQUENCY);
-			channels = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_CHANNELS);
-			
-			if (channels < 1)
-			{
-				channels = 2;
-			}
-			
-			if (frequency <= 0)
-			{
-				frequency = 44100;
-			}
-			
-			dataSize = frequency;
 						
-			createNewAudioPlayer(dataSize, frequency, channels);
 			
-			Log.d(TAG, "FOUND PLUGIN:" + currentPlugin.getClass().getName());
-			Log.d(TAG, "'%s' by '%s'", song.getTitle(), song.getComposer());
-			
-			songDetails.clear(); 
-
 			synchronized (this)
 			{
 				songDetails.put(SongMeta.FILENAME, song.getPath());
@@ -442,7 +424,6 @@ public class Player implements Runnable
 				songDetails.put(SongMeta.TOTAL_SUBTUNES, count);
 				songDetails.put(SongMeta.SUBTUNE, currentPlugin.getIntInfo(DroidSoundPlugin.INFO_STARTTUNE));
 								
-
 				currentPlugin.getDetailedInfo(songDetails);
 				songDetails.put(SongMeta.SIZE, size);
 				songDetails.put(SongMeta.CAN_SEEK, currentPlugin.canSeek());
@@ -459,7 +440,8 @@ public class Player implements Runnable
 			// Songs in playlists can start from a specific subtune.
 			startedFromSub = false;
 			currentTune = 0;
-			if(song.getSubtune() >= 0) {
+			if(song.getSubtune() >= 0)
+			{
 				songDetails.put(SongMeta.START_SUBTUNE, song.getSubtune());				
 				songDetails.put(SongMeta.TOTAL_SUBTUNES, 0);
 				
@@ -477,46 +459,69 @@ public class Player implements Runnable
 			lastLatency = 0;
 			songDetails.put(SongMeta.SOURCE, "");
 			
+			songDetails.put(SongMeta.STATE, 1);
+			msg = mHandler.obtainMessage(MSG_NEWSONG, songDetails);
+			
 			if(!skipStart)
-			{
-					
-				songDetails.put(SongMeta.STATE, 1);
-	
-				Message msg = mHandler.obtainMessage(MSG_NEWSONG, songDetails);
+			{					
+				
+				// Mediaplayer is for MP3 only
+				mp = currentPlugin.getMediaPlayer();
 
-				audioPlayer.stop();
-
-				MediaPlayer mp = currentPlugin.getMediaPlayer();
 				if(mp != null)
 				{
 					currentState = State.PLAYING;
 					mp.setLooping(loopMode == 1);
 					lastPos = -1000;
+					
 					String source = currentPlugin.getStringInfo(102);
+					
 					if(source != null)
+					{
 						songDetails.put(SongMeta.SOURCE, source);
+					}
+					
 					mHandler.sendMessage(msg);
-					//mp.start();
+					mp.start();
 					return;
 				}
-	
-				mHandler.sendMessage(msg);
-	
-				audioPlayer.start();
-				currentState = State.PLAYING;
-			}
-			
-			// First read should fill more of buffer to avoid stuttering
-			//dataSize = bufSize / 4;
 
-			lastPos = -1000;
-			
+				else
+				{
+					// create audioPlayer instead of MediaPlayer
+										
+					frequency = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_FREQUENCY);
+					channels = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_CHANNELS);
+					
+					if (channels < 1)
+					{
+						channels = 2;
+					}
+					
+					if (frequency <= 0)
+					{
+						frequency = 44100;
+					}
+					
+					dataSize = frequency;
+											
+					createNewAudioPlayer(dataSize, frequency, channels);
+					audioPlayer.stop();
+					Log.d(TAG, "FOUND PLUGIN:" + currentPlugin.getClass().getName());
+					Log.d(TAG, "'%s' by '%s'", song.getTitle(), song.getComposer());
+					
+					lastPos = -1000;
+					mHandler.sendMessage(msg);
+					
+					currentState = State.PLAYING;
+					
+					audioPlayer.start();
+				}
+			}
 			return;
 		}
-		
-		Message msg = mHandler.obtainMessage(MSG_FAILED);
+		msg = mHandler.obtainMessage(MSG_FAILED);
 		mHandler.sendMessage(msg);
-		
 		currentState = State.STOPPED;
 	}
 
@@ -534,7 +539,6 @@ public class Player implements Runnable
 	@Override
 	public void run()
 	{
-
 		currentPlugin = null;
 	
 		noPlayWait = 0;
@@ -550,9 +554,12 @@ public class Player implements Runnable
 					
 				oldLoopMode = loopMode;
 				
-				MediaPlayer mp = currentPlugin == null ? null : currentPlugin.getMediaPlayer();
+				mp = currentPlugin == null ? null : currentPlugin.getMediaPlayer();
 				if(mp != null)
+				{
 					mp.setLooping(loopMode == 1);
+				}
+					
 				songDetails.put(SongMeta.REPEAT, loopMode == 1 ? true : false);				
 				Message msg = mHandler.obtainMessage(MSG_DETAILS, songDetails);
 				mHandler.sendMessage(msg);
@@ -576,8 +583,21 @@ public class Player implements Runnable
 								
 								if (currentState == State.PLAYING)
 								{
-									audioPlayer.stop();
-									audioPlayer.exit();
+									if (mp != null)
+									{
+										mp.stop();
+										if(currentPlugin != null)
+										{
+											currentPlugin.unload();
+											currentPlugin = null;
+										}
+									}
+									
+									else
+									{
+										audioPlayer.stop();
+										audioPlayer.exit();
+									}
 								}
 								
 								SongFile song = (SongFile) argument;
@@ -586,8 +606,6 @@ public class Player implements Runnable
 								if (currentState == State.STOPPED)
 								{
 									audioPlayer.stop();
-									
-									
 								}
 								if (currentState != State.STOPPED)
 								{
@@ -617,16 +635,20 @@ public class Player implements Runnable
 						case STOP:
 							if(currentState != State.STOPPED)
 							{
-								// audioTrack.pause();
 								Log.d(TAG, "STOP");
-								MediaPlayer mp = currentPlugin == null ? null : currentPlugin.getMediaPlayer();
-								if(mp != null) {
+								
+								if(mp != null)
+								{
 									mp.stop();
-								} else {
+								} 
+								else
+								{
 									audioPlayer.stop();
 								}
+								
 
-								if(currentPlugin != null) {
+								if(currentPlugin != null)
+								{
 									currentPlugin.unload();
 									currentPlugin = null;
 								}
@@ -638,6 +660,7 @@ public class Player implements Runnable
 								mHandler.sendMessage(msg);
 							}
 							break;
+							
 						case RESTART:
 							if(!currentPlugin.restart())
 								if(!currentPlugin.setTune(currentTune)) {
@@ -657,27 +680,36 @@ public class Player implements Runnable
 						}
 						if(currentState != State.STOPPED)
 						{
-							switch(command) {
+							switch(command)
+							{
 							case SET_POS:
 								int msec = (Integer) argument;
-								if(currentState == State.SWITCHING) {
+								if(currentState == State.SWITCHING)
+								{
 									currentState = State.PLAYING;
 								}
-								if(currentPlugin.seekTo(msec)) {
-									audioPlayer.seekTo(msec);
-									lastPos = -1000;
+								if(currentPlugin.seekTo(msec))
+								{
+									if (mp == null)
+									{
+										audioPlayer.seekTo(msec);
+										lastPos = -1000;
+									}
+									
 								}
 								break;
 							case SET_TUNE:
 								Log.d(TAG, "Setting tune");
-								if(currentPlugin.setTune((Integer) argument)) {
+								if(currentPlugin.setTune((Integer) argument))
+								{
 									songEnded = false;
 									currentTune = (Integer) argument;
 
 									lastPos = -1000;
 									audioPlayer.stop();
 
-									if(currentState == State.SWITCHING) {
+									if(currentState == State.SWITCHING)
+									{
 										currentState = State.PLAYING;
 									}
 
@@ -698,7 +730,7 @@ public class Player implements Runnable
 									songDetails.put(SongMeta.STATE, 2);
 									Message msg = mHandler.obtainMessage(MSG_STATE, 2, 0);
 									mHandler.sendMessage(msg);
-									MediaPlayer mp = currentPlugin == null ? null : currentPlugin.getMediaPlayer();
+									
 									if(mp != null)
 										mp.pause();
 									else
@@ -712,7 +744,7 @@ public class Player implements Runnable
 									songDetails.put(SongMeta.STATE, 1);
 									Message msg = mHandler.obtainMessage(MSG_STATE, 1, 0);
 									mHandler.sendMessage(msg);
-									MediaPlayer mp = currentPlugin == null ? null : currentPlugin.getMediaPlayer();
+									
 									if(mp != null)
 										mp.start();
 									else
@@ -729,7 +761,6 @@ public class Player implements Runnable
 				
 				if(currentState == State.PLAYING)
 				{
-					MediaPlayer mp = currentPlugin == null ? null : currentPlugin.getMediaPlayer();
 					if(mp != null)
 					{						
 						updateMediaPlayer();
@@ -767,8 +798,12 @@ public class Player implements Runnable
 				break;
 			}
 		}
-
-		audioPlayer.exit();
+		if (audioPlayer != null)
+		{
+			audioPlayer.exit();
+			
+		}
+		
 
 		for(DroidSoundPlugin plugin : plugins) {
 			plugin.exit();
@@ -782,7 +817,10 @@ public class Player implements Runnable
 	{
 		
 		noPlayWait = 0;
-
+		if (audioPlayer == null)
+		{
+			Log.d(TAG,"Null audioPlayer");
+		}
 		int playPos = audioPlayer.getPlaybackPosition();
 		
 		if(lastPos > playPos)

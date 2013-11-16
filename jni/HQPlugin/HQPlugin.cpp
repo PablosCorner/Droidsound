@@ -95,27 +95,23 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_HQPlugin_N_1unload(JNIEnv
 	
 }
 
-//
-// getSoundData() is the function that is being called all the time from Java side
-// It is the place where you put the function that produces samples.
-// song is the pointer the sound instance usually casted to void*, sArray is in/out
-// buffer for samples, size is wanted amount of samples.
-//
-
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_HQPlugin_N_1getSoundData(JNIEnv *env, jobject obj, jlong song, jshortArray sArray, jint size)
 {
 	qsf_loader_state *state = (qsf_loader_state*)song;
 	
 	int ret = 0;			
-	signed short sample_buffer[22050 * 2]; 
 
-	uint32_t samples_cnt = 22050;
-	
-	ret = qsound_execute( (void*)state->emu, 0x7fffffff, sample_buffer, &samples_cnt ); 		
+	uint32_t samples_cnt = size/2;
 	
 	jshort *dest = env->GetShortArrayElements(sArray, NULL);
-	memcpy((char *)dest,(char *)sample_buffer, 22050 * 4); // 22050 * 2 * sizeof(short)
+	
+	ret = qsound_execute( (void*)state->emu, 0x7fffffff, dest, &samples_cnt ); 	
+    if (samples_cnt < (size/2))	
+	{
+		size = samples_cnt * 2;
+	}
+
 	env->ReleaseShortArrayElements(sArray, dest, 0);
 	
-	return 44100;
+	return size;
 }

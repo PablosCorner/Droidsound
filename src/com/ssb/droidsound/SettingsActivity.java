@@ -64,11 +64,14 @@ public class SettingsActivity extends PreferenceActivity {
 				findPreference("SidPlugin.resampling").setEnabled(isVice);
 			}
 			
-			if(newValue instanceof String) {
-				try {
+			if(newValue instanceof String)
+			{
+				try 
+				{
 					int i = Integer.parseInt((String) newValue);
 					newValue = Integer.valueOf(i);
-				} catch (NumberFormatException e) {
+				} 
+				catch (NumberFormatException e) {
 				}
 			}
 			
@@ -94,12 +97,16 @@ public class SettingsActivity extends PreferenceActivity {
 		String s = prefs.getString("SidPlugin.sidengine", null);
 		
 		Preference p = findPreference("SidPlugin.resampling");
-		if(s.startsWith("Sidplay")) {
+		if(s.startsWith("Sidplay"))
+		{
 			p.setEnabled(false);
-		} else {
+		} else 
+		{
 			p.setEnabled(true);
 		}
+				
 		Preference pref = findPreference("flush_cache");
+				
 		pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
 		{
 			@Override

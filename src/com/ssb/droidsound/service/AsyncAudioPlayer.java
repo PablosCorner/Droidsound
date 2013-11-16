@@ -24,7 +24,8 @@ public class AsyncAudioPlayer implements Runnable
 	
 	private static class SampleArray
 	{
-		SampleArray(short [] s, int l) {
+		SampleArray(short [] s, int l)
+		{
 			samples = s;
 			len = l;
 		}
@@ -190,7 +191,7 @@ public class AsyncAudioPlayer implements Runnable
 				FREQ, 
 				set_channels,
 				AudioFormat.ENCODING_PCM_16BIT, 
-				FREQ * 2, 
+				44100,  // buffer size
 				AudioTrack.MODE_STREAM);
 		
 		buffers = new LinkedList<SampleArray>();
