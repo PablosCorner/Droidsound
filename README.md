@@ -28,7 +28,7 @@ Other changes:
  
  About those MinixSF formats:
  
- * They usually need an additional file that has extension .???lib. In some cases the .???lib filename
+ * They usually need an additional file that has an extension .???lib. In some rare cases the .???lib filename
  * have been changed causing the song fail to load. In order to fix this, you need to manually download
  * the whole song, and change the  .???lib filename. The correct .???lib filename is always inside the
  * .minixSF file. In most cases, only the case-sensitiveness is the problem.
