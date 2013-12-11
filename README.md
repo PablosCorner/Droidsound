@@ -17,7 +17,7 @@ Added features compared to Google Play version:
  * Improved SC68 Plugin
  * VGMPlay by Valley Bell
  * Sidplay2 plugin has been replaced by Sidplay2fp
-
+ 
 
  Other changes:
  
