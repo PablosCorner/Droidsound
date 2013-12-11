@@ -18,7 +18,6 @@ Added features compared to Google Play version:
  * VGMPlay by Valley Bell
  * Sidplay2 plugin has been replaced by Sidplay2fp
  
-
  Other changes:
  
  * Option to change File-Cache size (16MB - 4096MB)
