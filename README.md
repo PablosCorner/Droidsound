@@ -5,8 +5,8 @@ Droidsound with added features and stuff.
 
 Added features compared to Google Play version:
  
- * FTP Client
-  * Allows you to download tunes from FTP sites. Included few pre-defined sites.
+ New Plugins:
+
  * Sega Saturn plugin (SSF/MiniSSF)
  * DreamCast plugin (DSF/MiniDSF)
  * Capcom Qsound plugin (QSF/MiniQSF)
@@ -15,9 +15,22 @@ Added features compared to Google Play version:
  * Plays packed .GYM files
  * VGMStream Plugin (too many formats to include)
  * Improved SC68 Plugin
- * Option to change File-Cache size (16MB - 4096MB)
- * Option to clean directory list cache.
+ * VGMPlay by Valley Bell
+ * Sidplay2 plugin has been replaced by Sidplay2fp
 
---------------------------------------------------------------------------------------------
-Needs lots of work still. 
+Other changes:
  
+ * Option to change File-Cache size (16MB - 4096MB)
+ * Option to clean directory list cache
+ * FTP Client. Allows you to download tunes from FTP sites. Included few pre-defined sites.
+ 
+--------------------------------------------------------------------------------------------
+ 
+ About those MinixSF formats:
+ 
+ * They usually need an additional file that has an extension .???lib. In some rare cases the .???lib filename
+ * have been changed causing the song fail to load. In order to fix this, you need to manually download
+ * the whole song and change the .???lib filename. The correct .???lib filename is always inside the
+ * .minixSF file. In most cases, only the case-sensitiveness is the problem.
+
+Needs lots of work still. 

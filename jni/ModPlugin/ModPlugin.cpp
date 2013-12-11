@@ -60,50 +60,6 @@ static jstring NewString(JNIEnv *env, const char *str)
 	return j;
 }
 
-/*
-JNIEXPORT jboolean JNICALL Java_com_ssb_droidsound_plugins_ModPlugin_N_1canHandle(JNIEnv *env, jobject obj, jstring name)
-{
-	const char spaces[] = "      ";
-	unsigned int ext = 0;
-	jboolean iscopy;
-	const char *fname = env->GetStringUTFChars(name, &iscopy);
-	bool ok = false;
-
-	if(strncasecmp(fname, "MOD.", 4) == 0)
-		ok = true;
-	else
-	{
-		const char *ptr = strrchr(fname, '.');
-		if(ptr) {
-			for(int i=0; i<4; i++)
-			{
-				ext <<= 8;
-				if(!ptr[i+1])
-					ptr = spaces;
-				ext |= toupper(ptr[i+1]);
-			}
-
-
-			switch(ext)
-			{
-			case 'MOD ':
-			case 'IT  ':
-			case 'S3M ':
-			case 'XM  ':
-			case 'MTM ':
-			case 'STM ':
-			case '669 ':
-			case 'FT  ':
-				ok = true;
-				break;
-			}
-		}
-	}
-
-	return ok;
-}
-*/
-
 static int loopMode = 0;
 
 struct ModInfo {
@@ -146,6 +102,7 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_ModPlugin_N_1load(JNIEnv
 
 	if(mod)
 	{
+		ModPlug_SetMasterVolume(mod,0x100);
 		info = new ModInfo();
 		info->mod = mod;
 		info->ptr = ptr2;

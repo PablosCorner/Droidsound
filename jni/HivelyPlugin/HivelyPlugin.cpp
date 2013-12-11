@@ -42,27 +42,24 @@ static jstring NewString(JNIEnv *env, const char *str)
 static bool inited = false;
 
 
-JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_HivelyPlugin_N_1load(JNIEnv *env, jobject obj, jbyteArray bArray, int size)
+JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_HivelyPlugin_N_1load(JNIEnv *env, jobject obj, jstring fname)
 {
 	if(!inited) {
 		hvl_InitReplayer();
 		inited = true;
 	}
 
-
-	jbyte *ptr = env->GetByteArrayElements(bArray, NULL);
-
-	__android_log_print(ANDROID_LOG_VERBOSE, "HivelyPlugin", "open %p %d", ptr, size);
-
-	struct hvl_tune *tune = hvl_LoadTuneMemory((uint8*)ptr, size, 44100, 0);
-
-	if(tune) {
-
-		__android_log_print(ANDROID_LOG_VERBOSE, "HivelyPlugin", "CHAN %d NAME '%s' TIME %d", tune->ht_Channels, tune->ht_Name, tune->ht_PlayingTime);
+	const char *filename = env->GetStringUTFChars(fname, NULL);
+	
+	char temp[260];
+	strcpy(temp, filename);
+	
+	struct hvl_tune *tune = hvl_LoadTune(temp, 44100, 0);
+	if (!tune)
+	{
+		return -1;
 	}
-
-
-	env->ReleaseByteArrayElements(bArray, ptr, 0);
+		
 	return (jlong)tune;
 }
 
@@ -84,17 +81,11 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_HivelyPlugin_N_1getSoundD
 
 	int len = ((44100*2)/5);
 
-	for(int i=0; i<10; i++) {
-		//__android_log_print(ANDROID_LOG_VERBOSE, "HivelyPlugin", "mixing to %p", ptr);
+	for(int i=0; i<10; i++) 
+	{
 		hvl_DecodeFrame(tune, ptr, ptr+2, 4);
 		ptr += ((44100*2*2)/50);
-
 	}
-
-	//for(int i=0; i<len; i++) {
-	//	int x = ((uint16_t*)dest)[i];
-	//	dest[i] = (jshort)(x - 0x8000);
-	//}
 
 	env->ReleaseShortArrayElements(bArray, dest, 0);
 	return len;

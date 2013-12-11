@@ -40,8 +40,6 @@ static jstring NewString(JNIEnv *env, const char *str)
 	return j;
 }
 
-
-
 JNIEXPORT jboolean JNICALL Java_com_ssb_droidsound_plugins_GMEPlugin_N_1canHandle(JNIEnv *env, jobject obj, jstring name)
 {
 	return true;
@@ -129,7 +127,8 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_GMEPlugin_N_1loadFile(JN
 
 	__android_log_print(ANDROID_LOG_VERBOSE, "GMEPlugin", "Loading from file '%s' => %s", s, err ? err : "OK");
 
-	if(!err) {
+	if(!err)
+	{
 		rc = setUp(emu);
 	}
 	env->ReleaseStringUTFChars(fname, s);
@@ -206,9 +205,9 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_GMEPlugin_N_1getSoundData
 	}
 
 	jshort *ptr = env->GetShortArrayElements(sArray, NULL);
-	//__android_log_print(ANDROID_LOG_VERBOSE, "GMEPlugin", "Getting %d shorts from %p", size, info->emu);
+
 	gme_err_t err = gme_play(info->emu, size, ptr);
-	//__android_log_print(ANDROID_LOG_VERBOSE, "GMEPlugin", "Result %d", err);
+
 	env->ReleaseShortArrayElements(sArray, ptr, 0);
 	return size;
 }
@@ -251,11 +250,13 @@ JNIEXPORT jstring JNICALL Java_com_ssb_droidsound_plugins_GMEPlugin_N_1getString
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_GMEPlugin_N_1getIntInfo(JNIEnv *env, jobject obj, jlong song, jint what)
 {
 	GMEInfo *info = (GMEInfo*)song;
+	__android_log_print(ANDROID_LOG_VERBOSE, "GMEPlugin", "getIntInfo code: %d",what);
 	switch(what)
 	{
 	case INFO_LENGTH:
 		return info->lastTrack->length;
 	case INFO_SUBTUNES:
+		__android_log_print(ANDROID_LOG_VERBOSE, "GMEPlugin", "INFO_SUBTUNES");
 		return info->trackCount;
 	case INFO_STARTTUNE:
 		return 0;

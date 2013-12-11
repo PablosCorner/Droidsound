@@ -36,7 +36,7 @@ LOCAL_SRC_FILES :=  ndsplugin.cpp \
 	
  
 LOCAL_LDLIBS := -llog -lz
-LOCAL_CFLAGS := -DLSB_FIRST -DHAVE_STDINT_H -D_strnicmp=strncasecmp -D_PASKA
+LOCAL_CFLAGS := -DLSB_FIRST -DHAVE_STDINT_H -D_strnicmp=strncasecmp
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/nds/vio2sf
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/nds
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/nds/vio2sf/desmume

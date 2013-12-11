@@ -105,19 +105,24 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_HTPlugin_N_1unload(JNIEnv
 
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_HTPlugin_N_1getSoundData(JNIEnv *env, jobject obj, jlong song, jshortArray sArray, jint size)
 {
+
 	sdsf_loader_state *state = (sdsf_loader_state*)song;
 	
 	int ret = 0;			
-	signed short sample_buffer[22050 * 2]; 
-
-	uint32_t samples_cnt = 22050;
 	
-	ret = sega_execute( (void*)state->emu, 0x7fffffff, sample_buffer, &samples_cnt ); 		
+	uint32_t samples_cnt = size / 2;
+	
 	jshort *dest = env->GetShortArrayElements(sArray, NULL);
-	memcpy((char *)dest,(char *)sample_buffer, 22050 * 4); // 22050 * 2 * sizeof(short)
-	env->ReleaseShortArrayElements(sArray, dest, 0);
+	
+	ret = sega_execute( (void*)state->emu, 0x7fffffff, dest, &samples_cnt ); 		
 		
-	return 44100;
+	env->ReleaseShortArrayElements(sArray, dest, 0);
+	if (samples_cnt < (size / 2))
+	{
+		size = samples_cnt * 2;
+	}
+		
+	return size;
 }
 
 

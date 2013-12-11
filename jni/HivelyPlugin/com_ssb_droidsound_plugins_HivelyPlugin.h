@@ -7,41 +7,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef com_ssb_droidsound_plugins_HivelyPlugin_INFO_TITLE
-#define com_ssb_droidsound_plugins_HivelyPlugin_INFO_TITLE 0L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_INFO_AUTHOR
-#define com_ssb_droidsound_plugins_HivelyPlugin_INFO_AUTHOR 1L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_INFO_LENGTH
-#define com_ssb_droidsound_plugins_HivelyPlugin_INFO_LENGTH 2L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_INFO_TYPE
-#define com_ssb_droidsound_plugins_HivelyPlugin_INFO_TYPE 3L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_INFO_COPYRIGHT
-#define com_ssb_droidsound_plugins_HivelyPlugin_INFO_COPYRIGHT 4L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_INFO_GAME
-#define com_ssb_droidsound_plugins_HivelyPlugin_INFO_GAME 5L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_INFO_SUBTUNES
-#define com_ssb_droidsound_plugins_HivelyPlugin_INFO_SUBTUNES 6L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_INFO_STARTTUNE
-#define com_ssb_droidsound_plugins_HivelyPlugin_INFO_STARTTUNE 7L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_INFO_SUBTUNE_TITLE
-#define com_ssb_droidsound_plugins_HivelyPlugin_INFO_SUBTUNE_TITLE 8L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_SIZEOF_INFO
-#define com_ssb_droidsound_plugins_HivelyPlugin_SIZEOF_INFO 9L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_OPT_FILTER
-#define com_ssb_droidsound_plugins_HivelyPlugin_OPT_FILTER 1L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_OPT_RESAMPLING
-#define com_ssb_droidsound_plugins_HivelyPlugin_OPT_RESAMPLING 2L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_OPT_NTSC
-#define com_ssb_droidsound_plugins_HivelyPlugin_OPT_NTSC 3L
-#undef com_ssb_droidsound_plugins_HivelyPlugin_OPT_SPEED_HACK
-#define com_ssb_droidsound_plugins_HivelyPlugin_OPT_SPEED_HACK 4L
 /*
  * Class:     com_ssb_droidsound_plugins_HivelyPlugin
  * Method:    N_load
- * Signature: ([BI)J
+ * Signature: (Ljava/lang/String;)J
  */
 JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_HivelyPlugin_N_1load
-  (JNIEnv *, jobject, jbyteArray, jint);
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     com_ssb_droidsound_plugins_HivelyPlugin
@@ -59,6 +31,23 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_HivelyPlugin_N_1unload
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_HivelyPlugin_N_1getSoundData
   (JNIEnv *, jobject, jlong, jshortArray, jint);
 
+/*
+ * Class:     com_ssb_droidsound_plugins_HivelyPlugin
+ * Method:    N_getStringInfo
+ * Signature: (JI)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_ssb_droidsound_plugins_HivelyPlugin_N_1getStringInfo
+  (JNIEnv *, jobject, jlong, jint);
+
+/*
+ * Class:     com_ssb_droidsound_plugins_HivelyPlugin
+ * Method:    N_getIntInfo
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_HivelyPlugin_N_1getIntInfo
+  (JNIEnv *, jobject, jlong, jint);
+  
+  
 #ifdef __cplusplus
 }
 #endif
