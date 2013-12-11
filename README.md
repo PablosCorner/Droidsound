@@ -25,6 +25,7 @@ Other changes:
  * FTP Client. Allows you to download tunes from FTP sites. Included few pre-defined sites.
  
 --------------------------------------------------------------------------------------------
+<<<<<<< HEAD
  
  About those MinixSF formats:
  
@@ -34,3 +35,18 @@ Other changes:
  * .minixSF file. In most cases, only the case-sensitiveness is the problem.
 
 Needs lots of work still. 
+=======
+ 
+ About those MinixSF formats:
+ 
+ * They usually need an additional file that has an extension .???lib. In some rare cases the .???lib filename
+ * have been changed causing the song fail to load. In order to fix this, you need to manually download
+ * the whole song and change the .???lib filename. The correct .???lib filename is always inside the
+ * .minixSF file. In most cases, only the case-sensitiveness is the problem.
+
+Needs lots of work still. 
+ 
+ 
+
+ 
+>>>>>>> ec552120e63a9f6348778603d80c4c27ac590696
