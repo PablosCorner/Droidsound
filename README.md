@@ -23,7 +23,7 @@ Other changes:
  * Option to change File-Cache size (16MB - 4096MB)
  * Option to clean directory list cache
  * FTP Client. Allows you to download tunes from FTP sites. Included few pre-defined sites.
- 
+ * Added ARMv7 support.
 --------------------------------------------------------------------------------------------
  About those MinixSF formats:
  
