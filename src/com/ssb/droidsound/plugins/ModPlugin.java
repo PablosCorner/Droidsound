@@ -233,7 +233,8 @@ public class ModPlugin extends DroidSoundPlugin {
 	}
 
 	@Override
-	public void unload() {
+	public void unload()
+	{
 		author = null;
 		if (currentSong != 0)
 			N_unload(currentSong);

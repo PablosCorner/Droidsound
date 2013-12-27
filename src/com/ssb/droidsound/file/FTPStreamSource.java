@@ -1,7 +1,13 @@
 package com.ssb.droidsound.file;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+
+import android.os.NetworkOnMainThreadException;
+
 import java.net.URL;
 
 import org.apache.commons.net.ftp.FTPClient;
@@ -17,6 +23,38 @@ public class FTPStreamSource extends FileSource
 	{
 		super(ref);
 	}
+	
+	protected static boolean pingFTP(String host) {
+		
+		InetAddress in = null;
+		
+		try {
+            
+			in = InetAddress.getByName(host);
+            
+        } 
+		catch (UnknownHostException e) {
+
+            e.printStackTrace();
+            return false;
+        }
+
+        try {
+            if (in.isReachable(2000))
+            {
+            	return true;
+            } 
+            else
+            {
+            	return false;
+                
+            }
+        } 
+        catch (IOException e) {
+            return false;
+        }
+	}
+	
 	//
 	// this func exists because URL library's getPath fails when there 
 	// are special chars like '#'
@@ -37,7 +75,6 @@ public class FTPStreamSource extends FileSource
 		}
 		String path = full_url.substring(full_url.indexOf(host) + host.length() + port_string_sz );
 		return path;
-	
 	}
 	protected URL intGetFTPURL() throws MalformedURLException
 	{
@@ -55,6 +92,8 @@ public class FTPStreamSource extends FileSource
 							
 			FTPClient ftp = new FTPClient();
 			String host = url.getHost();
+			
+			
 			int port = url.getPort() > -1 ? url.getPort() : 21;
 
 			String userinfo = url.getUserInfo();
@@ -69,10 +108,16 @@ public class FTPStreamSource extends FileSource
 					password = userinfo.substring(userinfo.indexOf(":")+1);	
 				}
 			}
-
+			ftp.setConnectTimeout(3000);
 			ftp.connect(host, port);
             ftp.login(username, password);
             reply = ftp.getReplyCode();
+          
+            if (reply == 530)
+            {
+            	return ftp;
+            }
+            
             if (reply == 230)
             {
             	
@@ -87,15 +132,30 @@ public class FTPStreamSource extends FileSource
             	Log.d(TAG, "FTP getting FileStream");
                 
                 return ftp;
-
-                
             }
 			
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} 
+		
+		catch (NetworkOnMainThreadException n)
+		{
+			n.printStackTrace();
 		}
+		catch (SocketException s)
+		{
+			s.printStackTrace();
+
+		}
+		catch (MalformedURLException e)
+		{
+			e.printStackTrace();
+
+		} 
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+
+		}
+		
 		return null;
 	}	
 }

@@ -64,6 +64,8 @@ class PlayListAdapter extends BaseAdapter {
 			else
 				return "playlist";
 		case SongDatabase.TYPE_ARCHIVE:
+			if (filename.contains(".fs_source"))
+				return "filesys";
 			if(title.equals("CSDb"))
 				return "csdb";
 			if(title.equals("Local Mediastore"))

@@ -1,6 +1,5 @@
 package com.ssb.droidsound.service;
 
-
 import java.util.LinkedList;
 
 import android.media.AudioFormat;
@@ -11,19 +10,16 @@ import com.ssb.droidsound.utils.Log;
 
 public class AsyncAudioPlayer implements Runnable
 {	
-	private static final String TAG = AudioPlayer.class.getSimpleName();
+	private static final String TAG = AsyncAudioPlayer.class.getSimpleName();
 	
 	private AudioTrack audioTrack;
-	
-	private static int FREQ = 44100;
-	private int silence;
-	private int channels = 2;
-	public static int SEC = FREQ * 2;
-	private int bufSize;
-	
-	
-	private static class SampleArray
-	{
+	private static int channels;
+	private static int bufSize;
+	private static int FREQ;
+	private static int silence;
+	private static int SEC;
+		
+	private static class SampleArray {
 		SampleArray(short [] s, int l)
 		{
 			samples = s;
@@ -49,6 +45,7 @@ public class AsyncAudioPlayer implements Runnable
 	
 	private LinkedList<Command> commands = new LinkedList<Command>();
 
+	private volatile int playbackPosition;
 	private volatile int startPlaybackHead;
 	private volatile int playPosOffset;
 	private int framesWritten;
@@ -64,13 +61,13 @@ public class AsyncAudioPlayer implements Runnable
 	private int markPosition;
 	private volatile int bufferTotal;
 
-	public AsyncAudioPlayer(int bs, int frq, int chn)
+	public AsyncAudioPlayer(int bs, int freq, int chancount)
 	{
 		bufSize = bs;
 		silence = 0;
-		FREQ = frq;
-		channels = chn;
-		SEC = frq * chn;
+		FREQ = freq;
+		channels = chancount;
+		SEC = freq * 2;
 	}
 	
 	@Override
@@ -94,9 +91,10 @@ public class AsyncAudioPlayer implements Runnable
 					holdData = false;
 				}	
 				
-				boolean doSleep = false;
+				boolean doSleep = true; // <---- SUPER IMPORTANT MUST ALWAYS BE TRUE
 				if(!isPaused && !stopped)
 				{
+					playbackPosition = audioTrack.getPlaybackHeadPosition();
 					SampleArray data = null;
 					synchronized (buffers)
 					{
@@ -107,7 +105,7 @@ public class AsyncAudioPlayer implements Runnable
 					}
 					if(data != null)
 					{
-						byteswritten = audioTrack.write(data.samples, 0, data.len);		
+						audioTrack.write(data.samples, 0, data.len);		
 						framesRead += data.len/2;
 						returnArray(data.samples);
 						doSleep = false;
@@ -119,8 +117,8 @@ public class AsyncAudioPlayer implements Runnable
 				if(doExit)
 					return;
 				if(doSleep)
-					Thread.sleep(0);
-			
+					Thread.sleep(100);
+				playbackPosition = audioTrack.getPlaybackHeadPosition();
 							
 			}
 		} 
@@ -177,23 +175,18 @@ public class AsyncAudioPlayer implements Runnable
 	{
 		int set_channels = AudioFormat.CHANNEL_OUT_STEREO;
 		
-		if (channels == 2)
-		{
-			set_channels = AudioFormat.CHANNEL_OUT_STEREO;
-		}
-		else if (channels == 1)
-		{
+		if (channels == 1)
 			set_channels = AudioFormat.CHANNEL_OUT_MONO;
-		}
-				
+	
 		audioTrack = new AudioTrack(
 				AudioManager.STREAM_MUSIC, 
 				FREQ, 
 				set_channels,
 				AudioFormat.ENCODING_PCM_16BIT, 
-				44100,  // buffer size
+				bufSize,  // buffer size
 				AudioTrack.MODE_STREAM);
 		
+		audioTrack.setPlaybackRate(FREQ);
 		buffers = new LinkedList<SampleArray>();
 		framesWritten = 0;
 		framesRead = 0;
@@ -268,7 +261,7 @@ public class AsyncAudioPlayer implements Runnable
 	{
 		
 		int startOfSilence = framesWritten - silence;
-		if((audioTrack.getPlaybackHeadPosition() - startPlaybackHead) >= startOfSilence)
+		if((playbackPosition - startPlaybackHead) >= startOfSilence)
 		{
 			return (silence * 2 * 1000 / SEC);	
 		}
@@ -282,7 +275,7 @@ public class AsyncAudioPlayer implements Runnable
 		if(stopped || holdData)
 			return 0;
 		
-		int pos = audioTrack.getPlaybackHeadPosition() - startPlaybackHead;
+		int pos = playbackPosition - startPlaybackHead;
 		int playPos = pos * 10 / (FREQ / 100);
 		
 		return playPos + playPosOffset;
@@ -300,7 +293,7 @@ public class AsyncAudioPlayer implements Runnable
 		}
 		if(msec > 0)
 		{
-			int playPos = (audioTrack.getPlaybackHeadPosition()  - startPlaybackHead) * 10 / (FREQ / 100);
+			int playPos = (playbackPosition  - startPlaybackHead) * 10 / (FREQ / 100);
 			playPosOffset = msec - playPos;
 			Log.d(TAG, "Offset %d - %d = %d", msec, playPos, playPosOffset);
 		}		
@@ -328,11 +321,12 @@ public class AsyncAudioPlayer implements Runnable
 		
 		stopped = true;
 		holdData = false;
+		audioTrack.pause();
 		
 		audioTrack.flush();
 		try
 		{
-			Thread.sleep(1);
+			Thread.sleep(100);
 		} 
 		catch (InterruptedException e)
 		{
@@ -400,18 +394,18 @@ public class AsyncAudioPlayer implements Runnable
 	
 	private int toMSec(int frames)
 	{
-		return frames * 10 / 441;
+		return frames * 10 / (FREQ/100);
 	}
 
 	public void mark()
 	{
 		markPosition = framesWritten;//playbackPosition;
-		Log.d(TAG, "Mark %d (play at %d)", toMSec(markPosition),  toMSec(audioTrack.getPlaybackHeadPosition() - startPlaybackHead));
+		Log.d(TAG, "Mark %d (play at %d)", toMSec(markPosition),  toMSec(playbackPosition - startPlaybackHead));
 	}
 	
 	public boolean markReached()
 	{
-		return (audioTrack.getPlaybackHeadPosition() - startPlaybackHead) >= markPosition;
+		return (playbackPosition - startPlaybackHead) >= markPosition;
 	}
 	
 }

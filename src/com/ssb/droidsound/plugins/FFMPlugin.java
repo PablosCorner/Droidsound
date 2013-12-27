@@ -16,7 +16,7 @@ public class FFMPlugin extends DroidSoundPlugin {
 	
 	@Override
 	public String getVersion() {
-		return "VGMStream [r1014]";
+		return "FFmpeg 2.1";
 	}
 	
 	private long songRef;
@@ -24,14 +24,14 @@ public class FFMPlugin extends DroidSoundPlugin {
 	public boolean canHandle(FileSource fs) 
 	{
 		extension = fs.getExt().toUpperCase();
-		return fs.getExt().equals("ADX");
+		return fs.getExt().equals("AT3");
 	}
 	
 	
 	@Override
 	public void getDetailedInfo(Map<String, Object> list)
 	{
-		list.put("plugin", "FFMPlugin");
+		list.put("plugin", "FFmpeg");
 		list.put("format", extension);
 	}
 	

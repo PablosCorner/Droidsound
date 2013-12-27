@@ -27,7 +27,7 @@ import com.ssb.droidsound.file.FileCache;
 
 import com.ssb.droidsound.plugins.DroidSoundPlugin;
 
-import com.ssb.droidsound.plugins.SidplayPlugin;
+import com.ssb.droidsound.plugins.SidplayfpPlugin;
 import com.ssb.droidsound.plugins.VICEPlugin;
 import com.ssb.droidsound.utils.Log;
 
@@ -37,7 +37,7 @@ public class SettingsActivity extends PreferenceActivity {
 	protected static final String TAG = SettingsActivity.class.getSimpleName();
 	private SongDatabase songDatabase;
 	private boolean doFullScan;
-	private SharedPreferences prefs;
+	public static SharedPreferences prefs;
 	private String modsDir;
 	
 	class AudiopPrefsListener implements OnPreferenceChangeListener {
@@ -54,14 +54,21 @@ public class SettingsActivity extends PreferenceActivity {
 			String k2 = k.substring(k.indexOf('.')+1);
 			
 			Log.d(TAG, "CHANGED " + k);
-			
-			if(k.equals("SidPlugin.sidengine")) {
+			if(k.equals("SidPlugin.force_options"))
+			{
+				boolean forced = (Boolean) newValue ? true : false;
+				findPreference("SidPlugin.sid_model").setEnabled(forced);
+				findPreference("SidPlugin.video_mode").setEnabled(forced);
+			}
+				
+			if(k.equals("SidPlugin.sidengine"))
+			{
 				boolean isVice = ((String) newValue).startsWith("VICE");
-				/* FIXME: Both sid model and resampling actually could be done
-				 * also in sidplayplugin, but it's not currently supported. */
-				findPreference("SidPlugin.filter_bias").setEnabled(isVice);
-				findPreference("SidPlugin.sid_model").setEnabled(isVice);
-				findPreference("SidPlugin.resampling").setEnabled(isVice);
+				boolean isSidplay2fp = ((String) newValue).startsWith("Sidplay2fp");
+				
+				findPreference("SidPlugin.resampling_mode").setEnabled(isVice);
+				findPreference("SidPlugin.buildermode").setEnabled(isSidplay2fp);
+
 			}
 			
 			if(newValue instanceof String)
@@ -86,6 +93,7 @@ public class SettingsActivity extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		
 		DroidSoundPlugin.setContext(getApplicationContext());
+		Preference p = null;
 		
 		addPreferencesFromResource(R.layout.preferences);
 		
@@ -96,15 +104,25 @@ public class SettingsActivity extends PreferenceActivity {
 		
 		String s = prefs.getString("SidPlugin.sidengine", null);
 		
-		Preference p = findPreference("SidPlugin.resampling");
-		if(s.startsWith("Sidplay"))
-		{
-			p.setEnabled(false);
-		} else 
-		{
-			p.setEnabled(true);
-		}
+		Preference resampling_mode_pref = findPreference("SidPlugin.resampling_mode");
+		Preference buildermode = findPreference("SidPlugin.buildermode");
 				
+		boolean forced = prefs.getBoolean("SidPlugin.force_options", false);
+		findPreference("SidPlugin.sid_model").setEnabled(forced);
+		findPreference("SidPlugin.video_mode").setEnabled(forced);
+
+		if(s.startsWith("Sidplay2fp"))
+		{
+			resampling_mode_pref.setEnabled(false);
+			buildermode.setEnabled(true);
+		} 
+
+		if(s.startsWith("VICE"))
+		{
+			resampling_mode_pref.setEnabled(true);
+			buildermode.setEnabled(false);
+		} 
+		
 		Preference pref = findPreference("flush_cache");
 				
 		pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
@@ -119,15 +137,11 @@ public class SettingsActivity extends PreferenceActivity {
 		});
 
 		pref = findPreference("FileCache.fcsize");
+				
 		pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
-		{
-			
-		//pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-		//{
-			
-		
+		{		
 			@Override
-			//public boolean onPreferenceClick(Preference preference)
+	
 			public boolean onPreferenceChange(Preference preference, Object newValue)
 			{
 				Log.d(TAG, "setting fileCache size");
@@ -223,7 +237,7 @@ public class SettingsActivity extends PreferenceActivity {
 			}
 		}
 
-		list.add(new SidplayPlugin());
+		list.add(new SidplayfpPlugin());
 		list.add(new VICEPlugin());
 				
 		PreferenceScreen abScreen = (PreferenceScreen) findPreference("about_prefs");
@@ -235,7 +249,7 @@ public class SettingsActivity extends PreferenceActivity {
 	
 			p = new Preference(this);
 			p.setTitle("Application");
-			p.setSummary(String.format("%s v%s\n(C) 2010-2012 by Jonas Minnberg (Sasq)", appName, pinfo.versionName));		
+			p.setSummary(String.format("%s v%s\n(C) 2010-2012 by Jonas Minnberg (Sasq)\n(c) 2013-201x by DroidMJT", appName, pinfo.versionName));		
 			abScreen.addPreference(p);
 	
 			pc = new PreferenceCategory(this);

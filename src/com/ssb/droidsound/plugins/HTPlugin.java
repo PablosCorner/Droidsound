@@ -68,8 +68,11 @@ public class HTPlugin extends DroidSoundPlugin {
 	@Override
 	public int getIntInfo(int what)
 	{
-		if (tagMap != null)
+		if (tagMap == null)
+		{
 			return -1;
+		}
+			
 		if(what == INFO_LENGTH)
 		{
 			return PSFFile.parseLength(tagMap.get("length"));
@@ -132,7 +135,13 @@ public class HTPlugin extends DroidSoundPlugin {
 	public void unload() {
 		N_unload(songRef);
 	}
-
+	
+	@Override
+	public int getBufferSize(int frequency)
+	{
+		return frequency;
+	}
+	
 	native public long N_load(String fileName);	
 	native public void N_unload(long song);
 	native public int N_getSoundData(long song, short [] dest, int size);	

@@ -79,6 +79,7 @@ public abstract class DroidSoundPlugin {
 			//pluginList.add(new VICEPlugin());
 			//pluginList.add(new SidplayPlugin());
 			pluginList.add(new VGMPlugin());
+			pluginList.add(new VGMStreamPlugin());
 			pluginList.add(new PSFPlugin());
 			pluginList.add(new SidPlugin());
 			pluginList.add(new ModPlugin());
@@ -264,4 +265,9 @@ public abstract class DroidSoundPlugin {
 	}
 
 	public void setSilence(int msec) {}
+
+	public int getBufferSize(int frequency) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

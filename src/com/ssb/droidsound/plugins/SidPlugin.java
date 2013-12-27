@@ -15,15 +15,12 @@ import android.content.Context;
 import com.ssb.droidsound.file.FileSource;
 import com.ssb.droidsound.utils.Log;
 
-public class SidPlugin extends DroidSoundPlugin {
+public class SidPlugin extends DroidSoundPlugin 
+{
 	private static final String TAG = SidPlugin.class.getSimpleName();
-	
-	//static {
-	//	System.loadLibrary("vice");
-	//}
-	
+		
 	private static VICEPlugin vicePlugin = new VICEPlugin();
-	private static SidplayPlugin sidplayPlugin = new SidplayPlugin();
+	private static SidplayfpPlugin sidplayPlugin = new SidplayfpPlugin();
 
 	private static volatile DroidSoundPlugin currentPlugin = vicePlugin;
 	private static volatile DroidSoundPlugin nextPlugin = vicePlugin;
@@ -36,7 +33,10 @@ public class SidPlugin extends DroidSoundPlugin {
 		protected int sidModel = 0;
 		protected int startSong = 1;
 		protected int songs = 1;
+		protected int psidversion = 0;
+		protected int second_sid_addr = 0;
 		protected String format;
+		
 	};
 	
 	final byte [] header = new byte [128];
@@ -54,7 +54,7 @@ public class SidPlugin extends DroidSoundPlugin {
 		String description;
 		Object defaultValue;
 	}
-	
+	public static String plugin_name = "";
 	private Info songInfo;
 
 	private int silence;
@@ -126,7 +126,8 @@ public class SidPlugin extends DroidSoundPlugin {
 	
 	private void findLength(byte [] module, int size) {
 		
-		for (int i=0; i < 256; i++) {
+		for (int i=0; i < 256; i++)
+		{
 			songLengths[i] = 60*60*1000;
 		}
 		
@@ -206,12 +207,16 @@ public class SidPlugin extends DroidSoundPlugin {
 	}
 	
 	
+	public boolean setInfo(Info songinfo)
+	{
+		return true;
+	}
+	
 	@Override
-	public boolean loadInfo(FileSource fs) {
+	public boolean loadInfo(FileSource fs)
+	{
 		final byte[] header = new byte[128];
 		
-		
-
 		songInfo = new Info();
 		if(fs.getExt().equals("PRG")) {
 			songInfo.name = fs.getName();
@@ -227,56 +232,84 @@ public class SidPlugin extends DroidSoundPlugin {
 			e.printStackTrace();
 		}
 		
-		try {
+		try 
+		{
 			String s = new String(header, 0, 4, "ISO-8859-1");
-			if (!(s.equals("PSID") || s.equals("RSID"))) {
+			
+			if (!(s.equals("PSID") || s.equals("RSID")))
+			{
 				return false;
 			}
 			songInfo.format = s;
 			songInfo.name = new String(header, 0x16, 0x20, "ISO-8859-1").replaceAll("\0", "");
 			songInfo.composer = new String(header, 0x36, 0x20, "ISO-8859-1").replaceAll("\0", "");
 			songInfo.copyright = new String(header, 0x56, 0x20, "ISO-8859-1").replaceAll("\0", "");
+			songInfo.psidversion = header[0x5];
+
+			songInfo.second_sid_addr = (Integer)((header[0x7a] & 0xff) << 4);
+			if (songInfo.second_sid_addr != 0)
+				songInfo.second_sid_addr = (Integer) (0x0000d000 | (header[0x7a] & 0xff) << 4);
+			
+			currentPlugin.setOption("second_sid_addr", songInfo.second_sid_addr);
+
+			currentPlugin.setOption("resampling_mode", 0);
+			currentPlugin.setOption("filter_bias", 0);
+			
 			songInfo.videoMode = (header[0x77] >> 2) & 3;
+			currentPlugin.setOption("video_mode", songInfo.videoMode);
+			
 			songInfo.sidModel = (header[0x77] >> 4) & 3;
+			currentPlugin.setOption("sid_model", songInfo.sidModel);
+			
 			songInfo.songs = ((header[0xe] << 8) & 0xff00) | (header[0xf] & 0xff);
 			songInfo.startSong = ((header[0x10] << 8) & 0xff00) | (header[0x11] & 0xff) - 1;
+			
 			Log.i(TAG, "startSong=" + songInfo.startSong + ", songs=" + songInfo.songs);
+			
 			return true;
 		
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
+		} 
+		catch (UnsupportedEncodingException e) 
+		{
 			e.printStackTrace();
 		}
 		return false;	
 	}
 
 	@Override
-	public boolean canHandle(FileSource fs) {
+	public boolean canHandle(FileSource fs)
+	{
 		String ext = fs.getExt();
 		return ext.equals("SID") || ext.equals("PRG") || ext.equals("PSID") || ext.equals("RSID");
 	}
 	
 
 	@Override
-	public void getDetailedInfo(Map<String, Object> list) {
-		final String sids[] = { "UNKNOWN", "6581", "8580", "6581 & 8580" };
+	public void getDetailedInfo(Map<String, Object> list)
+	{
+		final String sid_model[] = { "UNKNOWN", "MOS6581", "MOS8580", "6581 & 8580" };
 		final String videoModes[] = { "UNKNOWN", "PAL", "NTSC", "PAL & NTSC" };
 		
-		list.put("plugin", "SID");
-
+		if (plugin_name.equals(""))
+			plugin_name = "VICE";
+		
+		list.put("plugin", plugin_name);
 		list.put("format", songInfo.format);
 		list.put("copyright", songInfo.copyright);
-		list.put("sidmodel", sids[songInfo.sidModel]);
+		list.put("sidmodel", sid_model[songInfo.sidModel]);
 		list.put("videomode", videoModes[songInfo.videoMode]);
+		list.put("psidversion", songInfo.psidversion);
 	}
 	
 	@Override
 	public int getIntInfo(int what) {
-		if (songInfo == null) {
+		if (songInfo == null)
+		{
 			return 0;
 		}
 		
-		if (what == INFO_LENGTH) {
+		if (what == INFO_LENGTH)
+		{
 			return songLengths[currentTune];
 		}
 		
@@ -288,7 +321,8 @@ public class SidPlugin extends DroidSoundPlugin {
 			return currentTune;
 		}
 		
-		if (what == INFO_STARTTUNE) {
+		if (what == INFO_STARTTUNE)
+		{
 			return songInfo.startSong;
 		}
 		
@@ -296,8 +330,10 @@ public class SidPlugin extends DroidSoundPlugin {
 	}
 	
 	@Override
-	public String getStringInfo(int what) {
-		if (songInfo == null) {
+	public String getStringInfo(int what)
+	{
+		if (songInfo == null)
+		{
 			return null;
 		}
 		
@@ -315,7 +351,8 @@ public class SidPlugin extends DroidSoundPlugin {
 
 
 	@Override
-	public int getSoundData(short[] dest, int size) {
+	public int getSoundData(short[] dest, int size)
+	{
 		int len =  currentPlugin.getSoundData(dest, size);
 		currentFrames += len/2;
 		
@@ -327,7 +364,8 @@ public class SidPlugin extends DroidSoundPlugin {
 	}
 	
 	@Override
-	public void setSilence(int msec) {
+	public void setSilence(int msec)
+	{
 		silence = msec;
 		//Log.d(TAG, "#SID SILENCE %d", msec);
 	}
@@ -368,7 +406,8 @@ public class SidPlugin extends DroidSoundPlugin {
 		if (type < 0)
 			return false;
 
-		if (type == 1) {
+		if (type == 1)
+		{
 			byte rsid[] = new byte [] {
 					0x52, 0x53, 0x49, 0x44, 0x00, 0x02, 0x00, 0x7c,
 					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
@@ -396,10 +435,12 @@ public class SidPlugin extends DroidSoundPlugin {
 			return rc;
 			
 		} 
-		loadInfo(fs);		
+		// get/set options from sid file directly
+		loadInfo(fs);
 		currentTune = songInfo.startSong;
 		boolean rc = currentPlugin.load(fs);		
-		if(rc) {
+		if(rc) 
+		{
 			findLength(module, size);		
 		}
 		return rc;
@@ -407,7 +448,8 @@ public class SidPlugin extends DroidSoundPlugin {
 	}
 	
 	@Override
-	public boolean setTune(int tune) {
+	public boolean setTune(int tune)
+	{
 		boolean rc = currentPlugin.setTune(tune);
 		if(rc) currentTune = tune;
 		currentFrames = 0;
@@ -415,7 +457,8 @@ public class SidPlugin extends DroidSoundPlugin {
 	}
 
 	@Override
-	public void unload() {
+	public void unload()
+	{
 		songInfo = null;
 		currentPlugin.unload();
 	}
@@ -423,18 +466,26 @@ public class SidPlugin extends DroidSoundPlugin {
 	@Override
 	public void setOption(String opt, Object val) {
 		
-		if(opt.equals("loop")) {
+		if(opt.equals("loop"))
+		{
 			loopMode = (Integer)val;
-		} else
-		if(opt.equals("sidengine")) {
+		} 
+		
+		else if(opt.equals("sidengine"))
+		{
 			String e = (String) val;
 			
-			if(e.equals("Sidplay2")) {
-				Log.d(TAG, "################ USING ENGINE: SIDPLAY2");
+			if(e.equals("Sidplay2fp"))
+			{
+				Log.d(TAG, "# USING ENGINE: SIDPLAY2FP");
 				nextPlugin = sidplayPlugin;
-			} else {
-				Log.d(TAG, "################ USING ENGINE: VICE");
+				plugin_name = "Sidplay2fp";
+			} 
+			else
+			{
+				Log.d(TAG, "# USING ENGINE: VICE");
 				nextPlugin = vicePlugin;
+				plugin_name = "VICE";
 			}
 			return;			
 		}
@@ -444,13 +495,8 @@ public class SidPlugin extends DroidSoundPlugin {
 	}
 	
 	@Override
-	public boolean isEndless() {
+	public boolean isEndless()
+	{
 		return true;
 	}
-
-	//@Override
-	//public String getVersion() {		
-	//	return "SidplayPlugin\n" + sidplayPlugin.getVersion() + "\nVICEPlugin\n" + vicePlugin.getVersion();
-	//}
-
 }

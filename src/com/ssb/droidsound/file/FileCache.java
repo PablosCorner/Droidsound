@@ -3,29 +3,40 @@ package com.ssb.droidsound.file;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import android.os.Environment;
+import android.preference.PreferenceManager;
+import android.widget.Toast;
 
+import com.ssb.droidsound.PlayerActivity;
+import com.ssb.droidsound.SettingsActivity;
+import com.ssb.droidsound.plugins.DroidSoundPlugin;
 import com.ssb.droidsound.utils.Log;
 
 
-public class FileCache {
+public class FileCache
+{
 	private static final String TAG = FileCache.class.getSimpleName();	
 	private static FileCache _instance = null;
 	
-	private static class CacheEntry {
-		public CacheEntry(File f) {
+	private static class CacheEntry
+	{
+		public CacheEntry(File f)
+		{
 			file = f;
 			File dotFile = FileCache.getDotFile(f);
-			if(dotFile.exists()) {
+			if(dotFile.exists())
+			{
 				time = dotFile.lastModified() / 1000;
-			} else {
+			} 
+			else
+			{
 				time = f.lastModified() / 1000;
 			}
-			if(time == 0) {
+			if(time == 0) 
+			{
 				throw new RuntimeException("LASTMODIFIED IS ZERO");
 			}
 				
@@ -34,17 +45,20 @@ public class FileCache {
 		public long time;
 	}
 	
-	private List<CacheEntry> fileList;
+	private ArrayList<String> fileNameList;
+	private LinkedHashSet<CacheEntry> fileList;
 	private List<File> newFiles;
 
 	private File cacheDir;
 
 	private String exDir;
 	private int totalSize;
-	private long limitSize;
+	private static long limitSize;
 	
-	public static synchronized FileCache getInstance() {
-		if(_instance == null) {
+	public static synchronized FileCache getInstance()
+	{
+		if(_instance == null) 
+		{
 			_instance = new FileCache();
 		}
 		return _instance;
@@ -52,23 +66,28 @@ public class FileCache {
 	
 	public FileCache()
 	{
-		fileList = new ArrayList<CacheEntry>();
+		fileNameList = new ArrayList<String>();
+		fileList = new LinkedHashSet<CacheEntry>();
+				
 		newFiles = new ArrayList<File>();
 		exDir = Environment.getExternalStorageDirectory().getPath();
+		//long freeSpace = Environment.getExternalStorageDirectory().getFreeSpace();
 		cacheDir = new File(exDir + "/droidsound/fileCache");
 		Log.d(TAG, "Created dir '%s'", cacheDir.getPath());
 		cacheDir.mkdirs();
 		
-		limitSize = 16 * 1024 * 1024;
+		//read the limitsize from SETTINGS!!!
+		
+		String cacheSize = PlayerActivity.prefs.getString("FileCache.fcsize", "64");
+		Integer cacheSz = Integer.parseInt((String) cacheSize);
+			
+		limitSize = cacheSz * 1024 * 1024; // 16MB default
+
 		totalSize = 0;
 		indexFiles(cacheDir);
-		Collections.sort(fileList, new Comparator<CacheEntry>() {
-			@Override
-			public int compare(CacheEntry lhs, CacheEntry rhs) {
-				return (int) (lhs.time - rhs.time);
-			}
-		});
-		
+	}
+	public static long getLimitSize(){
+		return limitSize;
 	}
 	
 	public void setLimitSize(long ls)
@@ -81,28 +100,67 @@ public class FileCache {
 	{
 		
 		File [] files = dir.listFiles();
-		if(files != null) {
-			for(File f : files) {
-				if(f.isFile() && f.length() > 0 && f.canRead()) {
-					if(f.getName().charAt(0) != '.') {
-						fileList.add(new CacheEntry(f));
-						totalSize += f.length();
+		if(files != null)
+		{
+			for(File f : files)
+			{
+				if(f.isFile() && f.length() > 0 && f.canRead())
+				{
+					if(f.getName().charAt(0) != '.')
+					{
+						if (!fileNameList.contains(f.getPath()))
+						{
+							fileNameList.add(f.getPath());
+							fileList.add(new CacheEntry(f));
+							totalSize += f.length();
+						}
 					}
-				} else {
+				} 
+				else
+				{
 					indexFiles(f);
 				}
 			}
 		}
 		dir.delete();
 	}
+
+// *********************************************************
+	// adds new files to filelist after they have been downloaded
+	private void addNewFiles()
+	{
+		Iterator<File> i = newFiles.iterator();
+		Log.d(TAG, "Trying to add file to filecache");
+		while(i.hasNext())
+		{
+			File f = i.next();
+			if(f != null && f.exists())
+			{
+				if (!fileNameList.contains(f.getPath()))
+				{
+					Log.d(TAG, "Adding FILE: %s", f.getPath());
+					fileNameList.add(f.getPath());
+					fileList.add(new CacheEntry(f));
+					totalSize += f.length();
+
+				}
+				i.remove();
+			}
+		}
+	}
 	
-	private void limit(long limitSize) {
+	private void limit(long limitSize)
+	{
+	
 		Log.d(TAG, "TOTAL SIZE IS %d", totalSize);
-		if(totalSize <= limitSize)
+		if (totalSize <= limitSize)
+		{
 			return;
-		
+		}
+									
 		Iterator<CacheEntry> iter = fileList.iterator();
-		while (iter.hasNext()) {
+		while (iter.hasNext())
+		{
 			CacheEntry f = iter.next();
 			totalSize -= f.file.length();
 			Log.d(TAG, "Removing FILE: %s", f.file.getPath());
@@ -111,34 +169,19 @@ public class FileCache {
 			getDotFile(f.file).delete();
 			
 			iter.remove();
+			fileNameList.remove(f.file.getPath());
+			fileList.remove(f);
 			
-			if(totalSize <= (limitSize - limitSize/10))
+			if(totalSize <= (limitSize - limitSize/8))
 				break;
 		}
 
 		indexFiles(cacheDir);
 	}
 	
-	private void addNewFiles()
-	{
-		
-		Iterator<File> i = newFiles.iterator();
-		Log.d(TAG, "trying to add file to filecache");
-		while(i.hasNext())
-		{
-			File f = i.next();
-			if(f != null && f.exists())
-			{
-				fileList.remove(f);
-				Log.d(TAG, "Adding FILE: %s", f.getPath());
-				totalSize += f.length();
-				fileList.add(new CacheEntry(f));
-				i.remove();
-			}
-		}
-	}
 	
-	private static File getDotFile(File f) {
+	private static File getDotFile(File f)
+	{
 		return new File(f.getParentFile(), "." + f.getName());
 	}
 	

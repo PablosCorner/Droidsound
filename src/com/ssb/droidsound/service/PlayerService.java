@@ -47,7 +47,7 @@ public class PlayerService extends Service implements PlayerInterface {
 	
 		
 	public static final int ERR_SONG_COULD_NOT_PLAY = 1;
-
+ 
 	public static final int OPTION_SPEECH = 0;
 	public static final int OPTION_SILENCE_DETECT = 1;
 	//public static final int OPTION_RESPECT_LENGTH = 2;
@@ -397,24 +397,32 @@ public class PlayerService extends Service implements PlayerInterface {
 		
     private Handler mHandler = null;
 
-	
-    void createThread() {
+// *******************************************************************	
+    void createThread()
+    {
     	
-    	if(playerThread != null) {
-			if(!playerThread.isAlive()) {
+    	if(playerThread != null)
+    	{
+			if(!playerThread.isAlive())
+			{
 				playerThread = null;
 			}
     	}
     	
-    	if(playerThread == null) {
+    	if(playerThread == null)
+    	{
 			Log.d(TAG, "Creating thread");
 		    playerThread = new Thread(player, "Player");
 		    playerThread.setPriority(Thread.NORM_PRIORITY+1);
 		    playerThread.start();
     	}
     }
-        
-    public void repeatSong() {
+    
+// *******************************************************************
+     
+    
+    public void repeatSong()
+    {
     	player.repeatSong();
     }
 
@@ -470,6 +478,7 @@ public class PlayerService extends Service implements PlayerInterface {
     	
 		if(song != null) {    			
        		song = playQueue.current();       		
+
        		createThread();
 
        		beforePlay(song.getFullTitle());
@@ -499,7 +508,8 @@ public class PlayerService extends Service implements PlayerInterface {
     
 	@TargetApi(8)
 	@Override
-	public void onCreate() {
+	public void onCreate()
+	{
 		super.onCreate();
 		
 		DroidSoundPlugin.setContext(getApplicationContext());
@@ -507,7 +517,12 @@ public class PlayerService extends Service implements PlayerInterface {
 		mHandler = new MyHandler(this);
 		
         AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-		player = new Player(audioManager, mHandler, getApplicationContext());
+
+        player = new Player(audioManager, mHandler, getApplicationContext());
+
+        //player.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+		//player.stop();
+		
 		callbacks = new ArrayList<IPlayerServiceCallback>();
 		
 		phoneStateListener = new PhoneStateListener() {
@@ -526,16 +541,9 @@ public class PlayerService extends Service implements PlayerInterface {
 						//didPause = true;
 					}
 					break;
-				/*case TelephonyManager.CALL_STATE_IDLE:
-					if(didPause && player != null && !player.isPlaying()) {
-						player.paused(false);
-					}
-					didPause = false;
-					break; */
 				}
 				
 				Log.d(TAG, "CALL STATE %d %s", state, incomingNumber);
-				//super.onCallStateChanged(state, incomingNumber);
 			}
 		};
 		
@@ -621,8 +629,6 @@ public class PlayerService extends Service implements PlayerInterface {
 		if(hasRemoteControl)
 			remoteControl.setState(RemoteControlWrapper.STOPPED);
 		stopForeground(true);
-		//AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-		//am.abandonAudioFocus(this);
 		if(hasAudioFocus)
 			afWrapper.abandonFocus();
 	}
@@ -827,26 +833,6 @@ public class PlayerService extends Service implements PlayerInterface {
 			}
 		}
 		
-/*
-		private void shuffle() {
-			String t;
-			int sz = musicList.size();
-			for (int i=musicListPos+1; i<sz; i++) {					
-			    int randomPosition = rgen.nextInt(sz-1) + 1;
-			    t = musicList.get(i);
-			    musicList.set(i, musicList.get(randomPosition));
-			    musicList.set(randomPosition, t);
-			}
-		}
-		
-		private void unshuffle() {
-			
-			musicList.clear();
-			for(int i=0; i<musicNames.length; i++) {
-				musicList.add(musicNames[i]);
-			}
-		}
-*/
 		@Override
 		public boolean playPlaylist(String name, int startIndex) throws RemoteException {
 			
@@ -872,9 +858,9 @@ public class PlayerService extends Service implements PlayerInterface {
 		}
 
 		@Override
-		public boolean playList(String[] names, int startIndex) throws RemoteException {
-			
-			
+		public boolean playList(String[] names, int startIndex) throws RemoteException
+		{
+					
 			playQueue = new PlayQueue(names, startIndex, shuffleSongs);
 			SongFile song = playQueue.current();       		
 			Log.d(TAG, "PlayList called " + song.getPath());

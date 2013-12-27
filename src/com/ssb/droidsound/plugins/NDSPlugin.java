@@ -32,7 +32,7 @@ public class NDSPlugin extends DroidSoundPlugin {
 	@Override
 	public void getDetailedInfo(Map<String, Object> list)
 	{
-		list.put("plugin", "VIO2SF");
+		list.put("plugin", "Vio2SF");
 		list.put("format", extension);
 
 		if (tagMap.containsKey("artist"))

@@ -6,38 +6,49 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.*;
 
+import com.ssb.droidsound.PlayerActivity;
 import com.ssb.droidsound.file.FileSource;
-
-
 
 public class GMEPlugin extends DroidSoundPlugin {
 	private static final String TAG = GMEPlugin.class.getSimpleName();
 	
-	static {
+	static
+	{
 		System.loadLibrary("gme");
 	}
-
+	private static String extension = "";
 	private Set<String> extensions;
 	
-	static String [] ex = { "SPC", "GYM", "NSF", "NSFE", "GBS", "AY", "SAP", "VGM", "VGZ", "HES", "KSS" };
+	static String [] ex = { "SGC", "SFM", "SPC", "GYM", "NSF", "NSFE", "GBS", "AY", "SAP", "HES", "KSS" };
 	
-	long currentSong = 0;
+	long currentSong = -1;
 
 	private int currentFrames;
-
+	
 	private int songLength;
-
+	
+	private boolean use_vgm_vgz = false;
+	
 	private Integer loopMode = 0;
 
-	public GMEPlugin() {
+	public GMEPlugin()
+	{
 		extensions = new HashSet<String>();
-		for(String s : ex) {			
+		for(String s : ex)
+		{			
 			extensions.add(s);
 		}
 	}
-	
+		
 	@Override
-	public boolean canHandle(FileSource fs) {
+	public boolean canHandle(FileSource fs)
+	{
+		boolean res = PlayerActivity.prefs.getBoolean("use_vgmplay", false);
+		if (!res)
+		{
+			extensions.add("VGM");
+			extensions.add("VGZ");
+		}
 		return extensions.contains(fs.getExt());
 	}
 
@@ -46,23 +57,22 @@ public class GMEPlugin extends DroidSoundPlugin {
 	public void getDetailedInfo(Map<String, Object> list) {
 		
 		list.put("plugin", "GME");
-
 		
 		String s = N_getStringInfo(currentSong, INFO_TYPE);
 		if(s != null & s.length() > 0) {
 			list.put("format", s);
-			//list.add("GME: " + s);
+
 			list.put("is" + s, true);
 		}
 		s = N_getStringInfo(currentSong, INFO_COPYRIGHT);
 		if(s != null & s.length() > 0) {
 			list.put("copyright", s);
-			//list.add(s);
+
 		}
 		s = N_getStringInfo(currentSong, INFO_GAME);
 		if(s != null & s.length() > 0) {
 			list.put("game", s);
-			//list.add(s);
+
 		}		
 	}
 	
@@ -145,13 +155,13 @@ public class GMEPlugin extends DroidSoundPlugin {
 	
 	@Override
 	public String getVersion() {
-		return "Game Music Emu v0.6.0\nCopyright (C) 2003-2013 Shay Green";
+		return "Game Music Emu v0.60 [Kode54 version]";
 	}
 	
 	// Expects Stereo, 44.1Khz, signed, big-endian shorts
 	@Override
-	public int getSoundData(short [] dest, int size) {
-		
+	public int getSoundData(short [] dest, int size)
+	{
 		int len = N_getSoundData(currentSong, dest, size);
 		
 		currentFrames += len/2;
@@ -162,21 +172,35 @@ public class GMEPlugin extends DroidSoundPlugin {
 	}
 	
 	@Override
-	public void setOption(String opt, Object val) {
+	public void setOption(String opt, Object val)
+	{
+		// this is because VGMPlay also plays VGM/VGZ files.
+		boolean res = PlayerActivity.prefs.getBoolean("use_vgmplay", false);
+		if (res)
+		{
+			use_vgm_vgz = true;			
+		}
 		
-		if(opt.equals("loop")) {
+		if(opt.equals("loop"))
+		{
 			loopMode  = (Integer)val;
 		}
 	}
 
 	
 	@Override
-	public boolean seekTo(int seconds) { return N_seekTo(currentSong, seconds); }
+	public boolean seekTo(int seconds)
+	{ 
+		return N_seekTo(currentSong, seconds); 
+	}
+	
 	@Override
-	public boolean setTune(int tune) {
+	public boolean setTune(int tune)
+	{
 		
 		boolean rc = N_setTune(currentSong, tune);
-		if(rc) {
+		if(rc)
+		{
 			currentFrames = 0;
 			songLength = N_getIntInfo(currentSong, INFO_LENGTH);
 		}
@@ -184,16 +208,20 @@ public class GMEPlugin extends DroidSoundPlugin {
 
 	}
 	@Override
-	public String getStringInfo(int what) {
-		if(currentSong <= 0) {
+	public String getStringInfo(int what)
+	{
+		if(currentSong == -1)
+		{
 			return null;
 		}
 		return N_getStringInfo(currentSong, what);
 	}
+	
 	@Override
-	public int getIntInfo(int what) {
-		
-		if(currentSong <= 0) {
+	public int getIntInfo(int what)
+	{
+		if(currentSong == -1)
+		{
 			return 0;
 		}
 		return N_getIntInfo(currentSong, what);

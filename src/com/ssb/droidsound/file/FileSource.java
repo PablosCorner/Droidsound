@@ -10,8 +10,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.commons.net.ftp.FTPClient;
-
-
 import com.ssb.droidsound.utils.DataFileSource;
 import com.ssb.droidsound.utils.Log;
 
@@ -84,7 +82,7 @@ public abstract class FileSource
 	protected File intGetFile() { return null; }
 	protected byte [] intGetContents() { return null; }
 	protected InputStream intGetStream() throws IOException { return null; }
-	//private static FTPClient intGetFTP(String urlname) throws IOException { return null; }
+
 	protected URL intGetFTPURL() throws IOException { return null; }
 	protected String intgetPath() throws MalformedURLException { return null; }
 	protected FileSource intGetRelative(String name) { return null; }
@@ -192,12 +190,9 @@ public abstract class FileSource
 							{
 								break;
 							}
-							
 						}
-						
 						String host_path = intgetPath();
 						is = my_ftp.retrieveFileStream(host_path);
-						
 					}
 					else
 					{
@@ -218,6 +213,7 @@ public abstract class FileSource
 						{
 							my_ftp.logout();
 							my_ftp.disconnect();
+							my_ftp = null;
 						} 
 						catch (IOException e) 
 						{

@@ -34,6 +34,13 @@
             android:summary="Use text to speech to speak titles of songs"
             />
     
+    <CheckBoxPreference
+            android:key="autorescan_db"
+            android:title="Rescan DB on start"
+            android:defaultValue="false"
+            android:summary="Automatically perform rescan when application starts"
+            />
+    
     <!-- CheckBoxPreference
             android:key="looping"
             android:title="Generic Looping"
@@ -42,7 +49,7 @@
             />
     
     
-	 EditTextPreference
+	 <EditTextPreference
 			android:inputType="numberDecimal"
             android:key="default_length"
             android:title="Max song length"
@@ -61,7 +68,26 @@
 			android:entryValues="@array/buffer_opts"
             android:summaryOn="Audio buffer size"
             / -->
-
+            
+	<!-- EditTextPreference
+			android:inputType="numberDecimal"
+            android:key="default_length"
+            android:title="Max song length"
+            android:dialogTitle="Length (in seconds)"
+            android:defaultValue="900"
+            android:summary="Never loop more than this."
+	/-->
+	
+	
+	<!--EditTextPreference
+	    	android:inputType="textFilter"
+            android:key="modsDir"
+            android:title="Default module dir path"
+            android:dialogTitle="Path to module dir"
+            android:defaultValue="/mnt/sdcard/dsroot"
+            android:summary="Default module dir path"
+	/-->
+	
 	<PreferenceScreen
             android:key="audio_prefs"
             android:title="Audio"
@@ -108,7 +134,8 @@
             android:defaultValue="false"
             android:summary="Use VGMPlay for VGM/VGZ"
             />
-		    
+		
+	    		    
 		</PreferenceCategory>
 		
 		<PreferenceCategory
@@ -316,7 +343,7 @@
 	<ListPreference
             android:key="FileCache.fcsize"
             android:title="FileCache Size in MB"
-            android:defaultValue="16"
+            android:defaultValue="64"
 			android:entries="@array/filecache_opts"
 			android:entryValues="@array/filecache_opts"
 			android:summary="Change the fileCache size"

@@ -22,6 +22,7 @@ else
 MY_CFLAGS := 
 endif
 
+include $(X)/VGMStreamPlugin/Android2.mk
 include $(X)/VGMPlay/Android.mk
 include $(X)/file_extractor/Android.mk
 include $(X)/GMEPlugin/Android.mk

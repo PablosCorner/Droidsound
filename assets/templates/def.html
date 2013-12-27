@@ -20,6 +20,10 @@ ${themeCSS}
 </div>
 <div class="infotitle">${song_source}</div>
 <div class="content">
+${if plugin}
+<span class="heading">Plugin: </span> ${plugin}<br/>
+${end}
+
 ${if copyright}
 <span class="heading">Copyright: </span> ${copyright}<br/>
 ${end}

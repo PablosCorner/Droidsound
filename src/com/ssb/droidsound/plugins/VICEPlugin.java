@@ -11,52 +11,12 @@ import com.ssb.droidsound.file.FileSource;
 import com.ssb.droidsound.utils.Log;
 import com.ssb.droidsound.utils.Unzipper;
 
-public class VICEPlugin extends DroidSoundPlugin {
+public class VICEPlugin extends DroidSoundPlugin 
+{
 	private static final String TAG = VICEPlugin.class.getSimpleName();
-
+	
 	private static boolean libraryLoaded = false;
 	
-
-	/**
-	 * Load a song into memory.
-	 * 
-	 * @param name Name of file to load
-	 * 
-	 * @return an error string, or null if successful.
-	 */
-	native private static String N_loadFile(String name);
-	
-	/**
-	 * Unload song from memory.
-	 */
-	native private static void N_unload();
-
-	/** 
-	 * Generates audio.
-	 * Produces stereo, 44.1Khz, signed, native-encoding shorts.
-	 * 
-	 * @param dest the buffer to fill
-	 */
-	native private static int N_getSoundData(short[] dest, int size);
-	
-	/**
-	 * Select a subsong.
-	 */
-	native private static boolean N_setTune(int tune);
-	
-	/**
-	 * Set an option from the known #defines.
-	 */
-	native private static void N_setOption(int what, int val);
-	
-	/**
-	 * Set the directory of VICE's basic, kernal and chargen files.
-	 * 
-	 * @param path Where kernal, basic and chargen can be found.
-	 */
-	native private static void N_setDataDir(String path);
-
-
 	//private int currentTune;
 
 	@SuppressLint("UseSparseArrays")
@@ -96,28 +56,31 @@ public class VICEPlugin extends DroidSoundPlugin {
 			isActive = (Boolean)val;
 			Log.d(TAG, ">>>>>>>>>> VICEPLUGIN IS " + (isActive ? "ACTIVE" : "NOT ACTIVE"));
 			return;
-		} else if (opt.equals("filter")) {
+		} else if (opt.equals("sid_filter")) {
 			k = OPT_FILTER;
 			v = (Boolean) val ? 1 : 0;
 		} else if (opt.equals("ntsc")) {
 			k = OPT_NTSC;
-			v = (Integer) val;
-		} else if (opt.equals("resampling")) {
+			v = Integer.valueOf(String.valueOf(val));
+		} else if (opt.equals("resampling_mode")) {
 			k = OPT_RESAMPLING;
-			v = (Integer) val;
+			v = Integer.valueOf(String.valueOf(val));
 		} else if (opt.equals("filter_bias")) {
 			k = OPT_FILTER_BIAS;
-			v = (Integer) val;
+			v = Integer.valueOf(String.valueOf(val)); 
 		} else if (opt.equals("sid_model")) {
 			k = OPT_SID_MODEL;
-			v = (Integer) val;
+			v = Integer.valueOf(String.valueOf(val));
 		} else {
 			return;
 		}
 		
-		if(!libraryLoaded) {
+		if(!libraryLoaded)
+		{
 			optMap.put(k, v);
-		} else {		
+		} 
+		else
+		{		
 			N_setOption(k, v);
 		}
 	}
@@ -140,25 +103,34 @@ public class VICEPlugin extends DroidSoundPlugin {
 	@Override
 	public boolean setTune(int tune) {
 		boolean ok = N_setTune(tune + 1);
-		//if (ok) {
-		//	currentTune = tune;
-		//}
 		return ok;
 	}
 
 	@Override
-	public boolean load(FileSource fs) {
-		
-		//currentTune = 0;
-		
-		if(!libraryLoaded) {
-			System.loadLibrary("vice");
+	public boolean load(FileSource fs)
+	{
+		if(!libraryLoaded)
+		{
+			try {
+				System.loadLibrary("vice");
+				
+			}
+			catch (UnsatisfiedLinkError u)
+			{
+				return false;
+			}
 			
-			if(unzipper != null) {
-				while(!unzipper.checkJob("vice.zip")) {
-					try {
+			
+			if(unzipper != null) 
+			{
+				while(!unzipper.checkJob("vice.zip"))
+				{
+					try
+					{
 						Thread.sleep(500);
-					} catch (InterruptedException e) {
+					} 
+					catch (InterruptedException e)
+					{
 						e.printStackTrace();
 						return false;
 					}
@@ -168,7 +140,8 @@ public class VICEPlugin extends DroidSoundPlugin {
 			
 			N_setDataDir(new File(dataDir, "VICE").getAbsolutePath());
 			
-			for(Entry<Integer, Integer> e : optMap.entrySet()) {
+			for(Entry<Integer, Integer> e : optMap.entrySet())
+			{
 				N_setOption(e.getKey(), e.getValue());
 			}
 			optMap.clear();						
@@ -176,17 +149,8 @@ public class VICEPlugin extends DroidSoundPlugin {
 		}
 
 		final String error;
-		//try {
-			//File file = File.createTempFile("tmp-XXXXX", "sid");
-			//FileOutputStream fo = new FileOutputStream(file);
-			//fo.write(fs.getContents());
-			//fo.close();
-			error = N_loadFile(fs.getFile().getAbsolutePath());
-			//file.delete();
-		//}
-		//catch (IOException ie) {
-		//	throw new RuntimeException(ie);
-		//}
+		error = N_loadFile(fs.getFile().getAbsolutePath());
+			
 		
 		if (error != null) {
 			Log.i(TAG, "Native code error: " + error);
@@ -212,4 +176,12 @@ public class VICEPlugin extends DroidSoundPlugin {
 	public String getVersion() {
 		return "VICE 2.4.5-r27760";
 	}
+
+	native private static String N_loadFile(String name);
+	native private static void N_unload();
+	native private static int N_getSoundData(short[] dest, int size);
+	native private static boolean N_setTune(int tune);
+	native private static void N_setOption(int what, int val);
+	native private static void N_setDataDir(String path);
+
 }

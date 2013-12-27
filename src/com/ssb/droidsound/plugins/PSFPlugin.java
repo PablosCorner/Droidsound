@@ -7,8 +7,6 @@ import com.ssb.droidsound.file.FileSource;
 
 public class PSFPlugin extends DroidSoundPlugin
 {
-	
-	//private static final String TAG = PSFPlugin.class.getSimpleName();
 	private static Map<String, String> psfoptMap = new HashMap<String, String>();
 
 	private static SexyPSFPlugin sexypsfPlugin = new SexyPSFPlugin();

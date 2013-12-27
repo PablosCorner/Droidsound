@@ -13,14 +13,16 @@ public class HEPlugin extends DroidSoundPlugin {
 		System.loadLibrary("highlyexp");
 	}
 	
+	private String [] info = null;
 	private static String extension = "";
 	private static Map<String, String> tagMap = new HashMap<String, String>();
 	private static Map<String, Integer> optMap = new HashMap<String, Integer>();
 	
 	
 	@Override
-	public String getVersion() {
-		return "Highly Experimental Replay [20130804] by kode54";
+	public String getVersion()
+	{
+		return "Highly Experimental Library for PSF/PSF2 formats by kode54";
 	}
 	
 	private long songRef;
@@ -30,6 +32,11 @@ public class HEPlugin extends DroidSoundPlugin {
 		//
 		// check here from optMap if this engine is enabled
 		//
+		if (optMap.isEmpty())
+		{
+			optMap.put("isEnabled", 1); // default value, since HighlyEXP is enabled by default
+		}
+		
 		
 		if (optMap.containsKey("isEnabled"))
 		{
@@ -37,7 +44,10 @@ public class HEPlugin extends DroidSoundPlugin {
 			if (enabled == 1)
 			{
 				extension = fs.getExt().toUpperCase();
-				return fs.getExt().equals("PSF") || fs.getExt().equals("MINIPSF") || fs.getExt().equals("PSF2") || fs.getExt().equals("MINIPSF2");
+				return fs.getExt().equals("PSF") || 
+						fs.getExt().equals("MINIPSF") || 
+						fs.getExt().equals("PSF2") || 
+						fs.getExt().equals("MINIPSF2");
 			}
 			
 		}
@@ -48,8 +58,7 @@ public class HEPlugin extends DroidSoundPlugin {
 	@Override
 	public void setOption(String opt, Object val)
 	{
-		optMap.put("isEnabled", 1); // default value, since HighlyEXP is enabled by default
-		
+				
 		if (opt.equals("psfengine"))
 		{
 			String v = val.toString();
@@ -125,9 +134,16 @@ public class HEPlugin extends DroidSoundPlugin {
 
 	@Override
 	public String getStringInfo(int what) {
+		
+		if(info != null)
+		{
+			return info[what];
+		}
+		
 		return null;
 	}
-
+	
+	
 	@Override
 	public boolean load(FileSource fs)
 	{
@@ -161,9 +177,31 @@ public class HEPlugin extends DroidSoundPlugin {
 	}
 
 	@Override
+	public boolean loadInfo(FileSource fs)
+	{
+		info = new String [128];
+		
+		tagMap = PSFFile.getTags(fs.getContents(), (int) fs.getLength());
+		
+		if(tagMap != null)
+		{
+			info[INFO_TITLE] = tagMap.get("title");
+			info[INFO_AUTHOR] = tagMap.get("artist");
+			info[INFO_GAME] = tagMap.get("game");
+			info[INFO_COPYRIGHT] = tagMap.get("copyright");
+			info[INFO_LENGTH] = tagMap.get("length");
+			return true;
+		}
+		return false;
+	}
+
+	
+	@Override
 	public void unload()
 	{
-		N_unload(songRef);
+		if (songRef != 0)
+			N_unload(songRef);
+		return;
 	}
 
 	

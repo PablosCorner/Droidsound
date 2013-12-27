@@ -25,6 +25,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
+import org.apache.commons.net.ftp.FTPClient;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -40,6 +42,7 @@ import android.provider.BaseColumns;
 import com.ssb.droidsound.FileIdentifier;
 import com.ssb.droidsound.Playlist;
 import com.ssb.droidsound.SongFile;
+import com.ssb.droidsound.file.FTPStreamSource;
 import com.ssb.droidsound.file.FileSource;
 import com.ssb.droidsound.utils.Log;
 
@@ -103,7 +106,8 @@ public class SongDatabase implements Runnable {
 	public static final int INDEX_NONE = 0;
 	public static final int INDEX_BASIC = 1;
 	public static final int INDEX_FULL = 2;
-
+	
+	private FTPClient intGetFTP(String urlname) { return null; }
 	
 	public boolean isReady() {
 		return  (mHandler != null);
@@ -159,7 +163,7 @@ public class SongDatabase implements Runnable {
 		}
 	}
 
-	private SQLiteDatabase getWritableDatabase() {
+	public SQLiteDatabase getWritableDatabase() {
 		SQLiteDatabase dbrc = null;
 		if(dbName == null) {
 			return null;
@@ -591,7 +595,8 @@ public class SongDatabase implements Runnable {
 					int count = 0;
 					int total = files.size();
 					int reportPeriod = total / 100;
-					if(reportPeriod < 10) {
+					if(reportPeriod < 10)
+					{
 						reportPeriod = 10;
 					}
 					for(String s : files) {
@@ -670,6 +675,7 @@ public class SongDatabase implements Runnable {
 						fs = null;
 						
 						count++;
+						Log.d(TAG, "filecount: %d",count);
 						if(count % reportPeriod == 0) {
 							isReady = false;
 							scanCallback.notifyScan(null, count * 100 / total);
@@ -748,8 +754,20 @@ public class SongDatabase implements Runnable {
 							ContentValues values = new ContentValues();
 							values.put("PATH", dump.getParentFile().getPath());
 							values.put("FILENAME", dump.getName());
-							values.put("TYPE", TYPE_ARCHIVE);
-							values.put("TITLE", ds.getTitle());
+
+							if (dump.toString().endsWith(FileSystemSource.NAME))
+							{
+								values.put("TYPE", TYPE_DIR);
+								String fs_source_title = dump.getName();
+								fs_source_title = fs_source_title.replace(FileSystemSource.NAME, "");
+								values.put("TITLE", fs_source_title);
+							}
+							else
+							{
+								values.put("TYPE", TYPE_ARCHIVE);
+								values.put("TITLE", ds.getTitle());
+							}
+							
 							Log.d(TAG, "Inserting %s from dump (%s)", ds.getTitle(), dump.getPath());
 							scanDb.insert("FILES", "PATH", values);
 							//db.setTransactionSuccessful();
@@ -1197,16 +1215,19 @@ public class SongDatabase implements Runnable {
 			rdb = getReadableDatabase();
 		}
 		
+		
 		for(Entry<String, DataSource> db : dbsources.entrySet()) {
 			if(upath.contains("/" + db.getKey())) {
 				Cursor cursor = db.getValue().getCursorFromPath(file, rdb, sorting);
-				if(cursor != null) {
-					 pathTitle = db.getValue().getPathTitle(file);
+				if(cursor != null)
+				{
+					pathTitle = db.getValue().getPathTitle(file);
 					return cursor;
 				}
 			}
 		}
-
+		 
+		
 		Log.d(TAG, "Path now '%s'", pathName);
 
 		String path = file.getParent();

@@ -2,7 +2,9 @@ package com.ssb.droidsound;
 
 import java.io.File;
 import java.io.FileInputStream;
+
 import java.io.FileOutputStream;
+import android.support.v4.view.ViewPager; 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,6 +58,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -81,7 +84,8 @@ import com.viewpagerindicator.TitlePageIndicator;
 public class PlayerActivity extends Activity  {
 	private static final String TAG = "PlayerActivity";
 	public static final int VERSION = 18;
-
+	
+		
 	private static class Config {
 		int ttsStatus;
 		SearchCursor searchCursor;
@@ -115,6 +119,7 @@ public class PlayerActivity extends Activity  {
 
 	static SongDatabase songDatabase = null;
 	private static Thread dbThread = null;
+	private static boolean first_run = false;
 
 	private PlayerServiceConnection player;
 
@@ -138,7 +143,7 @@ public class PlayerActivity extends Activity  {
 	private ProgressDialog progressDialog;
 
 	private SearchCursor searchCursor;
-	private SharedPreferences prefs;
+	public static SharedPreferences prefs;
 
 	private int searchDirDepth;
 
@@ -205,7 +210,8 @@ public class PlayerActivity extends Activity  {
 			}
 		}
 		
-		if(path.startsWith("/mnt/sdcard/")) {
+		if(path.startsWith("/mnt/sdcard/"))
+		{
 			File extFile = Environment.getExternalStorageDirectory();
 			path = extFile.getPath() + path.substring(11);
 		}
@@ -221,12 +227,16 @@ public class PlayerActivity extends Activity  {
 
 		File f = new File(path);
 
-		if(f.equals(modsDir)) {
+		if(f.equals(modsDir))
+		{
 			atTop = true;
-		} else {
+		} 
+		else
+		{
 			atTop = false;
 		}
-		if(plv == playListView) {
+		if(plv == playListView)
+		{
 			state.dirTitle = songDatabase.getPathTitle();
 			if(state.dirTitle == null) {
 				state.dirTitle = f.getName();
@@ -236,9 +246,11 @@ public class PlayerActivity extends Activity  {
 			dirText.setText(state.dirTitle);
 			pathText.setText(state.dirSubTitle);		
 			//flipper.flipTo(FILE_VIEW);
-			updateFileView();
+			//updateFileView();
 			currentPath = path;
-		} else if(plv == searchListView) {
+		} 
+		else if(plv == searchListView)
+		{
 			updateSearch();
 		}
 
@@ -286,7 +298,8 @@ public class PlayerActivity extends Activity  {
 			return;
 		}
 
-		if(atTop) {
+		if(atTop) 
+		{
 			return;
 		}
 
@@ -431,7 +444,8 @@ public class PlayerActivity extends Activity  {
 		searchSubtitle = (TextView) sl.findViewById(R.id.subsearch_text);
 
 		
-		flipper.onFlip(new Pager.FlipCallback() {
+		flipper.onFlip(new Pager.FlipCallback()
+		{
 			@Override
 			public void flipped(int to, int from, View v) {
 				Log.d(TAG, "Flipped to %d", to);
@@ -455,15 +469,20 @@ public class PlayerActivity extends Activity  {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		
+		first_run = false;
 
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "#### onCreate()");
-
+		
+		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+				
 		DroidSoundPlugin.setContext(getApplicationContext());
-
+	
 		Intent intent = getIntent();
 		Log.d(TAG, "Intent %s / %s", intent.getAction(), intent.getDataString());
-		if(Intent.ACTION_VIEW.equals(intent.getAction())) {
+		if(Intent.ACTION_VIEW.equals(intent.getAction()))
+		{
 			String music = intent.getDataString();
 
 			if(music.toUpperCase(Locale.ENGLISH).endsWith(".ZIP")) {
@@ -516,6 +535,11 @@ public class PlayerActivity extends Activity  {
 		final ThemeManager tm = ThemeManager.getInstance();
 		tm.init();
 
+		File dsroot = new File("/mnt/sdcard/dsroot");
+		if (!dsroot.exists())
+			first_run = true;
+		dsroot = null;
+		
 		File themeDir = new File(Environment.getExternalStorageDirectory(), "droidsound/theme");
 		if(!themeDir.exists())
 			themeDir.mkdir();
@@ -578,24 +602,22 @@ public class PlayerActivity extends Activity  {
 		//flipper.addView(playListView);
 		//flipper.addView(playScreen.getView());
 		//flipper.addView(searchListView);
-		
 	
-		prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
 		state.seekingSong = 0;
-
 		currentPlaylistView = playListView;
-
-		
-		modsDir = null; //new File("/XXX");
+		modsDir = null; 	//new File("/XXX");
 		
 		setupModsDir();
 		
 		String cp = prefs.getString("currentPath", null);
-		if(cp == null) {
+		if(cp == null)
+		{
 			currentPath = modsDir.getPath();
-		} else {
-			currentPath = cp;
+		} 
+		else
+		{
+			if (cp != currentPath)
+				currentPath = modsDir.getPath();
 		}
 		atTop = currentPath.equals(modsDir);
 		
@@ -607,7 +629,8 @@ public class PlayerActivity extends Activity  {
 			public void onReceive(Context context, Intent intent) {
 				// TODO Auto-generated method stub
 
-				if(intent.getAction().equals("com.sddb.droidsound.REQUERY")) {
+				if(intent.getAction().equals("com.sddb.droidsound.REQUERY"))
+				{
 					Log.d(TAG, "REQUERY");
 					//playListView.rescan();
 					setDirectory(playListView);
@@ -619,14 +642,17 @@ public class PlayerActivity extends Activity  {
 						Log.d(TAG, "CONFIG CHANGE");
 					} else {
 						Log.d(TAG, "SCANNING");
-						songDatabase.scan(false, modsDir.getPath());
+						boolean autorescan = prefs.getBoolean("autorescan_db", false);
+						if (autorescan == true || first_run == true)
+							songDatabase.scan(false, modsDir.getPath());
 					}
 
 					// playListView.rescan();
 					setDirectory(playListView);
 
-					// songDatabase.scan(false, modsDir);
-				} else if(intent.getAction().equals("com.sddb.droidsound.SCAN_DONE")) {
+
+				} 
+				else if(intent.getAction().equals("com.sddb.droidsound.SCAN_DONE")) {
 
 					if(progressDialog != null) {
 						progressDialog.cancel();
@@ -636,7 +662,10 @@ public class PlayerActivity extends Activity  {
 					Log.d(TAG, "Scan done!");
 					setDirectory(playListView);
 					// playListView.rescan();
-				} else if(intent.getAction().equals("com.sddb.droidsound.SCAN_UPDATE")) {
+					
+				} 
+				else if(intent.getAction().equals("com.sddb.droidsound.SCAN_UPDATE")) 
+				{
 					Log.d(TAG, "Scan update!");
 					checkProgressDialog();
 					if(progressDialog != null) {
@@ -650,6 +679,13 @@ public class PlayerActivity extends Activity  {
 					}
 
 				}
+				else if (intent.getAction().equals("com.sddb.droidsound.FAILED"))
+				{
+					Log.d(TAG,"Failed!");
+					if(flipper != null)
+						flipper.flipTo(FILE_VIEW);
+					
+				}
 			}
 		};
 
@@ -658,6 +694,7 @@ public class PlayerActivity extends Activity  {
 		filter.addAction("com.sddb.droidsound.OPEN_DONE");
 		filter.addAction("com.sddb.droidsound.SCAN_DONE");
 		filter.addAction("com.sddb.droidsound.SCAN_UPDATE");
+		filter.addAction("com.sddb.droidsound.FAILED");		
 		// filter.addAction("com.sddb.droidsound.DOWNLOAD_DONE");
 		registerReceiver(state.receiver, filter);
 
@@ -865,9 +902,25 @@ public class PlayerActivity extends Activity  {
 		songDatabase.registerDataSource(MediaSource.NAME, ms);
 		
 		FileSystemSource.BasePath = "";
+
+		// *************************************************************************
+		// create here the filesystem, loop through all the .fs_source files
+		String md = prefs.getString("modsDir", null);
+		File[] files = new File(md).listFiles();
+		for ( File file : files )
+		{
+			if (file.getName().contains(FileSystemSource.NAME))
+			{
+				String fs_title = file.getName();
+				FileSystemSource fss = new FileSystemSource();
+				songDatabase.registerDataSource(fs_title, fss);
+			}
+			
+		}
+		// *************************************************************************
 		
-		FileSystemSource fss = new FileSystemSource();
-		songDatabase.registerDataSource(FileSystemSource.NAME, fss);
+		//FileSystemSource fss = new FileSystemSource();
+		//songDatabase.registerDataSource(FileSystemSource.NAME, fss);
 
 		dbThread = new Thread(songDatabase);
 		dbThread.start();
@@ -888,37 +941,51 @@ public class PlayerActivity extends Activity  {
 		showDialog(what);
 	}
 	
-	
-	private void setupModsDir() {
+	// *************************************************************************
+	private void setupModsDir()
+	{
+		// this should probably go to external memory card instead of internal
+		// unless external is missing
 		
 		String md = prefs.getString("modsDir", null);
 		
-		if(md == null) {
+		if(md == null)
+		{
 			File extFile = Environment.getExternalStorageDirectory();
-			if(extFile != null) {
-				modsDir = new File(extFile, "MODS");
-
-			} else {
+			if(extFile != null) 
+			{
+				modsDir = new File(extFile, "dsroot");
+			}
+			
+			else 
+			{
 				showDialog(R.string.sdcard_not_found);
 				dialogShowing = true;
 			}
-		} else {
+		} 
+		else 
+		{
 			modsDir = new File(md);
 		}
 		
-		if(modsDir == null) {
-			modsDir = new File("/MODS");
+		if(modsDir == null)
+		{
+			modsDir = new File("/dsroot");
 			return;			
 		}
 	
-		if(!modsDir.exists()) {
+		if(!modsDir.exists())
+		{
 			modsDir.mkdirs();
 		}
 
-		if(!modsDir.exists()) {
+		if(!modsDir.exists())
+		{
 			showDialog(R.string.create_moddir_failed);
 			dialogShowing = true;
-		} else {
+		} 
+		else
+		{
 			Editor editor = prefs.edit();
 			editor.putString("modsDir", modsDir.getPath());
 			editor.commit();
@@ -992,15 +1059,40 @@ public class PlayerActivity extends Activity  {
 			}
 		}
 
-		mf = new File(modsDir, FileSystemSource.NAME);
+		// create default filesystem for external memory card /mnt/extSdCard/
+		// samsung uses /mnt/extSdCard
+		// google uses /mnt/sdcard
+		
+		String sdcard_path_google = "/mnt/sdcard/"; // in samsung case, this is phone's internal memory
+		String sdcard_path_samsung = "/mnt/extSdCard/";
+/*
+		File sdcard = new File(sdcard_path_samsung);
+		if (sdcard.exists())
+		{
+			mf = new File(modsDir, "extSdCard"+FileSystemSource.NAME);
+			if(!mf.exists()) {
+				try {
+					FileWriter fw = new FileWriter(mf);
+					fw.write(sdcard_path_samsung);
+					fw.close();
+				} catch (IOException e2) {
+					e2.printStackTrace();
+				}
+			}
+		}
+	*/
+		
+		mf = new File(modsDir, "SdCard"+FileSystemSource.NAME);
 		if(!mf.exists()) {
 			try {
 				FileWriter fw = new FileWriter(mf);
+				fw.write(sdcard_path_google);
 				fw.close();
 			} catch (IOException e2) {
 				e2.printStackTrace();
 			}
 		}
+
 		
 		mf = new File(modsDir, "Streaming");
 		if(mf.exists()) {
@@ -1039,8 +1131,13 @@ public class PlayerActivity extends Activity  {
 
 		new File(modsDir, "Favorites.lnk").delete();
 		
-	}
+		return;
 
+		
+	}
+	
+// *************************************************************************
+	
 	private void deleteAll(File mf) {
 		File [] files = mf.listFiles();
 		if(files != null) {
@@ -1611,6 +1708,9 @@ public class PlayerActivity extends Activity  {
 			songDatabase.quit();
 			songDatabase = null;
 			finish();
+			System.runFinalization();
+			System.exit(0);
+
 			break;
 		case R.id.new_:
 			//if(songDatabase.getCurrentPlaylist() != null) {
@@ -1670,6 +1770,30 @@ public class PlayerActivity extends Activity  {
 		}
 	}
 
+	public static String fix_fs_sourcePath(String path)
+	{
+		String pfix = "";
+	
+		int _fssource_idx = path.indexOf(".fs_source");
+		if (_fssource_idx != -1)
+		{
+			// if its .fs_source then translate it to real path: "/mnt/sdcard" for example
+			
+			String fs_filename = path.substring(0, path.indexOf(".fs_source")) + ".fs_source";
+			int remain_path_idx = path.indexOf(".fs_source") + 10 ;
+			String remain_path = path.substring(remain_path_idx);
+			
+			pfix = FileSystemSource.getFilesystemPath(new File(fs_filename));
+			pfix = pfix.concat(remain_path);
+			return pfix;
+		}
+		
+		else
+			return path;
+		
+		
+		
+	}
 	@Override
 	protected Dialog onCreateDialog(int id) {
 
@@ -1716,7 +1840,9 @@ public class PlayerActivity extends Activity  {
 		}	
 		case R.string.new_:
 			builder.setTitle(id);
-			builder.setSingleChoiceItems(R.array.new_opts, -1, new DialogInterface.OnClickListener() {
+			
+			builder.setItems(R.array.new_opts, new DialogInterface.OnClickListener() {
+			//builder.setSingleChoiceItems(R.array.new_opts, -1, new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					Log.d(TAG, "Clicked " + which);
@@ -1731,6 +1857,10 @@ public class PlayerActivity extends Activity  {
 					case 2:
 						showDialog(R.string.name_link);
 						break;
+					case 3:
+						showDialog(R.string.name_filesystem);
+						break;
+						
 					}
 				}
 			});
@@ -1766,27 +1896,88 @@ public class PlayerActivity extends Activity  {
 				}
 			});
 			break;
+			
+		case R.string.name_filesystem:
+			final EditText input_fsname = new EditText(this);
+			final EditText input_fstitle = new EditText(this);
+						
+			input_fsname.setHint("/mnt/extSdCard");
+			input_fstitle.setHint("external_sdcard");
+			input_fsname.setInputType(InputType.TYPE_CLASS_TEXT);
+			input_fstitle.setInputType(InputType.TYPE_CLASS_TEXT);
+			
+			LinearLayout testi1 = new LinearLayout(this);
+			testi1.setOrientation(1); //1 is for vertical orientation
+			 
+			testi1.addView(input_fsname);
+		    testi1.addView(input_fstitle);
+		    builder.setView(testi1);
+		    
+	        //builder.setTitle("Enter mountpoint and name");
+
+			builder.setMessage(id);
+			builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() 
+			{
+				@Override
+				public void onClick(DialogInterface dialog, int which)
+				{
+					String fs_path = input_fsname.getText().toString();
+					String fs_title = input_fstitle.getText().toString();
+					
+					String md = prefs.getString("modsDir", null);
+					
+					FileSystemSource fss = new FileSystemSource();
+					fss.setFilesystemPath(fs_path, fs_title);
+					
+					songDatabase.registerDataSource(fs_title+".fs_source", fss);
+					
+					songDatabase.rescan(md);
+					playListView.rescan();
+
+				}
+			});
+			builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			});
+			break;
+			
+			
 		case R.string.name_link:
-			final EditText input3 = new EditText(this);
-			input3.setHint("protocol://");
-			input3.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
-			// builder.setTitle(id);
-			builder.setView(input3);
+			final EditText uri = new EditText(this);
+			final EditText linkname = new EditText(this);
+			
+			uri.setHint("protocol://domain");
+			linkname.setHint("my favourite modsite");
+			uri.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+			linkname.setInputType(InputType.TYPE_CLASS_TEXT);
+			
+			LinearLayout testi2 = new LinearLayout(this);
+			testi2.setOrientation(1);
+
+			testi2.addView(uri);
+		    testi2.addView(linkname);
+		    builder.setView(testi2);
+			
+		    // builder.setTitle(id);
+		    
 			builder.setMessage(id);
 			builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					String s = input3.getText().toString();
-					/*
-					if(!s.startsWith("http://"))
-						s = "http://" + s;
-						*/
+					String uri_str = uri.getText().toString();
+					String linkname_str = linkname.getText().toString();
+
 					try {
-						URL url = new URL(s);
+						URL url = new URL(uri_str);
 						Log.d(TAG, "'%s', '%s', '%s'",url.toString(), url.getProtocol(), url.getFile());
-						File file = new File(currentPath, url.getHost() + ".lnk");
-						if(!file.exists()) {							
+						File file = new File(currentPath, linkname_str + ".lnk");
+						if(!file.exists())
+						{							
 							songDatabase.createLink(file, url.toString());
+							songDatabase.scan(false, currentPath);
 							playListView.rescan();
 						}
 					} catch (MalformedURLException e) {
@@ -1809,10 +2000,16 @@ public class PlayerActivity extends Activity  {
 			builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					String s = input2.getText().toString();
-					File f = new File(currentPath, s);
-					if(!f.exists()) {
+					String folderName = input2.getText().toString();
+
+					String pfix = fix_fs_sourcePath(currentPath);
+					
+					File f = new File(pfix, folderName);
+										
+					if(!f.exists())
+					{
 						songDatabase.createFolder(f);
+						songDatabase.scan(false, pfix);
 						playListView.rescan();
 					}
 				}

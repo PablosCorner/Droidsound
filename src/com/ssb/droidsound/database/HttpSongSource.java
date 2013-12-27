@@ -24,7 +24,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.MatrixCursor;
+import android.graphics.Color;
 import android.os.Environment;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ssb.droidsound.FileIdentifier;
@@ -45,6 +47,7 @@ public class HttpSongSource {
 			cursor = cr;
 		}
 	}
+ 
 	public static FTPClient cur_ftp;
 	private static String cur_host = "";
 		
@@ -55,7 +58,7 @@ public class HttpSongSource {
 	private static Map<String, Character> htmlMap = new HashMap<String, Character>();
 
 	private static Thread httpThread = null;
-
+	
 	private static HTTPWorker httpWorker = null;
 	static {
 		htmlMap.put("amp", '&');
@@ -77,7 +80,10 @@ public class HttpSongSource {
 	        Class.forName("android.net.http.HttpResponseCache")
 	            .getMethod("install", File.class, long.class)
 	            .invoke(null, httpCacheDir, httpCacheSize);
-	    } catch (Exception httpResponseCacheNotAvailable) {
+	        	
+	    } 
+	    
+	    catch (Exception httpResponseCacheNotAvailable) {
 	    }
 	}
 	
@@ -119,29 +125,40 @@ public class HttpSongSource {
 		return sb.toString();
 		
 	}
+	// *********************************************************************
 	
-	private static class HTTPWorker implements Runnable {
+	private static class HTTPWorker implements Runnable
+	{
 
 		private List<String> dirList = new ArrayList<String>();
 		private Context context;
-		private boolean doQuit;
+		private boolean doQuit = false;
+		private boolean failed = false;
 		
-		public HTTPWorker(Context ctx) {
+		public HTTPWorker(Context ctx)
+		{
 			context = ctx;
 		}
 
 		@Override
-		public void run() {
+		public void run()
+		{
 				
-			while(!doQuit) {
-				try {
-					synchronized (this) {
+			while(!doQuit)
+			{
+				try
+				{
+					synchronized (this)
+					{
 						wait();						
 					}
-				} catch (InterruptedException e) {
+				} 
+				catch (InterruptedException e)
+				{
 					return;
 				}
 				Log.d(TAG, "HTTP THREAD WOKE UP");				
+				
 				while(true)
 				{
 					String path = null;
@@ -159,14 +176,23 @@ public class HttpSongSource {
 					}
 					if(path != null)
 					{
-						getDirFromHTTP(path);
-						dirList.remove(0);
+						boolean result = false;
+						result = getDirFromHTTP(path);
+
+						if (dirList.size() > 0)
+							dirList.remove(0);
+						if (result == false)
+						{
+							failed = true;
+						}
 					}
 					
 					else
 						break;
 				}
 			}
+
+			return;
 			
 		}
 
@@ -181,13 +207,15 @@ public class HttpSongSource {
 					Log.d(TAG, "Added " + pathName);
 				}
 			}
-			synchronized (this) {
+			synchronized (this)
+			{
 				notify();				
 			}
 		}
-
+		// *****************************************************
+		
 		@SuppressWarnings("resource") // The matrix cursor does not need to be closed
-		private void getDirFromHTTP(String pathName)
+		private boolean getDirFromHTTP(String pathName)
 		{
 			
 			MatrixCursor cursor = new MatrixCursor(new String [] { "TITLE", "TYPE", "PATH", "FILENAME"} );
@@ -209,17 +237,34 @@ public class HttpSongSource {
 						{
 							cur_ftp.logout();
 							cur_ftp.disconnect();
+							cur_ftp = null;
 						}
 						cur_ftp = FTPStreamSource.intGetFTP(pathName);
 						
 					}
-								
+					if (cur_ftp == null)
+					{
+						cur_ftp = FTPStreamSource.intGetFTP(pathName);
+					}
 
 					// make a test here to see we are really connected or timed-out
-										
+					
+					if (cur_ftp == null)
+					{
+						Intent intent = new Intent("com.sddb.droidsound.FAILED");
+						context.sendBroadcast(intent);
+						return false;
+					}
+						
 					if (cur_ftp != null)
 		            {
-		            	Log.d(TAG, "FTP connected");
+						int replycode = cur_ftp.getReplyCode();
+						if (replycode < 200 || replycode > 299)
+						{
+							return false;
+						}
+						
+						Log.d(TAG, "FTP connected");
 		            	
 		            	cur_ftp.changeWorkingDirectory(url.getPath());
 		            	
@@ -270,7 +315,7 @@ public class HttpSongSource {
 	    			
 	    			Log.d(TAG, "FTP all done");
 		            
-		            return;
+		            return true;
 		            }
 									
 // -----------------------------------------------------------------------					
@@ -329,7 +374,8 @@ public class HttpSongSource {
 							 }
 						 }						
 
-					} catch (XPatherException e) {
+					} catch (XPatherException e)
+					{
 						
 						msg = "<HTML parsing failed>";
 						status = -1;
@@ -345,14 +391,14 @@ public class HttpSongSource {
 				msg = "<Illegal URL>";
 				status = -3;
 				dirList.remove(pathName);
-				return;
+				return false;
 			} catch (IOException e) {
 				
 				e.printStackTrace();
 				msg = "<IO Error>";
 				status = -4;
 				dirList.remove(pathName);
-				return;
+				return false;
 			}
 			
 			if(msg != null) {
@@ -367,6 +413,7 @@ public class HttpSongSource {
 			 
 			Intent intent = new Intent("com.sddb.droidsound.REQUERY");
 			context.sendBroadcast(intent);
+			return true;
 		}
 		
 		
@@ -374,9 +421,7 @@ public class HttpSongSource {
 
 	public static void resetdirMap(Context ctx)
 	{
-		// add here Toast to inform user that cache has been cleaned
 		Toast.makeText(ctx, "Directory cache cleaned!", Toast.LENGTH_LONG).show();
-		
 		dirMap.clear();
 		return;
 	
@@ -389,13 +434,14 @@ public class HttpSongSource {
 		return ce.cursor;
 	
 	}
-	public static Cursor getFilesInPath(Context ctx, String pathName, int sorting) {
-	
-		
+	public static Cursor getFilesInPath(Context ctx, String pathName, int sorting)
+	{
+			
 		Log.d(TAG, "PATH '%s'", pathName);
 		
 		if(!pathName.endsWith("/"))
 			pathName = pathName + "/";
+		
 		
 		CacheEntry ce = null;
 		synchronized (dirMap)
@@ -406,30 +452,47 @@ public class HttpSongSource {
 				dirMap.remove(ce);
 			}
 		}
+		if (httpWorker != null)
+		{
+			if (httpWorker.failed == true)
+			{
+				
+				httpWorker.failed = false;
+				
+				Toast toast = Toast.makeText(ctx, "Failed connecting to the site, check the URL", Toast.LENGTH_SHORT);
+				TextView v = (TextView) toast.getView().findViewById(android.R.id.message);
+				v.setTextColor(Color.RED);
+				toast.show();
 
-		if(ce != null) {
+				return null;
+			}
+		}
+
+		if(ce != null)
+		{
 			Log.d(TAG, "IN CACHE!");
 			return ce.cursor;
 		}
 		
-		if(httpThread == null) {
-			
-			enableHttpResponseCache();
+		if(httpThread == null)
+		{
+			//enableHttpResponseCache();
 			
 			httpWorker = new HTTPWorker(ctx);
 			httpThread = new Thread(httpWorker);
 			httpThread.start();
 			try
 			{
-				Thread.sleep(300);
+				Thread.sleep(100);
 			} 
 			catch (InterruptedException e) {
 			}
 		}		
-
 		httpWorker.getDir(pathName);
+		
 		MatrixCursor cursor = new MatrixCursor(new String [] { "TITLE", "TYPE", "PATH", "FILENAME"} );
-		cursor.addRow(new Object [] { "<Working...>", SongDatabase.TYPE_FILE, null, "" } );
+		//Toast.makeText(ctx, "...working...", Toast.LENGTH_SHORT).show();
+		cursor.addRow(new Object [] { "...working...", SongDatabase.TYPE_FILE, null, "" } );
 		return cursor;
 	}
 }

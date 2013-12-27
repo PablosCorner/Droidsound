@@ -25,7 +25,6 @@ extern "C" {
 static jstring NewString(JNIEnv *env, const char *str)
 {
 	static jchar *temp, *ptr;
-	UINT8 paska;
 
 	temp = (jchar *) malloc((strlen(str) + 1) * sizeof(jchar));
 

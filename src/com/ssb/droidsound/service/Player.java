@@ -32,8 +32,8 @@ public class Player implements Runnable
 {
 	private static final String TAG = "Player";
 	
-	private int frequency = 44100;
-	private int channels = 2;
+	private static int frequency = 44100;
+	private static int channels = 2;
 	
 	public enum State
 	{
@@ -297,7 +297,7 @@ public class Player implements Runnable
 			currentPlugin.setTune(currentTune);
 		}
 	}
-	
+
 	private void createNewAudioPlayer(int buffer_size, int frequency, int channels)
 	{
 		audioPlayer = new AsyncAudioPlayer(buffer_size, frequency, channels);
@@ -306,6 +306,7 @@ public class Player implements Runnable
 		audioThread.start();
 	}
 	
+
 	private void startSong(SongFile song, boolean skipStart)
 	{
 		Message msg = null;
@@ -433,7 +434,7 @@ public class Player implements Runnable
 				songDetails.put(SongMeta.SUBTUNE_TITLE,  getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_TITLE));
 				songDetails.put(SongMeta.SUBTUNE_COMPOSER, getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_AUTHOR));
 				
-				//currentPlugin.setOption("loop", loopMode);
+				currentPlugin.setOption("loop", loopMode);
 				
 			}
 
@@ -492,6 +493,7 @@ public class Player implements Runnable
 										
 					frequency = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_FREQUENCY);
 					channels = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_CHANNELS);
+					//bufsize = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_BUFFER_SIZE);
 					
 					if (channels < 1)
 					{
@@ -504,18 +506,22 @@ public class Player implements Runnable
 					}
 					
 					dataSize = frequency;
-											
-					createNewAudioPlayer(dataSize, frequency, channels);
+					int bufSize = currentPlugin.getBufferSize(frequency);
+					if (bufSize == 0)
+						bufSize = frequency * 2;
+					
+					
+					createNewAudioPlayer(bufSize, frequency, channels);
 					audioPlayer.stop();
+					
 					Log.d(TAG, "FOUND PLUGIN:" + currentPlugin.getClass().getName());
 					Log.d(TAG, "'%s' by '%s'", song.getTitle(), song.getComposer());
 					
 					lastPos = -1000;
 					mHandler.sendMessage(msg);
-					
-					currentState = State.PLAYING;
-					
+															
 					audioPlayer.start();
+					currentState = State.PLAYING;
 				}
 			}
 			return;
@@ -540,10 +546,10 @@ public class Player implements Runnable
 	public void run()
 	{
 		currentPlugin = null;
-	
+						
 		noPlayWait = 0;
 
-		while(noPlayWait < 50) {
+		while(noPlayWait < 20) {
 			
 			if(loopMode != oldLoopMode)
 			{
@@ -643,6 +649,8 @@ public class Player implements Runnable
 								} 
 								else
 								{
+									audioPlayer.pause();
+									audioPlayer.flush();
 									audioPlayer.stop();
 								}
 								
@@ -786,10 +794,11 @@ public class Player implements Runnable
 						}
 					}
 
-					if(currentState == State.STOPPED) {
+					if(currentState == State.STOPPED)
+					{
 						noPlayWait++;
 					}
-					Thread.sleep(10);
+					Thread.sleep(100);
 				}
 
 			} 
@@ -800,8 +809,7 @@ public class Player implements Runnable
 		}
 		if (audioPlayer != null)
 		{
-			audioPlayer.exit();
-			
+			audioPlayer.exit();	
 		}
 		
 
@@ -821,6 +829,7 @@ public class Player implements Runnable
 		{
 			Log.d(TAG,"Null audioPlayer");
 		}
+		
 		int playPos = audioPlayer.getPlaybackPosition();
 		
 		if(lastPos > playPos)
@@ -837,7 +846,7 @@ public class Player implements Runnable
 		
 		if(audioPlayer.getLeft() < dataSize * 2)
 		{
-			//Thread.sleep(100); //used to be 100
+			Thread.sleep(100);
 			return;
 		}
 				
@@ -851,7 +860,7 @@ public class Player implements Runnable
 		} 
 		else 
 		{
-			//Thread.sleep(100);
+			Thread.sleep(100);
 			len = dataSize;
 			Arrays.fill(samples, 0, len, (short) 0);
 			if(audioPlayer.markReached())
@@ -1010,7 +1019,7 @@ public class Player implements Runnable
 		songDetails.put(SongMeta.POSITION, playPos);
 		Message msg = mHandler.obtainMessage(MSG_PROGRESS, 0, 0);
 		mHandler.sendMessage(msg);
-		Thread.sleep(20);
+		Thread.sleep(200);
 	}
 	
 	public void getSongDetails(Map<String, Object> target)
@@ -1103,7 +1112,6 @@ public class Player implements Runnable
 		synchronized (binaryInfo) {
 			return binaryInfo[what];	
 		}
-		
 	}
 
 	public void dumpWav(SongFile song, String destFile, int length, int flags) {

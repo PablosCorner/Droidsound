@@ -1,31 +1,6 @@
 package com.ssb.droidsound.service;
 
 public class SongMeta {
-	/*
-	 * 	public static final int SONG_TITLE = 1;
-	public static final int SONG_AUTHOR = 2;
-	public static final int SONG_COPYRIGHT = 3;
-	public static final int SONG_CPULOAD = 4;	
-	public static final int SONG_FORMAT = 5;
-	
-	public static final int SONG_POS = 6;
-	public static final int SONG_FILENAME = 7;
-	public static final int SONG_LENGTH = 8;
-	public static final int SONG_SUBSONG = 9;
-	public static final int SONG_TOTALSONGS = 10;
-	
-	public static final int SONG_STATE = 11;
-	
-	public static final int SONG_DETAILS = 12;
-	public static final int SONG_REPEAT = 13;
-	
-	public static final int SONG_SUBTUNE_TITLE = 14;
-	public static final int SONG_SUBTUNE_AUTHOR = 15;
-	public static final int SONG_PLAYLIST = 16;
-	public static final int SONG_FLAGS = 17;
-	public static final int SONG_SOURCE = 18;
-	public static final int SONG_BUFFERING = 19;
-*/
 	
 	public static final String TITLE = "title";
 	public static final String COMPOSER = "composer";

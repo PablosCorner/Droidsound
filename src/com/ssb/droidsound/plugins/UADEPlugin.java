@@ -6,12 +6,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
+import android.annotation.SuppressLint;
 import android.os.Environment;
+import android.util.SparseIntArray;
 
 import com.ssb.droidsound.file.FileSource;
 import com.ssb.droidsound.utils.Log;
@@ -37,6 +41,8 @@ public class UADEPlugin extends DroidSoundPlugin {
 	static int [] optvals = new int [] { OPT_FILTER, OPT_SPEED_HACK, OPT_NTSC, OPT_PANNING };
 
 	
+	@SuppressLint("UseSparseArrays")
+	private static HashMap<Integer, Integer> optMap = new HashMap<Integer, Integer>();
 	
 	public UADEPlugin() {
 		extractFiles();
@@ -63,11 +69,8 @@ public class UADEPlugin extends DroidSoundPlugin {
 				droidDir.mkdir();				
 				Unzipper unzipper = Unzipper.getInstance();				
 				unzipper.unzipAssetAsync(getContext(), "eagleplayers.zip", droidDir);
-
 			}		
-
 		}
-		
 	}
 	
 	private void indexExtensions() {
@@ -130,9 +133,9 @@ public class UADEPlugin extends DroidSoundPlugin {
 	
 	@Override
 	public boolean canHandle(FileSource fs) {
-
-		init();
 		
+		indexExtensions();
+
 		String name = fs.getName();
 		int x = name.lastIndexOf('.');
 		
@@ -249,6 +252,12 @@ public class UADEPlugin extends DroidSoundPlugin {
 		
 		init();
 		
+		for(Entry<Integer, Integer> e : optMap.entrySet())
+			N_setOption(e.getKey(), e.getValue());
+		
+		optMap.clear();						
+
+		
 		FileSource fs2 = null;
 		
 		String name2 = getSecondaryFile(fs.getName());
@@ -267,19 +276,19 @@ public class UADEPlugin extends DroidSoundPlugin {
 			fs2.close();
 		return (currentSong != 0);
 	}
-	
-	private void init() {
+
+	private void init()
+	{
 		if(!inited) {			
-			//Context context = getContext();
+
 			File droidDir = new File(Environment.getExternalStorageDirectory(), "droidsound");
 
-			if(!libLoaded) {
+			if(!libLoaded) 
+			{
 				Log.d(TAG, "Loading library");
 				System.loadLibrary("uade");
 				libLoaded = true;
 			}
-			
-			indexExtensions();
 			
 			N_init(droidDir.getPath());
 			try {
@@ -305,6 +314,7 @@ public class UADEPlugin extends DroidSoundPlugin {
 		}
 		N_unload(currentSong);
 		currentSong = 0;
+
 	}
 	
 	@Override
@@ -330,6 +340,7 @@ public class UADEPlugin extends DroidSoundPlugin {
 		}
 		inited = false;		
 	}
+	
 /*
 	public static void setFilter(boolean on) {
 		Log.d(TAG, "Setting filter to " + (on ? "ON" : "OFF"));
@@ -358,10 +369,15 @@ public class UADEPlugin extends DroidSoundPlugin {
 			v = (Integer)val;
 		}
 		
-		for(int i=0; i<options.length; i++) {
-			if(options[i].equals(o)) {
-				init();
-				N_setOption(optvals[i], v);
+		for(int i=0; i<options.length; i++)
+		{
+			if(options[i].equals(o))
+			{
+				if(!inited)
+					optMap.put(optvals[i], v);
+ 
+				else
+					N_setOption(optvals[i], v);
 				break;
 			}
 		}

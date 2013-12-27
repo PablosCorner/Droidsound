@@ -1,19 +1,19 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-//#include <unistd.h>
+#include <unistd.h>
 
 #include <jni.h>
 #include <android/log.h>
 
 #include "com_ssb_droidsound_plugins_HTPlugin.h"
 
-#include "../common/Fifo.h"
+
 #include "../common/Misc.h"
 
 #include "ht/misc.h"
 
-static Fifo *fifo = NULL;
+
 
 JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_HTPlugin_N_1load(JNIEnv *env, jobject obj, jstring fname)
 {
@@ -52,7 +52,7 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_HTPlugin_N_1load(JNIEnv 
 	
 	int dynarec = 1;
 	
-	sega_enable_dsp_dynarec( sega_state, dynarec );
+	sega_enable_dsp_dynarec( sega_state, 1 );
 	
 	void *yam = 0;
     if ( dynarec )
@@ -110,12 +110,12 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_HTPlugin_N_1getSoundData(
 	
 	int ret = 0;			
 	
-	uint32_t samples_cnt = size / 2;
+	uint32_t samples_cnt = size / 2; // samples_cnt in frames, 1 frame == 2 samples == 4 bytes
 	
 	jshort *dest = env->GetShortArrayElements(sArray, NULL);
 	
 	ret = sega_execute( (void*)state->emu, 0x7fffffff, dest, &samples_cnt ); 		
-		
+			
 	env->ReleaseShortArrayElements(sArray, dest, 0);
 	if (samples_cnt < (size / 2))
 	{
