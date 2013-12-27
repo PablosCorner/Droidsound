@@ -25,7 +25,7 @@ Other changes:
  * FTP Client. Allows you to download tunes from FTP sites. Included few pre-defined sites.
  * Added ARMv7 support.
  * Added FileBrowser.
- *  Now you can mount any path and copy your music there. Not limited to internal phone memory.
+  * Now you can mount any path and copy your music there. Not limited to internal phone memory.
  
 --------------------------------------------------------------------------------------------
  About those MinixSF formats:
