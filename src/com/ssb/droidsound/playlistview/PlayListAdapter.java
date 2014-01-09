@@ -152,8 +152,10 @@ class PlayListAdapter extends BaseAdapter {
 		}
 	};
 	
-	public void close() {
-		if(mCursor != null) {
+	public void close() 
+	{
+		if(mCursor != null)
+		{
 			mCursor.close();
 			mCursor = null;
 		}

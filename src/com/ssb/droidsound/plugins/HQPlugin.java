@@ -47,8 +47,15 @@ public class HQPlugin extends DroidSoundPlugin {
 		}
 		if (tagMap.containsKey("game"))
 		{
-			String title = tagMap.get("game");
+			String title = tagMap.get("title");
 			list.put("title", title);
+			tagMap.remove("title");
+		}
+
+		if (tagMap.containsKey("game"))
+		{
+			String game = tagMap.get("game");
+			list.put("game", game);
 			tagMap.remove("game");
 		}
 

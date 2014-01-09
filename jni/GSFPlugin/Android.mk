@@ -23,6 +23,6 @@ LOCAL_SRC_FILES += playgsf/libresample-0.1.3/src/resample.c \
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/playgsf $(LOCAL_PATH)/playgsf/libresample-0.1.3/include
 LOCAL_LDLIBS := -llog -lz
-LOCAL_CFLAGS := -DLINUX -DC_CORE $(MY_CFLAGS)
+LOCAL_CFLAGS := -DLINUX -DC_CORE $(MY_CFLAGS) -funroll-all-loops -O3
 
 include $(BUILD_SHARED_LIBRARY)

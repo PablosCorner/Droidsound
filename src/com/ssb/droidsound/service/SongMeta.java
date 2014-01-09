@@ -23,5 +23,6 @@ public class SongMeta {
 	public static final String CAN_SEEK = "can_seek";
 	public static final String BUFFERING = "buffering";
 	public static final String ENDLESS = "endless";
+	public static final String SYSTEM_NAME = "system_name";
 
 }

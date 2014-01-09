@@ -19,8 +19,6 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := sc68
 
-# Thanks to this app's shitty build system/design, there's a lot of .c files that aren't OK to build
-# so I copypasted the actually built file names from the autotools build of the program.
 LOCAL_SRC_FILES := SC68Plugin.cpp \
     file68/src/error68.c \
     file68/src/file68.c \

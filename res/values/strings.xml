@@ -129,11 +129,6 @@ to download more music from the web.</string>
 	<item>Very long</item>
 </string-array>
 
-<string-array name="engine_opts">
-<item>VICE</item>
-<item>Sidplay2fp</item>
-</string-array>
-
 
 <string-array name="videomode_opts">
 <item>PAL (50Hz)</item>
@@ -141,10 +136,8 @@ to download more music from the web.</string>
 </string-array>
 
 <string-array name="resampling_opts">
-<item>Fastest (cycle skipping)</item>
-<item>Fast (no cycle skipping)</item>
-<item>Slow (SINC)</item>
-<item>Slowest (SINC)</item>
+<item>Interpolate</item>
+<item>Resample Interpolate</item>
 </string-array>
 
 
@@ -175,8 +168,6 @@ to download more music from the web.</string>
 <string-array name="resampling_vals">
 <item>0</item>
 <item>1</item>
-<item>3</item>
-<item>2</item>
 </string-array>
 
 <string-array name="builder_vals">
@@ -195,8 +186,6 @@ to download more music from the web.</string>
 <string-array name="sid_model_vals">
 <item>0</item>
 <item>1</item>
-<item>2</item>
-<item>3</item>
 </string-array>
 
 <string-array name="psf_opts">

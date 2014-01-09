@@ -76,12 +76,10 @@ public abstract class DroidSoundPlugin {
 		List<DroidSoundPlugin> pluginList;
 		synchronized (lock) {				
 			pluginList = new ArrayList<DroidSoundPlugin>();
-			//pluginList.add(new VICEPlugin());
-			//pluginList.add(new SidplayPlugin());
 			pluginList.add(new VGMPlugin());
 			pluginList.add(new VGMStreamPlugin());
 			pluginList.add(new PSFPlugin());
-			pluginList.add(new SidPlugin());
+			pluginList.add(new SidplayfpPlugin());
 			pluginList.add(new ModPlugin());
 			pluginList.add(new GMEPlugin());
 			pluginList.add(new HivelyPlugin());

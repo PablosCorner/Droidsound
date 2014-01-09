@@ -35,6 +35,13 @@
             />
     
     <CheckBoxPreference
+            android:key="fadeout"
+            android:title="Generic Fadeout"
+            android:defaultValue="false"
+            android:summary="Fadeout any format songs"
+            />
+    
+    <CheckBoxPreference
             android:key="autorescan_db"
             android:title="Rescan DB on start"
             android:defaultValue="false"
@@ -47,18 +54,7 @@
             android:defaultValue="false"
             android:summary="Loop songs"
             />
-    
-    
-	 <EditTextPreference
-			android:inputType="numberDecimal"
-            android:key="default_length"
-            android:title="Max song length"
-            android:dialogTitle="Length (in seconds)"
-            android:defaultValue="900"
-            android:summary="Never loop more than this."
-	/>
-
-	
+            
      ListPreference
             android:key="buffer"
             android:title="Buffer Size"
@@ -68,6 +64,18 @@
 			android:entryValues="@array/buffer_opts"
             android:summaryOn="Audio buffer size"
             / -->
+    
+    
+	 <EditTextPreference
+			android:inputType="numberDecimal"
+            android:key="default_length"
+            android:title="Default song length"
+            android:dialogTitle="Length (in seconds)"
+            android:defaultValue="360"
+            android:summary="If no song length available, use default length."
+            />
+
+	
             
 	<!-- EditTextPreference
 			android:inputType="numberDecimal"
@@ -155,126 +163,61 @@
 						
 		<PreferenceCategory
 			android:title="SID"
-			android:key="SidPlugin"
+			android:key="SidplayfpPlugin"
 		>
-		<ListPreference
-	            android:key="SidPlugin.sidengine"
-	            android:title="SID Engine"
-	            android:defaultValue="VICE"
-				android:entries="@array/engine_opts"
-				android:entryValues="@array/engine_opts"
-	            />
+	
 		<CheckBoxPreference
-	            android:key="SidPlugin.sid_filter"
+	            android:key="SidplayfpPlugin.sid_filter"
 	            android:title="SID Filter"
 	            android:defaultValue="true"
 	            android:summary="Emulate the SID filter"
 	            />
+		
 		<CheckBoxPreference
-	            android:key="SidPlugin.force_options"
+	            android:key="SidplayfpPlugin.force_options"
 	            android:title="Force options"
 	            android:defaultValue="false"
 	            android:summary="Force SID options"
 	            />
 		
 		<ListPreference
-	            android:key="SidPlugin.filter_bias"
+	            android:key="SidplayfpPlugin.filter_bias"
 	            android:title="Filter Bias"
 	            android:defaultValue="0"
                 android:entries="@array/filter_bias_opts"
                 android:entryValues="@array/filter_bias_vals"
 	            />
 		<ListPreference
-	            android:key="SidPlugin.sid_model"
+	            android:key="SidplayfpPlugin.sid_model"
 	            android:title="Preferred SID Model"
 	            android:defaultValue="0"
                 android:entries="@array/sid_model_opts"
                 android:entryValues="@array/sid_model_vals"
 	            />
 		<ListPreference
-	            android:key="SidPlugin.video_mode"
+	            android:key="SidplayfpPlugin.video_mode"
 	            android:title="Preferred Video Mode"
 	            android:defaultValue="0"
                 android:entries="@array/videomode_opts"
                 android:entryValues="@array/videomode_vals"
 	            />
 		<ListPreference
-	            android:key="SidPlugin.resampling_mode"
-	            android:title="Resampling Mode (VICE)"
-	            android:defaultValue="0"
+	            android:key="SidplayfpPlugin.resampling_mode"
+	            android:title="Resampling Mode"
+	            android:defaultValue="1"
                 android:entries="@array/resampling_opts"
                 android:entryValues="@array/resampling_vals"
 	            />
 		<ListPreference
-	            android:key="SidPlugin.buildermode"
-	            android:title="Sid Mode (Sidplay2fp)"
+	            android:key="SidplayfpPlugin.buildermode"
+	            android:title="Builder Mode"
 	            android:defaultValue="1"
                 android:entries="@array/builder_opts"
                 android:entryValues="@array/builder_vals"
 	            />
 		
 	    </PreferenceCategory>
-		<!-- 
-		<PreferenceCategory
-			android:title="VICE"
-			android:key="VICEPlugin"
-		>
 		
-		<CheckBoxPreference
-	            android:key="VICEPlugin.active"
-	            android:title="Active"
-	            android:defaultValue="false"
-	            android:summaryOff="This plugin is not active"
-	            android:summaryOn="This plugin is active"
-	            />
-		<CheckBoxPreference
-	            android:key="VICEPlugin.filter"
-	            android:title="SID Filter"
-	            android:defaultValue="true"
-	            android:summaryOff="Filter not emulated"
-	            android:summaryOn="Filter emulated"
-	            />
-		<ListPreference
-	            android:key="VICEPlugin.ntsc"
-	            android:title="Video Mode"
-	            android:defaultValue="0"
-                android:entries="@array/videomode_opts"
-                android:entryValues="@array/videomode_vals"
-	            />
-		<ListPreference
-	            android:key="VICEPlugin.resampling123"
-	            android:title="Resampling Mode"
-	            android:defaultValue="0"
-                    android:entries="@array/resampling_opts"
-                    android:entryValues="@array/resampling_vals"
-	            />
-	    </PreferenceCategory>
-		<PreferenceCategory
-			android:title="Sidplay"
-			android:key="SidplayPlugin"
-		>
-		<CheckBoxPreference
-           android:key="SidplayPlugin.active"
-           android:title="Active"
-           android:defaultValue="false"
-           android:summaryOff="This plugin is not active"
-           android:summaryOn="This plugin is active"
-           />		
-		<CheckBoxPreference
-	            android:key="SidplayPlugin.filter"
-	            android:title="SID Filter"
-	            android:defaultValue="true"
-	            android:summaryOff="Filter not emulated"
-	            android:summaryOn="Filter emulated"
-	            />
-		<CheckBoxPreference
-	            android:key="SidplayPlugin.ntsc"
-	            android:title="NTSC Mode"
-	            android:defaultValue="false"
-	            android:summaryOff="Emulating PAL mode"
-	            android:summaryOn="Emulating NTSC mode"
-	            />
-		</PreferenceCategory>  -->
 		<PreferenceCategory
 			android:title="UADE"
 			android:key="UADEPlugin"

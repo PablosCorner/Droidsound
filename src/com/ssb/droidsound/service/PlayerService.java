@@ -519,9 +519,6 @@ public class PlayerService extends Service implements PlayerInterface {
         AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         player = new Player(audioManager, mHandler, getApplicationContext());
-
-        //player.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-		//player.stop();
 		
 		callbacks = new ArrayList<IPlayerServiceCallback>();
 		

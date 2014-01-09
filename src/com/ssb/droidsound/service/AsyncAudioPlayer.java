@@ -17,7 +17,7 @@ public class AsyncAudioPlayer implements Runnable
 	private static int bufSize;
 	private static int FREQ;
 	private static int silence;
-	private static int SEC;
+	public static int SEC;
 		
 	private static class SampleArray {
 		SampleArray(short [] s, int l)
@@ -314,14 +314,15 @@ public class AsyncAudioPlayer implements Runnable
 	private void _stop()
 	{
 		Log.d(TAG, "Flush & stop");
+
+		audioTrack.pause();
 		
+		stopped = true;
+		holdData = false;
 		buffers.clear();
 		framesWritten = framesRead = silence = 0;
 		bufferTotal = 0;
 		
-		stopped = true;
-		holdData = false;
-		audioTrack.pause();
 		
 		audioTrack.flush();
 		try
@@ -332,7 +333,8 @@ public class AsyncAudioPlayer implements Runnable
 		{
 			e.printStackTrace();
 		}
-		audioTrack.stop();
+		audioTrack.stop();		
+
 	}
 
 
@@ -399,7 +401,7 @@ public class AsyncAudioPlayer implements Runnable
 
 	public void mark()
 	{
-		markPosition = framesWritten;//playbackPosition;
+		markPosition = framesWritten;	//playbackPosition;
 		Log.d(TAG, "Mark %d (play at %d)", toMSec(markPosition),  toMSec(playbackPosition - startPlaybackHead));
 	}
 	

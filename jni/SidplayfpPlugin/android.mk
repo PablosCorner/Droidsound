@@ -60,10 +60,7 @@ LOCAL_SRC_FILES :=  SidPlayfpplugin.cpp \
 	utils/SidDatabase.cpp \
 	utils/MD5/MD5.cpp
 
-
-LOCAL_CPPFLAGS += -fexceptions -std=c++11
-
-LOCAL_C_INCLUDES  += $(LOCAL_PATH)
+LOCAL_C_INCLUDES  = $(LOCAL_PATH)
 LOCAL_C_INCLUDES  += $(LOCAL_PATH)/builders
 LOCAL_C_INCLUDES  += $(LOCAL_PATH)/builders/resid-builder
 LOCAL_C_INCLUDES  += $(LOCAL_PATH)/builders/resid-builder/resid
@@ -77,7 +74,8 @@ LOCAL_C_INCLUDES  += $(LOCAL_PATH)/utils
 LOCAL_C_INCLUDES  += $(LOCAL_PATH)/utils/MD5
 LOCAL_C_INCLUDES  += $(LOCAL_PATH)/utils/STILview
 
-LOCAL_CFLAGS := -DHAVE_CONFIG_H
-LOCAL_LDLIBS := -llog -lstdc++ -lz
+LOCAL_CFLAGS := -DHAVE_CONFIG_H -O3
+LOCAL_LDLIBS := -llog -lstdc++
+LOCAL_CPPFLAGS += -fexceptions -std=c++11
 
 include $(BUILD_SHARED_LIBRARY)

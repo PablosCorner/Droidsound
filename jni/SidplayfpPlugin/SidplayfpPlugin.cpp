@@ -1,15 +1,16 @@
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <stdio.h>
 
 #include <android/log.h>
-#include "com_ssb_droidsound_plugins_SidPlayfpPlugin.h"
+#include "com_ssb_droidsound_plugins_SidplayfpPlugin.h"
 
-#include "sidplayfp/SidTune.h"
+
 #include "builders/resid-builder/resid.h"
 #include "builders/residfp-builder/residfp.h"
 #include "sidplayfp/sidplayfp.h"
 #include "sidplayfp/sidtuneinfo.h"
 #include "sidplayfp/sidconfig.h"
+#include "sidplayfp/SidTune.h"
 
 #define OPT_FILTER 1
 #define OPT_SID_MODEL 2
@@ -21,6 +22,7 @@
 #define OPT_SID_BUILDERMODE 8
 #define OPT_FORCED_SID_MODEL 9
 #define OPT_FORCED_VIDEO_MODE 10
+#define OPT_SID_RESAMPLING 11
 
 struct Player
 {
@@ -34,6 +36,8 @@ struct Player
 
 static bool use_filter = false;
 static int use_playback = 2;   //default to STEREO
+
+static int resampling_mode = 0;
 
 static int defaultSidModel = 0; //MOS6581
 static bool defaultSidModel_forced = false;
@@ -70,9 +74,8 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1setOpt
 {
 	switch(what)
 	{
-		second_sid_addr = 0; // reset it just incase
 
-		case OPT_FILTER:
+     	case OPT_FILTER:
 			use_filter = val ? true : false;
 			break;
 
@@ -91,6 +94,7 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1setOpt
 		case OPT_SID_BUILDERMODE:
 			use_resid = (val == 0) ? true : false;
 			use_residfp = (val == 1) ? true : false;
+			__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "setting builderoption: %d", val);
 			break;
 
 		case OPT_FORCED_SID_MODEL:
@@ -100,6 +104,16 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1setOpt
 		case OPT_FORCED_VIDEO_MODE:
 			defaultC64Model_forced = (val == 1) ? true : false;
 			break;
+
+		case OPT_SID_RESAMPLING:
+			resampling_mode = val;
+			break;
+
+		case OPT_FILTERBIAS:
+			filterbias = (double) val;
+			break;
+			
+			
 	}
 }
 
@@ -110,7 +124,9 @@ JNIEXPORT jboolean JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1ca
 
 JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1load(JNIEnv *env, jobject obj, jbyteArray bArray, jint size)
 {
-	int sid_count = 1;
+	unsigned int sid_count = 1;
+	bool load_result = false;
+	bool conf_result = false;
 
 	jbyte * ptr = env->GetByteArrayElements(bArray, NULL);
 	
@@ -126,28 +142,31 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1load(
 	}
 	player->sidtune->selectSong(0);
 
-	player->sidemu = new sidplayfp;
+	player->sidemu = new sidplayfp();
 	FILE * fp = NULL;
 
-	fp = fopen("/mnt/sdcard/droidsound/VICE/kernal", "rb");
+	fp = fopen("/mnt/sdcard/droidsound/c64roms/kernal", "rb");
 	uint8_t * kernal_rom = (uint8_t *) malloc( 8192 );
     fread(kernal_rom, 1, 8192, fp);
     fclose(fp);
 
-	fp = fopen("/mnt/sdcard/droidsound/VICE/chargen", "rb");
+	fp = fopen("/mnt/sdcard/droidsound/c64roms/chargen", "rb");
 	uint8_t * chargen_rom = (uint8_t *) malloc( 4096 );
     fread(chargen_rom, 1, 4096, fp);
     fclose(fp);
 
-	fp = fopen("/mnt/sdcard/droidsound/VICE/basic", "rb");
+	fp = fopen("/mnt/sdcard/droidsound/c64roms/basic", "rb");
 	uint8_t * basic_rom = (uint8_t *) malloc( 8192 );
     fread(basic_rom, 1, 8192, fp);
     fclose(fp);
 	
 	player->sidemu->setRoms(kernal_rom, basic_rom, chargen_rom);
-	free(kernal_rom);
-	free(basic_rom);
-	free(chargen_rom);
+	delete [] kernal_rom;
+    delete [] basic_rom;
+    delete [] chargen_rom; 
+	//free(kernal_rom);
+	//free(basic_rom);
+	//free(chargen_rom);
 
 	SidConfig cfg = player->sidemu->config();
 	
@@ -155,6 +174,10 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1load(
 	cfg.frequency        = 44100;
 	cfg.playback         = cfg.STEREO;
 	cfg.secondSidAddress = second_sid_addr;
+
+	cfg.forceC64Model = defaultC64Model_forced;
+	cfg.forceSidModel = defaultSidModel_forced;
+
 	if (second_sid_addr != 0)
 		sid_count = 2;
 		
@@ -172,40 +195,41 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1load(
 	else if (defaultSidModel == 2)
 		cfg.defaultSidModel = cfg.MOS8580;
 
-	//cfg.forceC64Model = defaultC64Model_forced;
-	//cfg.forceSidModel = defaultSidModel_forced;
-	
+	if (resampling_mode == 0)
+		cfg.samplingMethod = cfg.INTERPOLATE;
+	else if (resampling_mode == 1)
+		cfg.samplingMethod = cfg.RESAMPLE_INTERPOLATE;
 
 	if (use_resid)
 	{
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "Using ReSID builder");
+
 		player->residbuilder = new ReSIDBuilder("ReSID");
 
 		cfg.fastSampling = false;
-		cfg.samplingMethod = cfg.INTERPOLATE;
-				
-		//EventContext *ctx = player->sidemu->getEventContext();
-		//player->residbuilder->lock(ctx, cfg.defaultSidModel);
 
-		cfg.sidEmulation  = player->residbuilder;
 		player->residbuilder->create(sid_count);
 		player->residbuilder->filter(use_filter);
 		player->residbuilder->bias(filterbias);
+		cfg.sidEmulation  = player->residbuilder;
 	}
 
 	if (use_residfp)
 	{
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "Using ReSIDfp builder");
+		
 		player->residfpbuilder = new ReSIDfpBuilder("ReSIDfp");
-		cfg.sidEmulation  = player->residfpbuilder;
 		
 		player->residfpbuilder->create(sid_count);
 		player->residfpbuilder->filter(use_filter);
 		player->residfpbuilder->filter6581Curve(filterCurve6581);
 		player->residfpbuilder->filter8580Curve(filterCurve8580);
+		cfg.sidEmulation  = player->residfpbuilder;		
 	}
 	
-	int rc = player->sidemu->load(player->sidtune);
+	load_result = player->sidemu->load(player->sidtune);
 
-	if(rc != 1)
+	if(load_result == false)
 	{
 		delete player->sidemu;
 		delete player->residbuilder;
@@ -215,9 +239,20 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1load(
 		return 0;
 	}
 
-	player->sidemu->config(cfg);
+	conf_result = player->sidemu->config(cfg);
+
+	if (conf_result == false)
+	{
+		delete player->sidemu;
+		delete player->residbuilder;
+		delete player->residfpbuilder;
+		delete player->sidtune;
+		delete player;
+		return 0;
+	}
 
 	env->ReleaseByteArrayElements(bArray, ptr, 0);
+	
 	return (long)player;
 
 }
@@ -227,12 +262,15 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1unload
 	Player *player = (Player*)song;
 	if (player->sidemu->isPlaying() == true)
 		player->sidemu->stop();
-	
+
 	delete player->sidemu;
 	delete player->residbuilder;
 	delete player->residfpbuilder;
 	delete player->sidtune;
 	delete player;
+	
+	__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "unloaded");
+
 }
 
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1getSoundData(JNIEnv *env, jobject obj, jlong song, jshortArray sArray, jint size)

@@ -19,6 +19,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := vio2sf
 
+LOCAL_ARM_MODE := arm
+
 LOCAL_SRC_FILES :=  ndsplugin.cpp \
 	nds/vio2sf/vio2sf.c \
 	nds/vio2sf/desmume/arm_instructions.c \
@@ -36,7 +38,7 @@ LOCAL_SRC_FILES :=  ndsplugin.cpp \
 	
  
 LOCAL_LDLIBS := -llog -lz
-LOCAL_CFLAGS := -DLSB_FIRST -DHAVE_STDINT_H -D_strnicmp=strncasecmp
+LOCAL_CFLAGS := -DLSB_FIRST -DHAVE_STDINT_H -D_strnicmp=strncasecmp -O3 -funroll-all-loops
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/nds/vio2sf
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/nds
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/nds/vio2sf/desmume

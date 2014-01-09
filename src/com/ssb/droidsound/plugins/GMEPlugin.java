@@ -1,6 +1,10 @@
 package com.ssb.droidsound.plugins;
 
-
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -17,18 +21,15 @@ public class GMEPlugin extends DroidSoundPlugin {
 		System.loadLibrary("gme");
 	}
 	private static String extension = "";
+	private static HashMap<String, String> infoMap = new HashMap<String, String>();
 	private Set<String> extensions;
 	
 	static String [] ex = { "SGC", "SFM", "SPC", "GYM", "NSF", "NSFE", "GBS", "AY", "SAP", "HES", "KSS" };
 	
 	long currentSong = -1;
-
 	private int currentFrames;
-	
 	private int songLength;
-	
 	private boolean use_vgm_vgz = false;
-	
 	private Integer loopMode = 0;
 
 	public GMEPlugin()
@@ -43,84 +44,93 @@ public class GMEPlugin extends DroidSoundPlugin {
 	@Override
 	public boolean canHandle(FileSource fs)
 	{
+		extension = fs.getExt();
+
 		boolean res = PlayerActivity.prefs.getBoolean("use_vgmplay", false);
 		if (!res)
 		{
 			extensions.add("VGM");
 			extensions.add("VGZ");
 		}
+		else
+		{
+			if (extensions.contains("VGM"))
+				extensions.remove("VGM");
+			if (extensions.contains("VGZ"))
+				extensions.remove("VGZ");
+
+		}
 		return extensions.contains(fs.getExt());
 	}
 
 	
 	@Override
-	public void getDetailedInfo(Map<String, Object> list) {
-		
+	public void getDetailedInfo(Map<String, Object> list)
+	{
 		list.put("plugin", "GME");
-		
-		String s = N_getStringInfo(currentSong, INFO_TYPE);
-		if(s != null & s.length() > 0) {
-			list.put("format", s);
+		if (infoMap == null)
+			return;
 
-			list.put("is" + s, true);
+		if (extension.startsWith("VG")) {
+			list.put("format", infoMap.get("SystemNameE"));
+			list.put("copyright", infoMap.get("ReleaseDate"));
+			list.put("game", infoMap.get("GameNameE"));
+			list.put("title", infoMap.get("TrackNameE"));
+			list.put("composer", infoMap.get("AuthorNameE"));
 		}
-		s = N_getStringInfo(currentSong, INFO_COPYRIGHT);
-		if(s != null & s.length() > 0) {
-			list.put("copyright", s);
-
-		}
-		s = N_getStringInfo(currentSong, INFO_GAME);
-		if(s != null & s.length() > 0) {
-			list.put("game", s);
-
-		}		
 	}
 	
 	@Override
 	public boolean load(FileSource fs) {
 		currentFrames = 0;
 		
-		if(fs.isFile() || fs.getExt().equals("VGZ")) 		
-			currentSong = N_loadFile(fs.getFile().getPath());
-		else
-			if (fs.getExt().equals("GYM"))
-			{
-				//check if its packed, if packed then unpack it with zlib
-				
-				byte[] contents = new byte[(int)fs.getLength()];
-				contents = fs.getContents();
-				
-				if (contents[428] != 0)
-				{
-					int decompress_size = 0;
-					decompress_size = ( ((contents[426] & 0xff)<<16) | ((contents[425] & 0xff)<<8) | (contents[424] & 0xff)) & 0x00ffffff;
-									
-					byte[] decompress_buffer = new byte[(int)decompress_size];
-					int bytestodecompress = (int)fs.getLength() - 428; // 428 is size of GYM header
-					
-					Inflater inflater = new Inflater();
-					inflater.setInput(contents, 428, bytestodecompress);
-					
-					try
-					{
-						inflater.inflate(decompress_buffer);
-					} 
-					catch (DataFormatException e)
-					{
-						e.printStackTrace();
-						currentSong = 0;
-						return false;
+		if (extension.contains("VGM") || extension.contains("VGZ"))
+			infoMap = GD3Parser.getTags(fs.getFile().getPath());
 						
-					}
-					byte[] decompressed_contents =  new byte[(int)decompress_size + 428];
-					byte[] nullbuf =  new byte[4];
+		if (isGZIPPED(fs)) // is packed with zlib
+		{
+			currentSong = N_loadFile(fs.getFile().getPath());
+
+		}
+		
+		else if (fs.getExt().equals("GYM"))
+		{
+			//check if its packed, if packed then unpack it with zlib
+			
+			byte[] contents = new byte[(int)fs.getLength()];
+			contents = fs.getContents();
+			
+			if (contents[428] != 0)
+			{
+				int decompress_size = 0;
+				decompress_size = ( ((contents[426] & 0xff)<<16) | ((contents[425] & 0xff)<<8) | (contents[424] & 0xff)) & 0x00ffffff;
+								
+				byte[] decompress_buffer = new byte[(int)decompress_size];
+				int bytestodecompress = (int)fs.getLength() - 428; // 428 is size of GYM header
+				
+				Inflater inflater = new Inflater();
+				inflater.setInput(contents, 428, bytestodecompress);
+				
+				try
+				{
+					inflater.inflate(decompress_buffer);
+				} 
+				catch (DataFormatException e)
+				{
+					e.printStackTrace();
+					currentSong = 0;
+					return false;
 					
-					System.arraycopy(contents, 0, decompressed_contents, 0, 428);
-					System.arraycopy(decompress_buffer, 0, decompressed_contents, 428, decompress_size);
-					System.arraycopy(nullbuf, 0, decompressed_contents, 424, 4);
-					
-					currentSong = N_load(decompressed_contents, decompressed_contents.length);
 				}
+				byte[] decompressed_contents =  new byte[(int)decompress_size + 428];
+				byte[] nullbuf =  new byte[4];
+				
+				System.arraycopy(contents, 0, decompressed_contents, 0, 428);
+				System.arraycopy(decompress_buffer, 0, decompressed_contents, 428, decompress_size);
+				System.arraycopy(nullbuf, 0, decompressed_contents, 424, 4);
+				
+				currentSong = N_load(decompressed_contents, decompressed_contents.length);
+			}
 				
 				
 			}
@@ -136,11 +146,43 @@ public class GMEPlugin extends DroidSoundPlugin {
 		return (currentSong != 0);
 	}
 	
-	@Override
-	public boolean loadInfo(FileSource fs)  {
+	public boolean isGZIPPED(FileSource fs)
+	{
 		
-		if(fs.isFile() || fs.getExt().equals("VGZ")) 		
+		byte[] data = new byte[4];
+		File file = fs.getFile();
+		try 
+		{
+			FileInputStream filereader = new FileInputStream(file);
+			filereader.read(data, 0, 4);
+			filereader.close();
+		} 
+		catch (FileNotFoundException e1)
+		{
+			e1.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		if (data[0] == 0x1f && ((data[1] & 0xff) == 0x8b) && data[2] == 0x08) // is packed with zlib
+		{
+			return true;
+		}
+		else
+		{
+			return false;	
+		}
+		
+		
+	}
+	@Override
+	public boolean loadInfo(FileSource fs) 
+	{
+		if (isGZIPPED(fs))
+		{
 			currentSong = N_loadFile(fs.getFile().getPath());
+		}
+
 		else
 			currentSong = N_load(fs.getContents(), (int) fs.getLength());
 		return (currentSong != 0);
@@ -158,7 +200,7 @@ public class GMEPlugin extends DroidSoundPlugin {
 		return "Game Music Emu v0.60 [Kode54 version]";
 	}
 	
-	// Expects Stereo, 44.1Khz, signed, big-endian shorts
+	
 	@Override
 	public int getSoundData(short [] dest, int size)
 	{

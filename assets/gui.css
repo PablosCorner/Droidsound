@@ -37,11 +37,14 @@ search-header {
 	color: #ffffff;
 	background: -webkit-linear-gradient(top, #27272f, #f7271a);
 	padding-left: 2dp;	
+	
 }
 
 search-header.title {
 	font-weight:bold;
 	font-size:28sp;
+	
+	
 }
 
 search-header.subtitle {
@@ -51,7 +54,7 @@ search-header.subtitle {
 /* Separating line between play info and controls */
 control-separator {
 	background-color: #33B5E5;
-	height: 2dp;
+	height: 1dp;
 }
  
 /* Play controls */
@@ -136,12 +139,12 @@ item {
 	side.color: #ccccff;
 
 	main.font : "bold";
-	sub.font : "bold";
-	side.font : "bold";
+	/*sub.font : "bold"; */
+	side.font : "bold"; 
 	
-	main.font-size: "20sp";
-	sub.font-size : "10sp";
-	side.font-size : "10sp";
+	main.font-size: "18sp";
+	sub.font-size : "12sp";
+	side.font-size : "12sp";
 
 	main.padding-left: 0dp;
 	sub.padding-left: 0dp;
@@ -153,47 +156,49 @@ item {
 /* Settings for specific file types */
 
 item.folder {
-	main.font-size: "20sp";
+	main.font-size: "10sp";
 	main.color : #ffff80;
 	icon.image : "icons/gflat_folder.png";
 }
 
 item.network {
-	main.font-size: "20sp";
+	main.font-size: "10sp";
 	main.color : #ffff80;
 	icon.image : "icons/gflat_net_folder.png";
 }
 
 item.archive {
-	main.font-size: "20sp";
+	main.font-size: "10sp";
 	main.color : #ffff80;
 	icon.image : "icons/gflat_package.png";
 }
 
 item.media {
-	main.font-size: "20sp";
+	main.font-size: "10sp";
 	main.color : #ffcc80;
 	icon.image : "icons/gflat_mus_folder.png";
 }
 
 item.csdb {
-	main.font-size: "20sp";
+	main.font-size: "10sp";
 	main.color : #ffcc80;
 	icon.image : "icons/gflat_bag.png";
 }
 
 item.filesys {
-	main.font-size: "20sp";
+	main.font-size: "10sp";
 	main.color : #ffcc80;
 	icon.image : "icons/gflat_folder.png";
 }
 
 
 item.playlist {
+	main.font-size: "10sp";
 	icon.image : "icons/gflat_note3.png";
 }
 
 item.favorites {
+	main.font-size: "10sp";
 	icon.image : "icons/gflat_heart.png";
 }
 
@@ -225,7 +230,7 @@ body {
 	background-color:  #2040a0;
 	background: -webkit-linear-gradient(top, #2F2727, #1a82f7);
 	padding-left: 2dp;	
-	height: 4.3em; 
+	height: 3.9em; 
 }
 
 
@@ -234,15 +239,16 @@ body {
 	white-space: nowrap;
 	overflow: hidden;
 	font-weight:bold;
-	font-size:16pt; 
+	font-size:10pt; 
 	padding-left: 4pt;
-	padding-top: 4pt;
+	padding-top: 10pt;
 }
 
 .subtitle {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	overflow: hidden; 
+	font-size:10pt; 
 	padding-left: 4pt;
 	padding-bottom: 4pt;
 	padding-top: 4pt;

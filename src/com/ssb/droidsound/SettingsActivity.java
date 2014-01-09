@@ -28,7 +28,6 @@ import com.ssb.droidsound.file.FileCache;
 import com.ssb.droidsound.plugins.DroidSoundPlugin;
 
 import com.ssb.droidsound.plugins.SidplayfpPlugin;
-import com.ssb.droidsound.plugins.VICEPlugin;
 import com.ssb.droidsound.utils.Log;
 
 @SuppressWarnings("deprecation") // Old preference system
@@ -43,7 +42,7 @@ public class SettingsActivity extends PreferenceActivity {
 	class AudiopPrefsListener implements OnPreferenceChangeListener {
 		
 		private DroidSoundPlugin plugin;
-
+		
 		AudiopPrefsListener(DroidSoundPlugin pi) {
 			plugin = pi;
 		}
@@ -54,23 +53,19 @@ public class SettingsActivity extends PreferenceActivity {
 			String k2 = k.substring(k.indexOf('.')+1);
 			
 			Log.d(TAG, "CHANGED " + k);
-			if(k.equals("SidPlugin.force_options"))
+			if(k.equals("SidplayfpPlugin.force_options"))
 			{
 				boolean forced = (Boolean) newValue ? true : false;
-				findPreference("SidPlugin.sid_model").setEnabled(forced);
-				findPreference("SidPlugin.video_mode").setEnabled(forced);
+				findPreference("SidplayfpPlugin.sid_model").setEnabled(forced);
+				findPreference("SidplayfpPlugin.video_mode").setEnabled(forced);
 			}
-				
-			if(k.equals("SidPlugin.sidengine"))
+			if(k.equals("SidplayfpPlugin.buildermode"))
 			{
-				boolean isVice = ((String) newValue).startsWith("VICE");
-				boolean isSidplay2fp = ((String) newValue).startsWith("Sidplay2fp");
-				
-				findPreference("SidPlugin.resampling_mode").setEnabled(isVice);
-				findPreference("SidPlugin.buildermode").setEnabled(isSidplay2fp);
-
+				int buildermode = Integer.valueOf((String) newValue);
+				boolean isresid = (buildermode == 0) ? true : false; 
+				findPreference("SidplayfpPlugin.filter_bias").setEnabled(isresid);
 			}
-			
+
 			if(newValue instanceof String)
 			{
 				try 
@@ -101,27 +96,14 @@ public class SettingsActivity extends PreferenceActivity {
 
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		modsDir = prefs.getString("modsDir", null);
+							
+		boolean forced = prefs.getBoolean("SidplayfpPlugin.force_options", false);
+		findPreference("SidplayfpPlugin.sid_model").setEnabled(forced);
+		findPreference("SidplayfpPlugin.video_mode").setEnabled(forced);
 		
-		String s = prefs.getString("SidPlugin.sidengine", null);
-		
-		Preference resampling_mode_pref = findPreference("SidPlugin.resampling_mode");
-		Preference buildermode = findPreference("SidPlugin.buildermode");
-				
-		boolean forced = prefs.getBoolean("SidPlugin.force_options", false);
-		findPreference("SidPlugin.sid_model").setEnabled(forced);
-		findPreference("SidPlugin.video_mode").setEnabled(forced);
-
-		if(s.startsWith("Sidplay2fp"))
-		{
-			resampling_mode_pref.setEnabled(false);
-			buildermode.setEnabled(true);
-		} 
-
-		if(s.startsWith("VICE"))
-		{
-			resampling_mode_pref.setEnabled(true);
-			buildermode.setEnabled(false);
-		} 
+		String buildermode = prefs.getString("SidplayfpPlugin.buildermode", "1");
+		boolean isresid = buildermode.equals("0") ? true : false; 
+		findPreference("SidplayfpPlugin.filter_bias").setEnabled(isresid);
 		
 		Preference pref = findPreference("flush_cache");
 				
@@ -238,7 +220,7 @@ public class SettingsActivity extends PreferenceActivity {
 		}
 
 		list.add(new SidplayfpPlugin());
-		list.add(new VICEPlugin());
+
 				
 		PreferenceScreen abScreen = (PreferenceScreen) findPreference("about_prefs");
 

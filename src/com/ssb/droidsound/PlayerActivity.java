@@ -149,6 +149,8 @@ public class PlayerActivity extends Activity  {
 
 	private File modsDir;
 	private String currentPath;
+	public static int currentVolume;
+	private AudioManager amg = null;
 
 	//private int backDown;
 	private boolean atTop = true;
@@ -471,7 +473,7 @@ public class PlayerActivity extends Activity  {
 	public void onCreate(Bundle savedInstanceState) {
 		
 		first_run = false;
-
+		
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "#### onCreate()");
 		
@@ -527,6 +529,9 @@ public class PlayerActivity extends Activity  {
 		}
 
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
+		amg = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+		currentVolume = amg.getStreamVolume(AudioManager.STREAM_MUSIC);
+		
 
 		state.ttsStatus = TTS_UNCHECKED;
 		
@@ -1259,7 +1264,7 @@ public class PlayerActivity extends Activity  {
 			}
 		}
 
-		AudioManager amg = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+		//AudioManager amg = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
 		switch(keyCode) {
 		case KeyEvent.KEYCODE_F:
@@ -1366,6 +1371,12 @@ public class PlayerActivity extends Activity  {
 			backPressed = true;
 			event.startTracking();
 			return true;
+			
+		case KeyEvent.KEYCODE_VOLUME_UP:
+		case KeyEvent.KEYCODE_VOLUME_DOWN:
+		case KeyEvent.KEYCODE_VOLUME_MUTE:			
+			currentVolume = amg.getStreamVolume(AudioManager.STREAM_MUSIC);
+			
 		}
 
 		//backDown = 0;
@@ -1707,6 +1718,10 @@ public class PlayerActivity extends Activity  {
 			//NativeZipFile.closeCached();
 			songDatabase.quit();
 			songDatabase = null;
+			
+			//restore original volume just in case
+			amg.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume, 0);
+			
 			finish();
 			System.runFinalization();
 			System.exit(0);
@@ -1769,7 +1784,11 @@ public class PlayerActivity extends Activity  {
 			break;
 		}
 	}
-
+	public static int getCurrentVolume()
+	{
+		return currentVolume;
+	}
+	
 	public static String fix_fs_sourcePath(String path)
 	{
 		String pfix = "";

@@ -1,0 +1,48 @@
+<html><head>
+<style type="text/css">
+${themeCSS}
+
+.content {
+	height: 100%;
+	${if artwork}
+		background-image:url('${artwork}');
+		background-size:100% 100%;
+		background-repeat:no-repeat;
+	${end}
+}
+
+</style>
+
+</head><body>
+<div class="song-header">
+<div class="title">${game}</div>
+<div class="subtitle">${title}</div>
+</div>
+<div class="infotitle">${song_source}</div>
+<div class="content">
+${if plugin}
+<span class="heading">Plugin: </span> ${plugin}<br/>
+${end} 
+
+${if composer}
+<span class="heading">Composer: </span> ${composer}<br/>
+${end} 
+
+${if copyright}
+<span class="heading">Copyright: </span> ${copyright}<br/>
+${end} 
+
+${if year}
+<span class="heading">Year: </span> ${year}<br/>
+${end} 
+
+${if format}
+<span class="heading">Format: </span> ${format}<br/>
+${end}
+
+
+${if sizeText}
+<span class="heading">Size:</span> ${sizeText}<br/>
+${end}
+</div>
+</html></body>

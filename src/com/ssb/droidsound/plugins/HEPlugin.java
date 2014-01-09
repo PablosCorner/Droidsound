@@ -22,7 +22,7 @@ public class HEPlugin extends DroidSoundPlugin {
 	@Override
 	public String getVersion()
 	{
-		return "Highly Experimental Library for PSF/PSF2 formats by kode54";
+		return "Highly Experimental Plugin for PSF/PSF2 formats";
 	}
 	
 	private long songRef;
@@ -103,7 +103,7 @@ public class HEPlugin extends DroidSoundPlugin {
 		
 		if (tagMap.containsKey("game"))
 		{
-			list.put("title", tagMap.get("game"));
+			list.put("game", tagMap.get("game"));
 		}
 
 		if (tagMap.containsKey("psfby"))

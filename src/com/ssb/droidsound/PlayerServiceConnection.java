@@ -312,7 +312,4 @@ public class PlayerServiceConnection implements ServiceConnection {
 		}
 		return false;
 	}
-	
-	
-
 }

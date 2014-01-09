@@ -19,6 +19,7 @@ import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Message;
 
+import com.ssb.droidsound.PlayerActivity;
 import com.ssb.droidsound.SongFile;
 import com.ssb.droidsound.file.FileSource;
 import com.ssb.droidsound.plugins.DroidSoundPlugin;
@@ -77,6 +78,7 @@ public class Player implements Runnable
 	private AsyncAudioPlayer audioPlayer;
 	private MediaPlayer mp;
 	private int dataSize;
+	private static int songlength_ms;
 
 	private DroidSoundPlugin currentPlugin;
 	private List<DroidSoundPlugin> plugins;
@@ -100,12 +102,20 @@ public class Player implements Runnable
 	private Thread audioThread;
 	private boolean isSilent;
 	private SongFile lastSong;
+	private Context context;
+	private int currentVol;
+	private int originalVol;
+	private AudioManager audiomanager;
+
+	private boolean usefadeOut = false;
+	private boolean useDefaultLength = false;
 
 	public Player(AudioManager am, Handler handler, Context ctx)
 	{
 		mHandler = handler;
 		plugins = DroidSoundPlugin.createPluginList();
 		dataSize = 44100;
+		context = ctx;
 	}
 
 
@@ -261,8 +271,7 @@ public class Player implements Runnable
 		else if(path.startsWith("ftp"))
 			songSource = FileSource.create(path);
 
-		else
-		if(lastSong.getZipPath() != null && !lastSong.exists())
+		else if(lastSong.getZipPath() != null && !lastSong.exists())
 		{
 			songSource = FileSource.create(lastSong.getZipPath() + '/' + lastSong.getZipName()); 
 		} 
@@ -305,11 +314,11 @@ public class Player implements Runnable
 		audioThread.setPriority(Thread.MAX_PRIORITY);
 		audioThread.start();
 	}
-	
 
 	private void startSong(SongFile song, boolean skipStart)
 	{
 		Message msg = null;
+		usefadeOut = PlayerActivity.prefs.getBoolean("fadeout", false);
 		
 		if(currentPlugin != null)
 		{
@@ -433,7 +442,14 @@ public class Player implements Runnable
 				songDetails.put(SongMeta.ENDLESS, currentPlugin.isEndless());
 				songDetails.put(SongMeta.SUBTUNE_TITLE,  getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_TITLE));
 				songDetails.put(SongMeta.SUBTUNE_COMPOSER, getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_AUTHOR));
-				
+				useDefaultLength = false;
+				songlength_ms = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_LENGTH);
+				if (songlength_ms <= 0)
+				{
+					songlength_ms = Integer.valueOf(PlayerActivity.prefs.getString("default_length", "360")) * 1000;
+					songDetails.put(SongMeta.LENGTH, songlength_ms);
+					useDefaultLength = true;
+				}
 				currentPlugin.setOption("loop", loopMode);
 				
 			}
@@ -455,6 +471,16 @@ public class Player implements Runnable
 				songDetails.put(SongMeta.SUBTUNE_TITLE,  getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_TITLE));
 				songDetails.put(SongMeta.SUBTUNE_COMPOSER, getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_AUTHOR));
 				startedFromSub = true;
+
+				songlength_ms = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_LENGTH);
+				useDefaultLength = false;
+				if (songlength_ms <= 0)
+				{
+					songlength_ms = Integer.valueOf(PlayerActivity.prefs.getString("default_length", "360")) * 1000;
+					songDetails.put(SongMeta.LENGTH, songlength_ms);
+					useDefaultLength = true;
+				}
+				
 			}
 
 			lastLatency = 0;
@@ -493,8 +519,7 @@ public class Player implements Runnable
 										
 					frequency = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_FREQUENCY);
 					channels = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_CHANNELS);
-					//bufsize = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_BUFFER_SIZE);
-					
+										
 					if (channels < 1)
 					{
 						channels = 2;
@@ -517,13 +542,14 @@ public class Player implements Runnable
 					Log.d(TAG, "FOUND PLUGIN:" + currentPlugin.getClass().getName());
 					Log.d(TAG, "'%s' by '%s'", song.getTitle(), song.getComposer());
 					
-					lastPos = -1000;
+
 					mHandler.sendMessage(msg);
-															
+					lastPos = -1000;
 					audioPlayer.start();
 					currentState = State.PLAYING;
 				}
 			}
+			
 			return;
 		}
 		msg = mHandler.obtainMessage(MSG_FAILED);
@@ -546,7 +572,9 @@ public class Player implements Runnable
 	public void run()
 	{
 		currentPlugin = null;
-						
+
+		audiomanager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+
 		noPlayWait = 0;
 
 		while(noPlayWait < 20) {
@@ -608,11 +636,13 @@ public class Player implements Runnable
 								
 								SongFile song = (SongFile) argument;
 								Log.d(TAG, "Playmod " + song.getName());
+
 								startSong(song, false);
-								if (currentState == State.STOPPED)
-								{
-									audioPlayer.stop();
-								}
+								originalVol = PlayerActivity.getCurrentVolume();
+								 
+								audiomanager.setStreamVolume(AudioManager.STREAM_MUSIC, originalVol, 0);
+								
+								
 								if (currentState != State.STOPPED)
 								{
 									currentState = State.PLAYING;
@@ -649,8 +679,6 @@ public class Player implements Runnable
 								} 
 								else
 								{
-									audioPlayer.pause();
-									audioPlayer.flush();
 									audioPlayer.stop();
 								}
 								
@@ -726,7 +754,16 @@ public class Player implements Runnable
 									songDetails.put(SongMeta.LENGTH, currentPlugin.getIntInfo(DroidSoundPlugin.INFO_LENGTH));
 									songDetails.put(SongMeta.SUBTUNE_TITLE,  getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_TITLE));
 									songDetails.put(SongMeta.SUBTUNE_COMPOSER, getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_AUTHOR));
+									
+									songlength_ms = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_LENGTH);
+									if (songlength_ms <= 0)
+									{
+										songlength_ms = Integer.valueOf(PlayerActivity.prefs.getString("default_length", "360")) * 1000;
+										songDetails.put(SongMeta.LENGTH, songlength_ms);
+									}
 
+									
+									
 									Message msg = mHandler.obtainMessage(MSG_SUBTUNE, songDetails);
 									mHandler.sendMessage(msg);
 									audioPlayer.start();
@@ -785,7 +822,8 @@ public class Player implements Runnable
 					{
 						int latency = currentPlugin.getIntInfo(203);
 						if(latency >= 0) {
-							if(latency / 1000 != lastLatency / 1000) {
+							if(latency / 1000 != lastLatency / 1000)
+							{
 								songDetails.put(SongMeta.BUFFERING, latency);
 								Message msg = mHandler.obtainMessage(MSG_PROGRESS, 0, 0);
 								mHandler.sendMessage(msg);
@@ -825,25 +863,42 @@ public class Player implements Runnable
 	{
 		
 		noPlayWait = 0;
-		if (audioPlayer == null)
-		{
-			Log.d(TAG,"Null audioPlayer");
-		}
 		
 		int playPos = audioPlayer.getPlaybackPosition();
 		
 		if(lastPos > playPos)
 			lastPos = -1;
-		
+
+		if (playPos >= songlength_ms - 8000 && !songEnded)
+		{
+			songEnded = true;
+			audioPlayer.mark();
+		}
+
 		if(playPos >= lastPos + 500)
 		{
 			songDetails.put(SongMeta.POSITION, playPos);
 			Message msg = mHandler.obtainMessage(MSG_PROGRESS, playPos, 0);
 			mHandler.sendMessage(msg);
 			lastPos = playPos;
+			
+			//
+			// generic fadeOut hack here, if there exists better way, file an issue in github please
+			//
+			if (usefadeOut && songlength_ms > 8)
+			{
+				if (playPos >= (songlength_ms - 7500))
+				{
+					if (currentVol > 0)
+					{
+						currentVol -= 1;
+						audiomanager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVol, 0);
+						
+					}
+				}
+			}
 		}
-		
-		
+	
 		if(audioPlayer.getLeft() < dataSize * 2)
 		{
 			Thread.sleep(100);
@@ -883,9 +938,10 @@ public class Player implements Runnable
 			len = dataSize;
 			Arrays.fill(samples, 0, len, (short) 0);
 		}
+		
 		if(len > 0)
 		{
-			
+
 			audioPlayer.update(samples, len);
 			
 			int silence = audioPlayer.getSilence();
@@ -1074,6 +1130,7 @@ public class Player implements Runnable
 	public void playMod(SongFile mod) {
 		synchronized (cmdLock) {
 			commands.add(new Command(CommandName.PLAY, mod));
+			
 		}
 	}
 	
@@ -1118,6 +1175,6 @@ public class Player implements Runnable
 		synchronized (cmdLock) {
 			commands.add(new Command(CommandName.DUMP_WAV, new Object [] {song, new File(destFile), length, flags}));
 		}
-		
 	}
+	
 }

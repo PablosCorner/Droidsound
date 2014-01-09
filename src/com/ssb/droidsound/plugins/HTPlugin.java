@@ -54,9 +54,16 @@ public class HTPlugin extends DroidSoundPlugin {
 		}
 		if (tagMap.containsKey("game"))
 		{
-			String title = tagMap.get("game");
-			list.put("title", title);
+			String game = tagMap.get("game");
+			list.put("game", game);
 			tagMap.remove("game");
+		}
+
+		if (tagMap.containsKey("title"))
+		{
+			String title = tagMap.get("title");
+			list.put("title", title);
+			tagMap.remove("title");
 		}
 
 		for (Map.Entry<String, String> entry : tagMap.entrySet())
@@ -119,14 +126,19 @@ public class HTPlugin extends DroidSoundPlugin {
 				lib_fs.close();
 				return false;
 			}
-			lib_fs.close();
+			
 		}
 		if(libName2 != null)
 		{
 			lib_fs2 = fs.getRelative(libName2);
 			lib_fs2.getFile();
-			lib_fs2.close();
 		}
+		
+		if (libName != null)
+			lib_fs.close();
+		if (libName2 != null)
+			lib_fs2.close();
+			
 		songRef = N_load(fs.getFile().getPath());
 		return ( songRef != 0);
 	}

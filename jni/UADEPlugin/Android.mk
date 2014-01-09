@@ -53,7 +53,7 @@ LOCAL_C_INCLUDES := \
                 $(LOCAL_PATH)/$(FE) \
 
 
-LOCAL_CFLAGS := $(MY_CFLAGS)
+LOCAL_CFLAGS := -O3
 
 LOCAL_LDLIBS := -llog
 
