@@ -1,21 +1,26 @@
 package com.ssb.droidsound.database;
 
 import java.io.BufferedReader;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -24,8 +29,8 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
-import org.apache.commons.net.ftp.FTPClient;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -33,6 +38,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
+
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -40,11 +47,17 @@ import android.os.Message;
 import android.provider.BaseColumns;
 
 import com.ssb.droidsound.FileIdentifier;
+
+import com.ssb.droidsound.PlayerActivity;
 import com.ssb.droidsound.Playlist;
 import com.ssb.droidsound.SongFile;
-import com.ssb.droidsound.file.FTPStreamSource;
+
+import com.ssb.droidsound.file.FileCache;
 import com.ssb.droidsound.file.FileSource;
+
+import com.ssb.droidsound.utils.Archive;
 import com.ssb.droidsound.utils.Log;
+import com.ssb.droidsound.utils.Unpacker;
 
 
 /**
@@ -60,7 +73,7 @@ import com.ssb.droidsound.utils.Log;
 public class SongDatabase implements Runnable {
 	private static final String TAG = SongDatabase.class.getSimpleName();
 	
-	public static final int DB_VERSION = 4;
+	public static final int DB_VERSION = 7;
 	
 	private static final String[] FILENAME_array = new String[] { "_id", "FILENAME", "TYPE" };
 
@@ -72,6 +85,8 @@ public class SongDatabase implements Runnable {
 	private SQLiteDatabase rdb;
 	
 	private String dbName;
+	private String curdbName;
+	
 	private volatile boolean stopScanning;
 
 	private Context context;
@@ -86,11 +101,13 @@ public class SongDatabase implements Runnable {
 	//private int lastIndexMode = -1;
 
 	private File dbFile;
+	private List<File> seen_fss = new ArrayList<File>();
 	
 	public static final int TYPE_ARCHIVE = 0x100;
 	public static final int TYPE_DIR = 0x200;
 	public static final int TYPE_PLIST = 0x300;
 	public static final int TYPE_FILE = 0x400;
+	public static final int TYPE_VDIR = 0x500;
 	
 	public static final int SORT_TITLE = 0;
 	public static final int SORT_AUHTOR = 1;
@@ -107,8 +124,10 @@ public class SongDatabase implements Runnable {
 	public static final int INDEX_BASIC = 1;
 	public static final int INDEX_FULL = 2;
 	
-	private FTPClient intGetFTP(String urlname) { return null; }
-	
+
+	private static final Set<String> ARCHIVE_EXTENSIONS = new HashSet<String>(Arrays.asList(
+			".ZIP", ".7Z", ".RAR", ".GZ")); 
+
 	public boolean isReady() {
 		return  (mHandler != null);
 	}
@@ -150,7 +169,11 @@ public class SongDatabase implements Runnable {
 			}
 		});
 	}
-
+	
+	public String getActiveDatabaseName() {
+		return curdbName;
+	}
+	
 	private SQLiteDatabase getReadableDatabase() {
 		if(dbName == null) {
 			return null;
@@ -163,13 +186,13 @@ public class SongDatabase implements Runnable {
 		}
 	}
 
-	public SQLiteDatabase getWritableDatabase() {
+	private SQLiteDatabase getWritableDatabase() {
 		SQLiteDatabase dbrc = null;
 		if(dbName == null) {
 			return null;
 		}
 		try {
-			dbrc =  SQLiteDatabase.openDatabase(dbName, null, SQLiteDatabase.CREATE_IF_NECESSARY | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+			dbrc = SQLiteDatabase.openDatabase(dbName, null, SQLiteDatabase.CREATE_IF_NECESSARY | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -202,12 +225,20 @@ public class SongDatabase implements Runnable {
             		sdb.doScan((String)msg.obj, msg.arg1 != 0);
             	}
             	break;
+            	
             case MSG_SCANDIR:
             	sdb.doScanDir((String)msg.obj);
             	break;
+            	
             case MSG_QUIT:
             	Log.d(TAG, "Telling looper to quit");
             	Looper.myLooper().quit();
+            	break;
+            	
+            case MSG_INDEXMODE:
+            	Log.d(TAG, "Indexing ModDB");
+            	sdb.createModDB((String)msg.obj);
+            	
             	break;
             } 
 		}
@@ -285,14 +316,14 @@ public class SongDatabase implements Runnable {
 			}
 	
 			db.execSQL("CREATE TABLE IF NOT EXISTS " + "FILES" + " (" + BaseColumns._ID + " INTEGER PRIMARY KEY," +
-					"PATH" + " TEXT," +
+					"PATH"     + " TEXT," +
 					"FILENAME" + " TEXT," +
-					"TYPE" + " INTEGER," +
-	
-					"TITLE" + " TEXT," +
+					"TYPE"     + " INTEGER," +
+					"TITLE"    + " TEXT," +
 					"COMPOSER" + " TEXT," +
-					"DATE" + " INTEGER," +
-					"FORMAT" + " TEXT" + ");");
+					"DATE"     + " INTEGER," +
+					"ARCPOS"   + " INTEGER," +					
+					"FORMAT"   + " TEXT" + ");");
 					// "LENGTH" + " INTEGER" + 
 			
 			db.execSQL("CREATE TABLE IF NOT EXISTS " + "VARIABLES" + " (" + BaseColumns._ID + " INTEGER PRIMARY KEY," +
@@ -309,7 +340,7 @@ public class SongDatabase implements Runnable {
 		}
 		isReady = true;
 	}
-	
+
 	private boolean scanZip(File zipFile) throws IOException {
 		
 		Log.d(TAG, "Scanning %s", zipFile.getPath());
@@ -320,7 +351,11 @@ public class SongDatabase implements Runnable {
 		scanDb.delete("FILES", "PATH LIKE ?", new String [] { zipFile.getPath() + "/%" });		
 		
 		Log.d(TAG, "OPEN");
-		ZipFile zfile = new ZipFile(zipFile);
+		
+		Archive archive = Unpacker.openArchive(zipFile);
+		if(archive == null)
+			return false;
+		
 		
 		Log.d(TAG, "ENTRY");
 		
@@ -328,90 +363,104 @@ public class SongDatabase implements Runnable {
 		String baseName = zipFile.getPath() + "/";
 		
 		Log.d(TAG, "ENUM");
-		Enumeration<? extends ZipEntry> entries = zfile.entries();
+		Iterator<Archive.Entry> entries = archive.getIterator();
 		
 		Set<String> pathSet = new HashSet<String>();
-
+		
 		int count = 0;
-		int total = zfile.size();
+		int total = archive.getFileCount();
 
 		int reportPeriod = total / 100;
-		if(reportPeriod < 100) {
+		if(reportPeriod < 100)
 			reportPeriod = 100;
-		}
+
 
 		ContentValues values = new ContentValues();
-		//values.put("LENGTH", 0);
-		values.put("TYPE", TYPE_FILE);
-		
 		boolean pathIncluded = false;
-			
-		
-		while(entries.hasMoreElements()) {
-			
+		Archive.Entry ze = null;
+
+		String sql = "INSERT INTO FILES VALUES (?,?,?,?,?,?,?,?,?);";
+		SQLiteStatement statement = scanDb.compileStatement(sql);
+
+		while(entries.hasNext())
+		{
+								
 			if(stopScanning)
 			{
-				zfile.close();
+				archive.close();
 				return false;
 			}
 			
-			ZipEntry ze = entries.nextElement();
-			
-			String n = ze.getName(); // -> MUSIC/song.mod		
+			ze = entries.next();
+
+			String n = ze.getPath(); // -> MUSIC/song.mod		
 			int slash = n.lastIndexOf('/');				
 			String fileName = n.substring(slash+1);
 			String path;
-			if(slash >= 0) {
-				path = baseName + n.substring(0, slash); // -> '/sdcard/MODS/Stuff.zip/' + 'MUSIC'
-			} else {
+			if(slash >= 0) 
+			{
+				path = baseName + n.substring(0, slash); 
+			} 
+			else
+			{
 				path = baseNameNoSlash; // Silly optimization
 			}
 
-			if(fileName.equals("")) {
+			if(fileName.equals(""))
+			{
 				pathIncluded = true;
 				pathSet.add(path);
-			} else {
+			} 
+			
+			else
+			{
 				
 				if(!pathIncluded && !path.equals(baseNameNoSlash))
 					pathSet.add(path);
 
-				
-				FileSource fs = FileSource.create(zfile.getName() + '/' + ze.getName());
-				
+				FileSource fs = archive.getFileSource(ze);
+				long position = ze.getPosition();				
 				FileIdentifier.MusicInfo info = FileIdentifier.identify(n, fs);
 				fs.close();
-	
-				if(info != null) {
-					
-					// NOTE: Fix for strange zip archives that does not contain directories
-					//if(!pathSet.contains(path))
-					//	pathSet.add(path);
+				fs = null;				 
+				ze = null;
+				
+				if(info != null) 
+				{
+				
+					statement.bindString(2, path);
+	    			statement.bindString(3, fileName);
+	    			statement.bindLong(4, TYPE_FILE);
+	    			if (info.title != null)
+	    				statement.bindString(5, info.title);
+	    			if (info.composer != null)
+	    				statement.bindString(6, info.composer);
+	    			statement.bindLong(7, info.date);
+	    			if (info.format != null)
+	    				statement.bindString(8, info.format);
+	    			statement.bindLong(9, position);
 
-					values.put("TITLE", info.title);
-					values.put("COMPOSER", info.composer);
-					//values.put("COPYRIGHT", info.copyright);
-					values.put("DATE", info.date);
-					values.put("FORMAT", info.format);
-					values.put("PATH", path);
-					values.put("FILENAME", fileName);
-					scanDb.insert("FILES", "PATH", values);
-				} else {
+	    			statement.execute();
+	    			statement.clearBindings();
+					
+					info = null;
+					
+				} 
+				else 
+				{
 					Log.d(TAG, "Could not identify '%s'", n);
 				}
 
 				count++;
-				if((count % reportPeriod) == 0) {
+				if((count % reportPeriod) == 0)
+				{
 					isReady = false;
 					scanCallback.notifyScan(null, total >= 0 ? count * 100 / total : count);
 				}
-					
-				//if(count == 4000)
-				//	break;
 			}			
 		}
-		
-		zfile.close();
-
+	
+		archive.close();
 
 		Log.d(TAG, "Adding %d paths", pathSet.size());
 		
@@ -457,9 +506,16 @@ public class SongDatabase implements Runnable {
 			scanDb.insert("FILES", "PATH", values);
 		}
 		
+		File cacheDir = context.getCacheDir();
+		cacheDir.delete();
+		context.deleteDatabase("webview.db");
+		context.deleteDatabase("webviewCache.db");
+		System.gc();
+		FileCache.getInstance().emptyfileCache();
+		
 		return true;
 		
-	}
+	} 
 	
 	private void scanFiles(File parentDir, boolean alwaysScan, long lastScan) {
 		
@@ -494,7 +550,10 @@ public class SongDatabase implements Runnable {
 			// Directories to scan later
 			Set<String> foundDirs = new HashSet<String>();
 			Set<String> foundDirsNew = new HashSet<String>();
-			Set<File> zipFiles = new HashSet<File>();
+			List<File> foundfss = new ArrayList<File>();
+			List<File> founddbs = new ArrayList<File>();
+			
+			Set<File> arcFiles = new HashSet<File>();
 			
 			File [] fileList = parentDir.listFiles();
 			
@@ -506,18 +565,17 @@ public class SongDatabase implements Runnable {
 				}
 			}
 
-			Log.d(TAG, "Datbase has %d entries, found %d files/dirs", fileCursor.getCount(), files.size());
+			Log.d(TAG, "Database has %d entries, found %d files/dirs", fileCursor.getCount(), files.size());
 
 			Set<String> delDirs = new HashSet<String>();
 			Set<Long> delFiles = new HashSet<Long>();
-			
-
 			Set<String> removes = new HashSet<String>();
 
 			Log.d(TAG, "Comparing DB to FS");
 			
 			// Iterate over database result and compare to hash set
-			while(fileCursor.moveToNext()) {
+			while(fileCursor.moveToNext()) 
+			{
 				String fileName = fileCursor.getString(index);
 				int type = fileCursor.getInt(flindex);
 				long id = fileCursor.getLong(idindex);
@@ -534,11 +592,26 @@ public class SongDatabase implements Runnable {
 					File f = new File(parentDir, fileName);
 					
 					// Add directories to scanlist
-					if(f.isDirectory()) {
+					if(f.isDirectory()) 
+					{
+						
 						foundDirs.add(fileName);
-						/// files.remove(fileName);
 						removes.add(fileName);
-					} else {
+						
+					}
+					else if (fileName.contains(".fs_source"))
+					{
+						foundfss.add(f);
+						removes.add(fileName);
+					}
+					else if (fileName.contains(".db_source"))
+					{
+						founddbs.add(f);
+						removes.add(fileName);
+					}
+					
+					else
+					{
 						//Log.d(TAG, "!! Lastscan %d, file %s modified %d", lastScan, fileName, f.lastModified());
 						if(lastScan < f.lastModified()) {
 							// File has been modified - del and readd
@@ -570,6 +643,7 @@ public class SongDatabase implements Runnable {
 			fileCursor.close();
 			fileCursor = null;
 			//File csdb = null;
+
 			List<File> foundDumps = new ArrayList<File>();
 	
 			if(files.size() > 0 || delDirs.size() > 0 || delFiles.size() > 0) {
@@ -599,7 +673,8 @@ public class SongDatabase implements Runnable {
 					{
 						reportPeriod = 10;
 					}
-					for(String s : files) {
+					for(String s : files)
+					{
 						File f = new File(parentDir, s);
 						ContentValues values = new ContentValues();
 						values.put("PATH", f.getParentFile().getPath());
@@ -608,34 +683,60 @@ public class SongDatabase implements Runnable {
 						
 						Log.d(TAG, "%s isfile %s", f.getPath(), String.valueOf(f.isFile()));
 	
-						if(f.isFile()) {
+						if(f.isFile())
+						{
 							
 							String fn = f.getName();
 							int end = fn.length();
+							
+							String ext = "";
+							int i = fn.lastIndexOf('.');
+							if (i > 0) 
+							{
+							    ext = fn.substring(i);
+							}
 														
 							if(dbsources.containsKey(fn.toUpperCase(Locale.ENGLISH))) {								
 								foundDumps.add(f);
 								values = null;
 							}							
-							else
-							if(fn.toUpperCase(Locale.ENGLISH).endsWith(".ZIP")) {
+							
+							else if(ARCHIVE_EXTENSIONS.contains(ext.toUpperCase())) {
 								Log.d(TAG, "Found zipfile (%s)", f.getPath());
-								zipFiles.add(f);
-								
+								arcFiles.add(f);
 								values = null;
 							}
-							else 
-							if(fn.toUpperCase(Locale.ENGLISH).endsWith(".PLIST")) {
+
+							else if(fn.toUpperCase(Locale.ENGLISH).endsWith(".PLIST")) {
 								Log.d(TAG, "Found playlist (%s)", fn);
 								values.put("TYPE", TYPE_PLIST);
 								values.put("TITLE", fn.substring(0, end - 6));								
 							}
-							else 
-							if(fn.toUpperCase(Locale.ENGLISH).endsWith(".LNK")) {
+							
+							else if(fn.toUpperCase(Locale.ENGLISH).endsWith(".LNK")) 
+							{
 								Log.d(TAG, "Found link (%s)", fn);
 								values.put("TYPE", TYPE_DIR);
 								values.put("TITLE", fn.substring(0, end - 4));								
-							} else {
+							}
+
+							else if (fn.toUpperCase(Locale.ENGLISH).contains(".FS_SOURCE"))
+							{
+								foundfss.add(f);
+								values.put("TITLE", fn.substring(0, end - 10));
+								values.put("TYPE", TYPE_DIR);
+							}
+
+							else if (fn.toUpperCase(Locale.ENGLISH).endsWith(".DB_SOURCE"))
+							{
+								founddbs.add(f);
+								values.put("TITLE", fn.substring(0, end - 10));
+								values.put("TYPE", TYPE_VDIR);
+							}
+
+							
+							else 
+							{
 								values.put("TYPE", TYPE_FILE);
 								Log.d(TAG, "Checking %s", f.getPath());
 																	
@@ -658,15 +759,21 @@ public class SongDatabase implements Runnable {
 									}
 								} */
 								
-								if(!ok) {
+								if(!ok) 
+								{
 									values = null;
 								}
 							}
-						} else {
+						} 
+						
+						else
+						{
 							foundDirsNew.add(s);
 							values.put("TYPE", TYPE_DIR);
 						}
-						if(values != null) {
+						
+						if(values != null)
+						{
 							Log.d(TAG, "Inserting FILE... (%s)", s);
 							scanDb.insert("FILES", "PATH", values);
 						}
@@ -689,11 +796,21 @@ public class SongDatabase implements Runnable {
 				}
 			}
 			
-			Log.d(TAG, "zipfiles (%d)", zipFiles.size());
-			if(zipFiles.size() > 0) {				
-				for(File f : zipFiles) {
+			// arc handling here
+			
+			Log.d(TAG, "zipfiles (%d)", arcFiles.size());
+			if(arcFiles.size() > 0)
+			{				
+				for(File f : arcFiles)
+				{
 					try {
 						isReady = false;
+						
+						String ext = "";
+						int i = f.getName().lastIndexOf('.');
+						if (i > 0) 
+						    ext = f.getName().substring(i).toUpperCase();
+						
 						scanCallback.notifyScan(f.getPath(), 0);
 						scanDb.beginTransaction();
 						if(scanZip(f)) {
@@ -702,7 +819,7 @@ public class SongDatabase implements Runnable {
 							values.put("FILENAME", f.getName());
 							values.put("TYPE", TYPE_ARCHIVE);
 							int end = f.getName().length();
-							values.put("TITLE", f.getName().substring(0, end - 4));				
+							values.put("TITLE", f.getName().substring(0, end - ext.length()));				
 							Log.d(TAG, "Inserting FILE... (%s)", f.getName());
 							scanDb.insert("FILES", "PATH", values);
 							scanDb.setTransactionSuccessful();
@@ -716,8 +833,9 @@ public class SongDatabase implements Runnable {
 					scanDb.endTransaction();
 				}
 			}
-			
-			for(File dump : foundDumps) {
+			// -------------------------------------------------------------------
+			for(File dump : foundDumps)
+			{
 				DataSource ds = dbsources.get(dump.getName().toUpperCase(Locale.ENGLISH));
 				isReady = false;
 				scanCallback.notifyScan(dump.getPath(), 0);
@@ -754,20 +872,8 @@ public class SongDatabase implements Runnable {
 							ContentValues values = new ContentValues();
 							values.put("PATH", dump.getParentFile().getPath());
 							values.put("FILENAME", dump.getName());
-
-							if (dump.toString().endsWith(FileSystemSource.NAME))
-							{
-								values.put("TYPE", TYPE_DIR);
-								String fs_source_title = dump.getName();
-								fs_source_title = fs_source_title.replace(FileSystemSource.NAME, "");
-								values.put("TITLE", fs_source_title);
-							}
-							else
-							{
-								values.put("TYPE", TYPE_ARCHIVE);
-								values.put("TITLE", ds.getTitle());
-							}
-							
+							values.put("TYPE", TYPE_ARCHIVE);
+							values.put("TITLE", ds.getTitle());
 							Log.d(TAG, "Inserting %s from dump (%s)", ds.getTitle(), dump.getPath());
 							scanDb.insert("FILES", "PATH", values);
 							//db.setTransactionSuccessful();
@@ -804,6 +910,20 @@ public class SongDatabase implements Runnable {
 				scanCallback.notifyScan(f.getPath(), 0);
 				scanFiles(f, true, lastScan);
 			}
+
+			for(File f : foundfss) 
+			{
+				if (!seen_fss.contains(f))
+				{
+					seen_fss.add(f); // just to keep track what we have seen to avoid inf.loops
+					isReady = false;
+					String fsspath = FileSystemSource.getFilesystemPath(f);
+	
+					File f1 = new File(fsspath);
+					scanCallback.notifyScan(f1.getPath(), 0);
+					scanFiles(f1, true, lastScan);
+				}
+			}
 	
 		} else {
 			
@@ -818,7 +938,7 @@ public class SongDatabase implements Runnable {
 				}
 			}
 			
-			Log.d(TAG, "No change, scanning %d Datbase entries with %d dirs", fileCursor.getCount(), files.size());
+			Log.d(TAG, "No change, scanning %d Database entries with %d dirs", fileCursor.getCount(), files.size());
 
 			fileCursor.close();
 			fileCursor = null;
@@ -848,6 +968,11 @@ public class SongDatabase implements Runnable {
 		Message msg = mHandler.obtainMessage(MSG_OPEN);
 		mHandler.sendMessage(msg);
 	}
+	
+	public void doMLDB(String dbfolder) {
+		Message msg = mHandler.obtainMessage(MSG_INDEXMODE, dbfolder);
+		mHandler.sendMessage(msg);
+	}
 
 		
 	private void doScanDir(String dir) {
@@ -865,25 +990,36 @@ public class SongDatabase implements Runnable {
 		//long lastScan = -1;
 		
 		File f = new File(dir);
-		
-		if(f.isDirectory()) {
+
+		String ext = "";
+		int i = f.getName().lastIndexOf('.');
+		if (i > 0) 
+		    ext = f.getName().substring(i).toUpperCase();
+
+		if(f.isDirectory())
+		{
 			scanFiles(f, true, 0);
-		} else if(f.getName().toUpperCase(Locale.ENGLISH).endsWith(".ZIP")) {			
-			try {
+		} 
+					
+		if(ARCHIVE_EXTENSIONS.contains(ext))	
+		{
+			try 
+			{
 				isReady = false;
 				scanCallback.notifyScan(f.getPath(), 0);
 				scanDb.beginTransaction();
-				if(scanZip(f)) {
+				if(scanZip(f))
+				{
 					ContentValues values = new ContentValues();
 					values.put("PATH", f.getParentFile().getPath());
 					values.put("FILENAME", f.getName());
 					values.put("TYPE", TYPE_ARCHIVE);
 					int end = f.getName().length();
-					values.put("TITLE", f.getName().substring(0, end - 4));				
+					values.put("TITLE", f.getName().substring(0, end - ext.length()));				
 					Log.d(TAG, "Inserting FILE... (%s)", f.getName());
 					scanDb.insert("FILES", "PATH", values);
 					scanDb.setTransactionSuccessful();
-					Log.d(TAG, "ZIP TRANSATION SUCCESSFUL");
+					Log.d(TAG, "ARCHIVE TRANSACTION SUCCESSFUL");
 				}
 			} /*catch (ZipException e) {
 				Log.d(TAG, "Broken zip");
@@ -908,6 +1044,8 @@ public class SongDatabase implements Runnable {
 
 		scanDb = getWritableDatabase();
 		
+		seen_fss.clear();
+		
 		if(scanDb == null) {
 			return;
 		}
@@ -918,10 +1056,8 @@ public class SongDatabase implements Runnable {
 				
 		// FileIdentifier.setPlugins(plugins);
 
-
 		//rdb = getReadableDatabase();
 		
-
 		long startTime = System.currentTimeMillis();
 		long lastScan = -1;
 		Cursor cursor = scanDb.query("VARIABLES", new String[] { "VAR", "VALUE" }, "VAR='lastscan'", null, null, null, null);
@@ -941,7 +1077,8 @@ public class SongDatabase implements Runnable {
 
 		File parentDir = new File(modsDir);
 		
-		if(full) {
+		if(full)
+		{
 			
 			Set<File> deletes = new HashSet<File>();
 			int limit, offset;
@@ -950,10 +1087,11 @@ public class SongDatabase implements Runnable {
 						
 			scanCallback.notifyScan("Checking orphans", 0);
 			
-			while(true) {
+			while(true)
+			{
 				
 				// Remove orphaned directories
-				Cursor oc = scanDb.query("FILES", new String[] { "PATH", "FILENAME" }, "PATH NOT LIKE '%.zip%'", null, null, null, null, String.format("%d,%d", offset, limit));
+				Cursor oc = scanDb.query("FILES", new String[] { "PATH", "FILENAME" }, "PATH NOT LIKE '%.zip%' OR '%.7z%' OR '%.rar%' OR '%.gz%'", null, null, null, null, String.format("%d,%d", offset, limit));
 
 				Log.d(TAG, "Orphan check on %d files\n", oc.getCount());
 
@@ -974,18 +1112,46 @@ public class SongDatabase implements Runnable {
 						break;
 					}
 					String pathName = oc.getString(pindex);
-					if(!pathName.toUpperCase(Locale.ENGLISH).contains(".zip")) {
+					
+					if(!pathName.toUpperCase(Locale.ENGLISH).contains(".ZIP"))
+					{
 						String fileName = oc.getString(findex);
 						File f = new File(pathName, fileName);
 						if(!f.exists()) {
 							deletes.add(f);
 						}
 					}
+					else if(!pathName.toUpperCase(Locale.ENGLISH).contains(".7Z"))
+					{
+						String fileName = oc.getString(findex);
+						File f = new File(pathName, fileName);
+						if(!f.exists()) {
+							deletes.add(f);
+						}
+					}
+					else if(!pathName.toUpperCase(Locale.ENGLISH).contains(".RAR"))
+					{
+						String fileName = oc.getString(findex);
+						File f = new File(pathName, fileName);
+						if(!f.exists()) {
+							deletes.add(f);
+						}
+					}
+					else if(!pathName.toUpperCase(Locale.ENGLISH).contains(".GZ"))
+					{
+						String fileName = oc.getString(findex);
+						File f = new File(pathName, fileName);
+						if(!f.exists()) {
+							deletes.add(f);
+						}
+					}
+					
 				}
 				
 				oc.close();
 				
-				if(stopScanning) {
+				if(stopScanning)
+				{
 					break;
 				}
 				
@@ -995,18 +1161,35 @@ public class SongDatabase implements Runnable {
 					for(File f : deletes) {
 						Log.d(TAG, "Removing %s from DB\n", f.getPath());
 						scanDb.delete("FILES", "PATH=? AND FILENAME=?", new String[] { f.getParent(), f.getName() });
-						if(f.getName().toUpperCase(Locale.ENGLISH).endsWith(".ZIP")) {
-							Log.d(TAG, "Removing zip contents");
+						
+						if(f.getName().toUpperCase(Locale.ENGLISH).endsWith(".ZIP"))
+						{
+							Log.d(TAG, "Removing archive contents");
 							scanDb.delete("FILES", "PATH LIKE ?", new String[] { f.getPath() + "/%" });
 						}
+						
+						else if(f.getName().toUpperCase(Locale.ENGLISH).endsWith(".7Z")) {
+							Log.d(TAG, "Removing 7zip contents");
+							scanDb.delete("FILES", "PATH LIKE ?", new String[] { f.getPath() + "/%" });
+						}
+
+						else if(f.getName().toUpperCase(Locale.ENGLISH).endsWith(".RAR")) {
+							Log.d(TAG, "Removing 7zip contents");
+							scanDb.delete("FILES", "PATH LIKE ?", new String[] { f.getPath() + "/%" });
+						}
+
+						else if(f.getName().toUpperCase(Locale.ENGLISH).endsWith(".GZ")) {
+							Log.d(TAG, "Removing 7zip contents");
+							scanDb.delete("FILES", "PATH LIKE ?", new String[] { f.getPath() + "/%" });
+						}
+						
+						
 					}
 					scanDb.setTransactionSuccessful();
 					scanDb.endTransaction();
 				}
 			}
 		}
-
-		
 		
 		scanFiles(parentDir, full, lastScan);
 		
@@ -1058,21 +1241,24 @@ public class SongDatabase implements Runnable {
 		Cursor c = null;
 		
 		String [] columns = new String[] { "_id", "TITLE", "COMPOSER", "PATH", "FILENAME", "TYPE", "DATE" };
-		if(query.charAt(0) == '.') {
+		if(query.charAt(0) == '.')
+		{
 			char x = query.toUpperCase().charAt(1);
 			String q = "%" + query.substring(2).trim() + "%" ;			
-			switch(x) {
-			case 'C':
-				c = rdb.query("FILES", columns, "COMPOSER LIKE ?", new String[] { q }, null, null, "TITLE", "500");
-				break;
-			case 'T':
-				c = rdb.query("FILES", columns, "TITLE LIKE ?", new String[] { q }, null, null, "TITLE", "500");
-				break;
-			case 'Q':
-				c = rdb.query("FILES", columns, query.substring(2).trim(), null, null, null, "TITLE", "500");
-				break;
-			default:
-				break;
+			switch(x) 
+			{
+				case 'C':
+					c = rdb.query("FILES", columns, "COMPOSER LIKE ?", new String[] { q }, null, null, "TITLE", "500");
+					break;
+				case 'T':
+					c = rdb.query("FILES", columns, "TITLE LIKE ?", new String[] { q }, null, null, "TITLE", "500");
+					break;
+				case 'Q':
+					c = rdb.query("FILES", columns, query.substring(2).trim(), null, null, null, "TITLE", "500");
+					break;
+				default:
+					return null;
+				
 			}
 		}
 		else {
@@ -1121,7 +1307,7 @@ public class SongDatabase implements Runnable {
 	private Map<String, String> linkMap = new HashMap<String, String>();
 		
 	public Cursor getFilesInPath(String pathName, int sorting) {
-		
+
 		if(pathName == null || !isReady) {
 			return null;
 		}
@@ -1210,10 +1396,6 @@ public class SongDatabase implements Runnable {
 			}
 			return currentPlaylist.getCursor();
 		}
-
-		if(rdb == null) {
-			rdb = getReadableDatabase();
-		}
 		
 		
 		for(Entry<String, DataSource> db : dbsources.entrySet()) {
@@ -1226,26 +1408,76 @@ public class SongDatabase implements Runnable {
 				}
 			}
 		}
-		 
+		File extFile = Environment.getExternalStorageDirectory();
+		if (pathName.equals(extFile +"/" + "dsroot"))
+			dbName = extFile +"/"+ "droidsound" + "/" + "songs.db";
+			
 		
-		Log.d(TAG, "Path now '%s'", pathName);
+		if(rdb == null && !pathName.contains("/MLDB")) {
+			rdb = getReadableDatabase();
+		}
 
-		String path = file.getParent();
-		String fname = file.getName();
+		if(rdb == null && pathName.contains("/MLDB")) {
+			int idx = pathName.indexOf("/MLDB");
+			String _path = pathName.substring(0, idx);
+			dbName = _path + "/" + "modland.moddb"; 
+			rdb = getReadableDatabase();
+		}
+		
+		if (!rdb.isOpen()) {
+			rdb = getReadableDatabase();
+
+		}
+
+		if (!pathName.contains(".db_source") && !pathName.contains("/MLDB") && rdb != null)
+		{
+			rdb.close();
+			rdb = getReadableDatabase();
+		}
+			
+		curdbName = rdb.getPath();
+		Log.d(TAG, "Path now '%s'", pathName);
+		
+		String path = "";
+		String fname = "";
+	
+		if (rdb.isOpen() && (pathName.contains(".db_source") ))
+		{
+			rdb.close();
+			String dbpath = PlayerActivity.get_db_source(pathName);
+			rdb = SQLiteDatabase.openDatabase(dbpath, null, SQLiteDatabase.OPEN_READONLY | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+			curdbName = rdb.getPath();
+		}
+		
+		if(pathName.contains(".db_source"))
+		{
+			pathName = PlayerActivity.translate_db_sourcePath(pathName);
+			pathName = pathName.replace("/modland.moddb", "/MLDB"); // MLDB is static identifier for Modland entries in the DB file
+			file = new File(pathName);
+		}
+		
+		else if(pathName.contains(".fs_source")) 
+		{
+			pathName = PlayerActivity.translate_fss_sourcePath(pathName);
+			file = new File(pathName);
+		}
+
+		path = file.getParent();
+		fname = file.getName();
 		
 		if(path == null || fname == null) {
 			return null;
 		}
 	
 		Log.d(TAG, "BEGIN");
-		Cursor c = rdb.query("FILES", new String[] { "TITLE", "TYPE" }, "PATH=? AND FILENAME=?", new String[] { path, fname }, null, null, sortOrder[sorting], "5000");
+		Cursor c = rdb.query("FILES", new String[] { "TITLE", "TYPE" }, "PATH=? AND FILENAME=?", new String[] { path, fname }, null, null, sortOrder[sorting], "8000");
 		if(c != null) {
 			if(c.moveToFirst()) {
 				pathTitle = c.getString(0);
 			}
 			c.close();
 		}
-		c = rdb.query("FILES", new String[] { "_id", "TITLE", "COMPOSER", "FILENAME", "TYPE", "DATE" }, "PATH=?", new String[] { pathName }, null, null, sortOrder[sorting], "5000");	
+		c = rdb.query("FILES", new String[] { "_id", "TITLE", "COMPOSER", "FILENAME", "TYPE", "DATE" }, "PATH=?", new String[] { pathName }, null, null, sortOrder[sorting], "8000");	
 		Log.d(TAG, "END");
 		return c;
 	}
@@ -1256,7 +1488,6 @@ public class SongDatabase implements Runnable {
 
 	public void stopScan() {
 		stopScanning = true;
-		
 	}
 
 	public boolean isScanning() {
@@ -1273,9 +1504,14 @@ public class SongDatabase implements Runnable {
 			Log.d(TAG, "Song exists, ignoring");
 			return;
 		}
-		
-		if(songFile.getName().toUpperCase(Locale.ENGLISH).endsWith(".ZIP")) {
-			Log.d(TAG, "WONT add zip files");
+
+		String ext = "";
+		int i = songFile.getName().lastIndexOf('.');
+		if (i > 0) 
+		    ext = songFile.getName().substring(i).toUpperCase();
+
+		if(ARCHIVE_EXTENSIONS.contains(ext)) {
+			Log.d(TAG, "WONT add archive files");
 			return;
 		}
 
@@ -1412,6 +1648,305 @@ public class SongDatabase implements Runnable {
 				values.put("TITLE", n);
 			}
 			
+			SQLiteDatabase db = getWritableDatabase();
+			db.insert("FILES", "PATH", values);
+			db.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}					
+	}
+	
+    public static void unzip_allModsZip(String zipName, String targetPath) throws IOException 
+    {
+    	
+        ZipInputStream zis = new ZipInputStream(new FileInputStream(zipName));
+        ZipEntry ze = zis.getNextEntry();
+        byte[] buffer = new byte[1024*512];
+
+        while(ze != null)
+        {
+            String fileName = ze.getName();
+            File newFile = new File(targetPath + "/" + fileName);
+
+            FileOutputStream fos = new FileOutputStream(newFile);
+
+            int len;
+            while ((len = zis.read(buffer)) > 0)
+            {
+                fos.write(buffer, 0, len);
+            }
+
+            fos.close();
+            ze = zis.getNextEntry();
+        }
+        zis.closeEntry();
+        zis.close();
+    }
+	
+	
+	public void createModDB(String dbfolder) {
+		
+		
+		File extFile = Environment.getExternalStorageDirectory();
+		String modsDir = "";
+		if(extFile != null) 
+		{
+			File f = new File(extFile, "dsroot");
+			modsDir = f.getPath();
+		}
+		
+		// also remove the .db file if it exists
+		File dbdir = new File(dbfolder);
+		if (!dbdir.exists())
+			dbdir.mkdir();
+		
+		if (rdb != null)
+			rdb.close();
+		File dbFile = new File(dbfolder, "modland.moddb");
+		if (dbFile.exists())
+			dbFile.delete();			
+			
+		// if we don't have allmods.txt, then lets get the zip from the modland
+	
+		File allmodsFile = new File(modsDir, "allmods.txt");
+		if (allmodsFile.exists())
+			allmodsFile.delete();
+
+		File target = new File(extFile+"/droidsound","allmods.zip");
+		if (target.exists())
+			target.delete();
+
+		String server = PlayerActivity.prefs.getString("Modland_server", "modland.ziphoid.com");
+		FileSource fs = FileSource.create("ftp://" + server + "/allmods.zip");
+		File zipfile = fs.getFile();
+		try {
+			unzip_allModsZip(zipfile.getPath(), modsDir);
+			PlayerActivity.copyFile(zipfile, target);
+		} 
+		
+		catch (IOException e1) {
+			e1.printStackTrace();
+			return;
+		}
+				
+		SQLiteDatabase moddb = null;
+				
+		try {
+			moddb = SQLiteDatabase.openDatabase(dbfolder + "/" + "modland.moddb", null, SQLiteDatabase.CREATE_IF_NECESSARY | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+		} 
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+		moddb.execSQL("DROP TABLE IF EXISTS FILES ;");
+
+		moddb.execSQL("CREATE TABLE IF NOT EXISTS " + "FILES" + " (" + BaseColumns._ID + " INTEGER PRIMARY KEY," +
+				"PATH"     + " TEXT," +
+				"FILENAME" + " TEXT," +
+				"TYPE"     + " INTEGER," +
+				"TITLE"    + " TEXT," +
+				"COMPOSER" + " TEXT," +
+				"DATE"     + " INTEGER," +
+				"ARCPOS"   + " INTEGER," +					
+				"FORMAT"   + " TEXT" + ");");
+
+		moddb.execSQL("DROP INDEX IF EXISTS fileindex ;");
+				
+		//moddb.delete("FILES", null,  null);
+		FileWriter writer;
+		try {
+			writer = new FileWriter(modsDir+ "/" + "ModDB.db_source");
+			writer.append(dbfolder + "/" + "modland.moddb");
+			writer.close();
+		}
+		catch (IOException e) {
+			return;
+		}
+		
+		ContentValues values = new ContentValues();
+		
+		File file = new File(modsDir, "ModDB");	
+		values.put("PATH", file.getParent());
+		values.put("FILENAME", file.getName() + ".db_source");
+		values.put("TYPE", TYPE_VDIR);
+		int dot = file.getName().indexOf('.');
+		if(dot > 0) {
+			values.put("TITLE", file.getName().substring(0, dot));
+		} else {
+			values.put("TITLE", file.getName());
+		}
+
+		moddb.insert("FILES", "PATH", values);
+		values.clear();
+		file = null;
+			
+		
+	    String _rootpath = dbfolder + "/MLDB"; //static identifier so we know its from Modland
+	    
+	    //moddb.execSQL("PRAGMA synchronous=OFF");
+
+	    moddb.beginTransaction();
+				
+		final Set<String> seen_paths = new HashSet<String>();
+        String line = "";
+        int counter = 0;
+              
+        BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(new File(modsDir, "allmods.txt")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		stopScanning = false;
+		scanning = true;
+
+		isReady = false;
+		scanCallback.notifyScan("Indexing moddb...", 0);
+		
+		String sql = "INSERT INTO FILES VALUES (?,?,?,?,?,?,?,?,?);";
+		SQLiteStatement statement = moddb.compileStatement(sql);
+							
+		try 
+        {
+			while ((line = br.readLine()) != null)
+			{
+				if (line.equals(""))
+					break;
+			    String name = line.split("\t")[1].trim();
+			    String[] parts = name.split("/");
+
+			    if (parts[0].equals("Ad Lib") || parts[0].equals("Video Game Music")) {
+			        if (parts.length == 4)
+			            parts = new String [] {parts[0]+"/"+parts[1],parts[2],parts[3]};
+
+			        else if (parts.length == 5)
+			            parts = new String [] {parts[0]+"/"+parts[1],parts[2],parts[3],parts[4]};
+
+			        else if (parts.length == 6)
+			            parts = new String [] {parts[0]+"/"+parts[1],parts[2],parts[3],parts[4],parts[5]};
+			    }
+
+			    if (parts[0].equals("YM") && parts[1].equals("Synth Pack")) {
+			        parts = new String [] {parts[0]+"/"+parts[1],parts[2],parts[3]};
+			    }
+
+			    if (parts[2].startsWith("coop-")) {
+			        if (parts.length == 4)
+			            parts = new String [] {parts[0], parts[1]+"/"+parts[2], parts[3]};
+			        else if (parts.length == 5)
+			            parts = new String [] {parts[0], parts[1]+"/"+parts[2], parts[3], parts[4]};
+
+			    }
+
+			    if (parts.length == 5 && (parts[3].startsWith("instr") || parts[3].startsWith("songs"))) {
+			        parts = new String [] {parts[0], parts[1], parts[2], parts[3]+"/"+parts[4]};
+			    }
+
+			    if (parts.length > 4) {
+			        if (parts.length == 5)
+			            parts = new String [] {parts[0], parts[1], parts[2], parts[3]+"/"+parts[4]};
+			        else if (parts.length == 6)
+			            parts = new String [] {parts[0], parts[1], parts[2], parts[3]+"/"+parts[4]+"/"+parts[5]};
+
+			    }
+
+			    String author = parts[1];
+			    String rootpath = _rootpath;
+
+			    File f = new File(name);
+
+			    String filename = f.getName();
+			    String path = f.getParent();
+			    String[] folders = path.split("/");
+
+			    int idx = f.getName().lastIndexOf('.');
+			    String format = f.getName().substring(idx+1).toUpperCase();
+
+			    if (FileIdentifier.KNOWN_FORMATS.contains(format))
+			    {
+			    	for (String folder : folders)
+			    	{
+			    		if (!seen_paths.contains(rootpath+"/"+folder))
+			    		{
+			    			
+			    			statement.bindString(2, rootpath);
+			    			statement.bindString(3, folder);
+			    			statement.bindLong(4, TYPE_DIR);
+			    			statement.bindString(5, folder);
+			    			statement.execute();
+			    			statement.clearBindings();
+							
+			                rootpath += "/"+folder;
+			                seen_paths.add(rootpath);
+			    		}
+			            
+			    		else
+			    		{
+			            	rootpath += "/"+folder;
+			            }
+			    	}
+
+			    	statement.bindString(2, rootpath);
+	    			statement.bindString(3, filename);
+	    			statement.bindLong(4, TYPE_FILE);
+	    			statement.bindString(5, filename);
+	    			statement.bindString(6, author);
+	    			statement.execute();
+	    			statement.clearBindings();
+    			
+					counter++;
+					if((counter % 1000) == 0)
+					{
+					
+						isReady = false;
+						scanCallback.notifyScan(null, counter);
+					}
+			    }
+			}
+	        br.close();
+		} 
+        catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		moddb.execSQL("CREATE INDEX IF NOT EXISTS fileindex ON FILES (PATH) ;");
+		values.clear();
+        values = null;
+        moddb.setTransactionSuccessful();
+        moddb.endTransaction();
+	    //moddb.execSQL("PRAGMA synchronous=NORMAL");
+        moddb.close();
+		moddb = null;
+
+		stopScanning = true;
+		scanning = false;
+		isReady = true;
+		return;
+	}
+	
+	public void createFileBrowser(File file, String contents) {
+		
+		FileWriter writer;
+		String n = file.getName();
+		try
+		{			
+			writer = new FileWriter(file);
+			writer.append(contents);
+			writer.close();
+			
+			ContentValues values = new ContentValues();
+			values.put("PATH", file.getParent());
+			//values.put("PATH", contents);
+			values.put("FILENAME", n);
+			values.put("TYPE", TYPE_DIR);
+			
+			int dot = n.indexOf('.');
+			if(dot > 0) {
+				values.put("TITLE", n.substring(0, dot));
+			} else {
+				values.put("TITLE", n);
+			}
+					
 			SQLiteDatabase db = getWritableDatabase();
 			db.insert("FILES", "PATH", values);
 			db.close();

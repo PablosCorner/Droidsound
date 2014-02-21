@@ -19,18 +19,17 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := highlytheo
 
-LOCAL_SRC_FILES := htplugin.cpp
-
 LOCAL_ARM_MODE := arm
 
-MY_SOURCES := $(wildcard $(LOCAL_PATH)/ht/*.c)
-LOCAL_SRC_FILES += $(MY_SOURCES:$(LOCAL_PATH)%=%)
-
-MY_SOURCES := $(wildcard $(LOCAL_PATH)/ht/m68k/m68kops.c)
-LOCAL_SRC_FILES += $(MY_SOURCES:$(LOCAL_PATH)%=%)
-
-MY_SOURCES := $(wildcard $(LOCAL_PATH)/ht/m68k/m68kcpu.c)
-LOCAL_SRC_FILES += $(MY_SOURCES:$(LOCAL_PATH)%=%)
+LOCAL_SRC_FILES := htplugin.cpp \
+	ht/arm.c \
+	ht/dcsound.c \
+	ht/psflib.c \
+	ht/satsound.c \
+	ht/sega.c \
+	ht/yam.c \
+	ht/m68k/m68kops.c \
+	ht/m68k/m68kcpu.c
 
 LOCAL_LDFLAGS = -Wl,--fix-cortex-a8
 LOCAL_LDLIBS := -llog -lz

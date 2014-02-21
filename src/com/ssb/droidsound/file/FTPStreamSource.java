@@ -18,12 +18,30 @@ import com.ssb.droidsound.utils.Log;
 public class FTPStreamSource extends FileSource
 {
 	private static final String TAG = FTPStreamSource.class.getSimpleName();
+	
+	private static FTPClient ftp = null;
 
 	public FTPStreamSource(String ref)
 	{
 		super(ref);
+		ftp = null;
 	}
+
+
+	public static void ftpclose() {
+		if (ftp != null) {
+			try {
+				ftp.logout();
+				ftp.disconnect();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+			ftp = null;
+		}
 	
+	}
 	protected static boolean pingFTP(String host) {
 		
 		InetAddress in = null;
@@ -90,7 +108,7 @@ public class FTPStreamSource extends FileSource
 			
 			int reply;		
 							
-			FTPClient ftp = new FTPClient();
+			ftp = new FTPClient();
 			String host = url.getHost();
 			
 			

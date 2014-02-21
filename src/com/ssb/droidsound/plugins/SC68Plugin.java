@@ -61,8 +61,7 @@ public class SC68Plugin extends DroidSoundPlugin
 			}
 		}
 	}
-	
-	
+		
 	//
 	// collect all the options to one place
 	//
@@ -127,7 +126,7 @@ public class SC68Plugin extends DroidSoundPlugin
 		}
 		
 		Log.d(TAG, "Trying to load '%s' -> %d", fs.getName(), currentSong);
-		currentSong = N_load(fs.getContents(), (int) fs.getLength());
+		currentSong = N_load(fs.getData(), (int) fs.getLength());
 			
 		
 		// set the options here
@@ -234,7 +233,7 @@ public class SC68Plugin extends DroidSoundPlugin
 		type = null;
 		infoMap.clear();
 
-		byte module [] = fs.getContents();
+		byte module [] = fs.getData();
 		int size = (int) fs.getLength();
 		byte data [] = module;
 		String head = new String(module, 0, 4);
@@ -258,7 +257,7 @@ public class SC68Plugin extends DroidSoundPlugin
 		
 		String header = new String(data, 12, 4);
 		String header2 = new String(data, 0, 16);
-		String sndh_data = new String(data,16,1024);
+		String sndh_data = new String(data,16,240);
 		
 		if(header.equals("SNDH"))
 		{

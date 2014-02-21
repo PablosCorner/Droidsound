@@ -59,7 +59,7 @@ public class GSFPlugin extends DroidSoundPlugin {
 	public boolean load(FileSource fs) {
 		
 		
-		Map<String, String> tagMap = PSFFile.getTags(fs.getContents(), (int) fs.getLength());
+		Map<String, String> tagMap = PSFFile.getTags(fs.getData(), (int) fs.getLength());
 		info = new String [128];
 		if(tagMap != null) {			
 			info[INFO_TITLE] = tagMap.get("title");
@@ -100,7 +100,7 @@ public class GSFPlugin extends DroidSoundPlugin {
 	@Override
 	public boolean loadInfo(FileSource fs) {
 		
-		byte [] module = fs.getContents();
+		byte [] module = fs.getData();
 		int size = (int) fs.getLength();
 		
 		//ByteBuffer src = ByteBuffer.wrap(module, 0, size);		

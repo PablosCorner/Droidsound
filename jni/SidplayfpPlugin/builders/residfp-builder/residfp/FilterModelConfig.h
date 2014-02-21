@@ -34,7 +34,7 @@ class Integrator;
 class FilterModelConfig
 {
 private:
-    static const unsigned int OPAMP_SIZE = 22;
+    static const unsigned int OPAMP_SIZE = 33;
     static const unsigned int DAC_BITS = 11;
 
 private:
@@ -66,7 +66,7 @@ private:
     const double vmin, norm;
     double opamp_working_point;
     unsigned short* mixer[8];
-    unsigned short* summer[7];
+    unsigned short* summer[5];
     unsigned short* gain[16];
     double dac[DAC_BITS];
     unsigned short vcr_Vg[1 << 16];

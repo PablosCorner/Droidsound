@@ -19,10 +19,12 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := highlyquix
 
-LOCAL_SRC_FILES := hqplugin.cpp
-
-MY_SOURCES := $(wildcard $(LOCAL_PATH)/hq/*.c)
-LOCAL_SRC_FILES += $(MY_SOURCES:$(LOCAL_PATH)%=%)
+LOCAL_SRC_FILES := hqplugin.cpp \
+	hq/kabuki.c \
+	hq/psflib.c \
+	hq/qmix.c \
+	hq/qsound.c \
+	hq/z80.c
 
 LOCAL_LDLIBS := -llog -lz
 LOCAL_CFLAGS = -DEMU_COMPILE -DEMU_LITTLE_ENDIAN -DHAVE_STDINT_H

@@ -9,7 +9,7 @@ public class PSFPlugin extends DroidSoundPlugin
 {
 	private static Map<String, String> psfoptMap = new HashMap<String, String>();
 
-	private static SexyPSFPlugin sexypsfPlugin = new SexyPSFPlugin();
+	//private static SexyPSFPlugin sexypsfPlugin = new SexyPSFPlugin();
 	private static HEPlugin hePlugin = new HEPlugin();
 	
 	@Override
@@ -21,7 +21,7 @@ public class PSFPlugin extends DroidSoundPlugin
 			String v = val.toString();
 			psfoptMap.put("psfengine", v);
 			hePlugin.setOption(opt, val);
-			sexypsfPlugin.setOption(opt, val);
+			//sexypsfPlugin.setOption(opt, val);
 		}
 	}
 

@@ -34,7 +34,7 @@
 		android:ellipsize="start"
 		android:singleLine="true"
 		android:textColor="#FFFFFFFF"
-		android:textSize="15dp" />
+		android:textSize="20dp" />
 
 	</LinearLayout>
 	

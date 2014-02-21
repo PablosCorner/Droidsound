@@ -24,5 +24,6 @@ public class SongMeta {
 	public static final String BUFFERING = "buffering";
 	public static final String ENDLESS = "endless";
 	public static final String SYSTEM_NAME = "system_name";
+	public static final String YEAR = "year";
 
 }

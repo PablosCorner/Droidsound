@@ -19,11 +19,25 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := id3tag
 
-LOCAL_SRC_FILES := ID3Tag.cpp
-
-MY_SOURCES := $(wildcard $(LOCAL_PATH)/libid3tag/*.c)
-LOCAL_SRC_FILES += $(MY_SOURCES:$(LOCAL_PATH)%=%)
-
+LOCAL_SRC_FILES := ID3Tag.cpp \
+	libid3tag/compat.c \
+	libid3tag/crc.c \
+	libid3tag/debug.c \
+	libid3tag/field.c \
+	libid3tag/file.c \
+	libid3tag/frame.c \
+	libid3tag/frametype.c \
+	libid3tag/genre.c \
+	libid3tag/latin1.c \
+	libid3tag/parse.c \
+	libid3tag/render.c \
+	libid3tag/tag.c \
+	libid3tag/ucs4.c \
+	libid3tag/utf16.c \
+	libid3tag/utf8.c \
+	libid3tag/util.c \
+	libid3tag/version.c
+	
 LOCAL_CFLAGS := -I$(LOCAL_PATH)/libid3tag
 LOCAL_LDLIBS := -llog -lz
 

@@ -28,24 +28,17 @@ public class VGMStreamPlugin extends DroidSoundPlugin {
 	private boolean multi_file;
 	
 	private static final Set<String> SINGLE_EXTENSIONS = new HashSet<String>(Arrays.asList(
-			"AAAP", "AAX", "ADX", "ADP", "AFC", "AGSC", "AIX", "AMTS", "ASS", "ASF", "ASR", 
-			"AST", 
-			"AUS", "BAF", "BG00", "BMDX", "BGW", "BNS", "BRSTM", "CAF", "CAPDSP", "CCC", 
-			"CFN", "CNK", "DE2", 
-			"DSP", "DXH", "EAM", "ENTH", "EXST", "FAG", "FILP",	"FSB", "GCA", "GCM", "GCSW", 
-			"GCW", "GENH", 
-			"GMS", "GSB", "HGC1", "HPS", "IDSP", "IKM", 
+			"AAAP", "AAX", "ADX", "ADP", "AFC", "AGSC", "AHX", "AIX", "AMTS", "ASS", "ASF", "ASR", 
+			"AST",  "AUS", "BAF", "BG00", "BMDX", "BGW", "BNS", "BRSTM", "CAF", "CAPDSP", "CCC", 
+			"CFN", "CNK", "BCWAV", "DE2", "DSP", "DXH", "EAM", "ENTH", "EXST", "FAG", "FILP", "FSB", 
+			"GCA", "GCM", "GCSW", "GCW", "GENH", "GMS", "GSB", "HGC1", "HPS", "IDSP", "IKM", 
 			"ILD", "INT", "ISD", "IVB", "JOE", "KCES", "KCEY", "KHV", "LEG", "LOGG", "MATX", "MCG", 
-			"MIB", 
-			"MIHB",	"MIC", "MPDSP", "MSA", "MSS", "MSVP", "MUSC", "MUSX", "NPSF", "PDT", 
-			"PNB", "PSH", 
-			"PSW", "RIFF", 
-			"RKV", "RND", "RRDS", "RSD", "RSF", "RSTM", "RWS", "RXW", "SAD", "SCD", "SEG", "SFS", 
-			"SL3", 
-			"SPM", "SS2", "STR", "STS", "STRM", "STER", "STX", "STS", "SVAG", "SVS", "SWAV", "THP",   
-			"VAS", "VAG", "VIG", "VOI", "VPK", "VSF", "WAA", "WAM", "WAVM", "WP2", "WSI", "WVS",
-			"XMU", 
-			"XA", "XA2", "XSS", "XWB", "WVAS", "WWAV", "YMF")); 
+			"MIB", "MIHB", "MIC", "MPDSP", "MSA", "MSS", "MSVP", "MUSC", "MUSX", "NPSF", "PDT",
+			"PNB", "PSH", "PSW", "RIFF", "RKV", "RND", "RRDS", "RSD", "RSF", "RSTM", "RWS", "RXW",
+			"SAD", "SCD", "SEG", "SFS",	"SL3", "SPM", "SS2", "STR", "STS", "STRM", "STER", "STX",
+			"STS", "SVAG", "SVS", "SWAV", "TEC", "THP", "VAS", "VAG", "VIG", "VOI", "VPK", "VSF", "WAA",
+			"WAM", "WAVM", "WP2", "WSI", "WVS", "XMU", "XA", "XA2", "XSS", "XWB", "WVAS", "WWAV",
+			"YMF")); 
 
 	@Override
 	public boolean canHandle(FileSource fs) 
@@ -75,8 +68,8 @@ public class VGMStreamPlugin extends DroidSoundPlugin {
 		list.put("plugin", "VGMStream");
 		list.put("format", extension);
 		
-		int freq = N_getIntInfo(songRef,DroidSoundPlugin.INFO_FREQUENCY);
-		int channels = N_getIntInfo(songRef,DroidSoundPlugin.INFO_CHANNELS);
+		int freq = N_getIntInfo(songRef, DroidSoundPlugin.INFO_FREQUENCY);
+		int channels = N_getIntInfo(songRef, DroidSoundPlugin.INFO_CHANNELS);
 		
 		list.put("frequency", Integer.toString(freq)+"Hz");
 
@@ -107,6 +100,12 @@ public class VGMStreamPlugin extends DroidSoundPlugin {
 	{
 		return null;
 	}
+	
+	@Override
+	public boolean loadInfo(FileSource fs)
+	{
+		return true;
+	} 
 
 	@Override
 	public boolean load(FileSource fs)

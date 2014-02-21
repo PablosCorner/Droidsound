@@ -22,7 +22,7 @@ import com.ssb.droidsound.utils.Log;
 class PlayListAdapter extends BaseAdapter {
 	private static final String TAG = PlayListAdapter.class.getSimpleName();
 	
-	private static final String [] monthNames = { "Jan", "Feb", "Mars", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dev" };	
+	private static final String [] monthNames = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };	
 
 	
 	private Context mContext;
@@ -56,8 +56,16 @@ class PlayListAdapter extends BaseAdapter {
 	
 	private String getTypeName(String filename, String title, int type) {
 		switch(type) {
-		case SongDatabase.TYPE_FILE: return "file";
-		case SongDatabase.TYPE_DIR: return "folder";
+		case SongDatabase.TYPE_FILE: 
+			return "file";
+		case SongDatabase.TYPE_VDIR:
+			return "vfolder";
+			
+		case SongDatabase.TYPE_DIR:
+			if (filename.contains(".fs_source"))
+				return "filesys";
+			return "folder";
+		
 		case SongDatabase.TYPE_PLIST:
 			if(title.equals("Favorites"))
 				return "favorites";
@@ -66,9 +74,9 @@ class PlayListAdapter extends BaseAdapter {
 		case SongDatabase.TYPE_ARCHIVE:
 			if (filename.contains(".fs_source"))
 				return "filesys";
-			if(title.equals("CSDb"))
+			else if(title.equals("CSDb"))
 				return "csdb";
-			if(title.equals("Local Mediastore"))
+			else if(title.equals("Local Mediastore"))
 				return "media";
 			else if(title.equals("Filesystem"))
 				return "filesys";
@@ -278,15 +286,46 @@ class PlayListAdapter extends BaseAdapter {
 		tm.applySelector(vg, "item." + typeName + ":" + flags);
 		
 		iv.setVisibility(iv.getDrawable() == null ? View.GONE : View.VISIBLE);
-
-		if(sub != null) {
-			tv1.setText(sub);
+		String mypath = "";
+				
+		if (type == SongDatabase.TYPE_DIR) {
+			int idx = getPath(position).indexOf("/MLDB/");
+			if (idx != -1)
+			{
+				mypath = getPath(position).substring(idx + 6);
+				mypath = mypath.replace(filename, "");
+			}
+		}
+		
+		if (type == SongDatabase.TYPE_DIR)
+		{
+			if (!mypath.equals(""))
+			{
+				tv1.setText(mypath);
+				tv1.setVisibility(View.VISIBLE);
+			}
+			else
+			{
+				tv0.setTextSize(TypedValue.COMPLEX_UNIT_PX, tv0.getTextSize());
+				tv1.setVisibility(View.GONE);
+			}
+		}
+		
+		else if (type == SongDatabase.TYPE_FILE)
+		{
+			if (sub != null)
+			{
+				tv1.setText(sub);
+			}
 			tv1.setVisibility(View.VISIBLE);
-		} else {
-			tv0.setTextSize(TypedValue.COMPLEX_UNIT_PX, tv0.getTextSize() + tv1.getTextSize());
+		}
+		
+		else {
+			tv0.setTextSize(TypedValue.COMPLEX_UNIT_PX, tv0.getTextSize());
 			tv1.setVisibility(View.GONE);
 		}
 		
+			
 		return vg;
 	}
 	

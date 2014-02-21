@@ -1,19 +1,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
         android:key="main_prefs">
-    <!--
-    <CheckBoxPreference
-            android:key="extensions"
-            android:title="Unknown extensions"
-            android:defaultValue="false"
-            android:summary="Index files with unknown extensions"
-            />
-     CheckBoxPreference
-            android:key="silence"
-            android:title="Silence detection"
-            android:defaultValue="true"
-            android:summaryOff="Silence will not trigger a song change"
-            android:summaryOn="Silence will trigger a song change"
-            / -->
+ 
     <CheckBoxPreference
             android:key="openplayer"
             android:title="Switch to Player"
@@ -45,74 +32,26 @@
             android:key="autorescan_db"
             android:title="Rescan DB on start"
             android:defaultValue="false"
-            android:summary="Automatically perform rescan when application starts"
+            android:summary="Allow rescans during start"
             />
-    
-    <!-- CheckBoxPreference
-            android:key="looping"
-            android:title="Generic Looping"
-            android:defaultValue="false"
-            android:summary="Loop songs"
-            />
-            
-     ListPreference
-            android:key="buffer"
-            android:title="Buffer Size"
-            android:summary="Sound buffer size. Increase to avoid skipping."
-            android:defaultValue="Long"
-            android:entries="@array/buffer_opts"
-			android:entryValues="@array/buffer_opts"
-            android:summaryOn="Audio buffer size"
-            / -->
-    
-    
-	 <EditTextPreference
+      
+	
+	<EditTextPreference
 			android:inputType="numberDecimal"
             android:key="default_length"
             android:title="Default song length"
             android:dialogTitle="Length (in seconds)"
-            android:defaultValue="360"
+            android:defaultValue="180"
             android:summary="If no song length available, use default length."
             />
-
-	
-            
-	<!-- EditTextPreference
-			android:inputType="numberDecimal"
-            android:key="default_length"
-            android:title="Max song length"
-            android:dialogTitle="Length (in seconds)"
-            android:defaultValue="900"
-            android:summary="Never loop more than this."
-	/-->
-	
-	
-	<!--EditTextPreference
-	    	android:inputType="textFilter"
-            android:key="modsDir"
-            android:title="Default module dir path"
-            android:dialogTitle="Path to module dir"
-            android:defaultValue="/mnt/sdcard/dsroot"
-            android:summary="Default module dir path"
-	/-->
-	
+		
 	<PreferenceScreen
             android:key="audio_prefs"
             android:title="Audio"
             android:summary="Plugin Audio Settings"
 	>
 	
-		<!-- <PreferenceCategory
-			android:title="MP3"
-			android:key="MP3Plugin"
-		>
-		<CheckBoxPreference
-	            android:key="MP3Plugin.simplestream"
-	            android:title="Simple MP3 streaming"
-	            android:defaultValue="false"
-	            android:summary="Use simple Android streaming. More limited but possibly more stable."
-	            /> 
-		</PreferenceCategory> -->
+		
 		
 		<PreferenceCategory
 		    android:title="SC68"
@@ -146,19 +85,7 @@
 	    		    
 		</PreferenceCategory>
 		
-		<PreferenceCategory
-			android:title="PSF"
-			android:key="PSFPlugin"
-		>
-		
-		<ListPreference
-	            android:key="PSFPlugin.psfengine"
-	            android:title="PSF Engine"
-	            android:defaultValue="HighlyEXP"
-				android:entries="@array/psf_opts"
-				android:entryValues="@array/psf_opts"
-	            />
-		</PreferenceCategory>		
+			
 		
 						
 		<PreferenceCategory
@@ -258,44 +185,36 @@
 	android:summary="Scan sdcard for changes and update database."
 	/>
 
-		<!-- 
-		<PreferenceScreen
-            android:key="database_prefs"
-            android:title="Database"
-            android:summary="Database options"
-            >
-        <ListPreference
-                android:key="indexing"
-                android:title="Indexing"
-                android:summary="Database index level. Don't change unless you know you need to"
-                android:defaultValue="Basic"
-                android:entries="@array/indexing_opts"
-                android:entryValues="@array/indexing_opts"
-		/>
-		<Preference android:key="backup_pref"
-		android:title="Backup database"
-		android:summary="Copy the database to sdcard"
-		/>
-		<Preference android:key="restore_pref"
-		android:title="Restore database"
-		android:summary="Restore database from file on sdcard"
-		/>  
-    </PreferenceScreen>
-    -->
+		
 
 	<ListPreference
             android:key="FileCache.fcsize"
             android:title="FileCache Size in MB"
-            android:defaultValue="64"
+            android:defaultValue="32"
 			android:entries="@array/filecache_opts"
 			android:entryValues="@array/filecache_opts"
 			android:summary="Change the fileCache size"
             />
-
+	
+	<ListPreference
+            android:key="Modland_server"
+            android:title="Modland Server"
+            android:defaultValue="modland.ziphoid.com"
+			android:entries="@array/mlservers_opts"
+			android:entryValues="@array/mlservers_vals"
+			android:summary="Select Modland server"
+            />
+	
     <Preference
-    	android:key="flush_cache"
-		android:title="Flush Cache"
-		android:summary="Flushes the directory cache."
+    	android:key="flush_cursor"
+		android:title="Reset cursor"
+		android:summary="Resets the directory cursor"
+   	/>
+    
+    <Preference
+    	android:key="flush_filecache"
+		android:title="Reset fileCache"
+		android:summary="Resets the fileCache"
    	/>
     
     <Preference
@@ -307,6 +226,8 @@
     <Preference android:key="help_pref"
 		android:title="Droidsound Help"
 		/>
-    <PreferenceScreen android:key="about_prefs" android:title="About Droidsound" />
+
+    <PreferenceScreen android:key="about_prefs" 
+        android:title="About Droidsound" />
     
 </PreferenceScreen> 

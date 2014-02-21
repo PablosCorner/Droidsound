@@ -19,7 +19,7 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_NDSPlugin_N_1load(JNIEnv
 	int result;
 		
 	const char *filename = env->GetStringUTFChars(fname, NULL);
-	char temp[1024];
+	char temp[260];
 	strcpy(temp, filename);
 
     result = xsf_start(temp);

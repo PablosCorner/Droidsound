@@ -76,6 +76,6 @@ LOCAL_C_INCLUDES  += $(LOCAL_PATH)/utils/STILview
 
 LOCAL_CFLAGS := -DHAVE_CONFIG_H -O3
 LOCAL_LDLIBS := -llog -lstdc++
-LOCAL_CPPFLAGS += -fexceptions -std=c++11
+LOCAL_CPPFLAGS += -fexceptions -std=gnu++11
 
 include $(BUILD_SHARED_LIBRARY)

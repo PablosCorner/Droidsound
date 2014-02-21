@@ -15,7 +15,7 @@ import java.util.Map.Entry;
 
 import android.annotation.SuppressLint;
 import android.os.Environment;
-import android.util.SparseIntArray;
+
 
 import com.ssb.droidsound.file.FileSource;
 import com.ssb.droidsound.utils.Log;
@@ -25,7 +25,7 @@ public class UADEPlugin extends DroidSoundPlugin {
 	private static final String TAG = UADEPlugin.class.getSimpleName();
 
 	static {
-		//System.loadLibrary("uade");
+		System.loadLibrary("uade");
 	}
 
 	private static Set<String> extensions = new HashSet<String>();

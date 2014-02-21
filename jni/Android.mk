@@ -16,22 +16,22 @@
 
 X := $(call my-dir)
 
-include $(X)/VGMStreamPlugin/Android2.mk
+include $(X)/USFPlugin/Android.mk
+include $(X)/OpenMPTPlugin/Android.mk
+include $(X)/VGMStreamPlugin/mpg123.mk
 include $(X)/VGMPlay/Android.mk
-include $(X)/file_extractor/Android.mk
+include $(X)/file_extractor/Android_shared.mk
+include $(X)/file_extractor/Android_static.mk
 include $(X)/GMEPlugin/Android.mk
 include $(X)/VGMStreamPlugin/Android.mk
 include $(X)/NDSPlugin/Android.mk
 include $(X)/HQPlugin/Android.mk
 include $(X)/HTPlugin/Android.mk
 include $(X)/HEPlugin/Android.mk
-include $(X)/ModPlugin/Android.mk
 include $(X)/SC68Plugin/Android.mk
 include $(X)/SidplayfpPlugin/Android.mk
 include $(X)/UADEPlugin/Android.mk
 include $(X)/HivelyPlugin/Android.mk
-include $(X)/SexyPSFPlugin/Android.mk
 include $(X)/GSFPlugin/Android.mk
-include $(X)/NativeZipFile/Android.mk
 include $(X)/Unrar/Android.mk
 include $(X)/ID3Tag/Android.mk

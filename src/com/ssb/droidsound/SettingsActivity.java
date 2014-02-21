@@ -105,7 +105,7 @@ public class SettingsActivity extends PreferenceActivity {
 		boolean isresid = buildermode.equals("0") ? true : false; 
 		findPreference("SidplayfpPlugin.filter_bias").setEnabled(isresid);
 		
-		Preference pref = findPreference("flush_cache");
+		Preference pref = findPreference("flush_cursor");
 				
 		pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
 		{
@@ -127,9 +127,14 @@ public class SettingsActivity extends PreferenceActivity {
 			public boolean onPreferenceChange(Preference preference, Object newValue)
 			{
 				Log.d(TAG, "setting fileCache size");
+				
+				SharedPreferences.Editor editor = prefs.edit();
+				editor.putString("FileCache.fcsize", (String) newValue);
+				editor.commit();
+				
 				int newval = Integer.parseInt((String) newValue);
 				
-				FileCache.getInstance().setLimitSize(newval * 1024 * 1024);
+				FileCache.getInstance().setLimitSize(newval);
 				Toast.makeText(getApplicationContext(), String.format("FileCache set to %d MB", newval), Toast.LENGTH_LONG).show();
 								
 				return true;
@@ -145,6 +150,18 @@ public class SettingsActivity extends PreferenceActivity {
 			{
 				Log.d(TAG, "Rescan database");
 				showDialog(R.string.scan_db);
+				return true;
+			}
+		});
+
+		pref = findPreference("flush_filecache");
+		pref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+		{
+			@Override
+			public boolean onPreferenceClick(Preference preference)
+			{
+				Log.d(TAG, "Empty filecache");
+				FileCache.getInstance().emptyfileCache();
 				return true;
 			}
 		});

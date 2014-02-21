@@ -20,7 +20,9 @@ public abstract class DroidSoundPlugin {
 	
 	static
 	{
-		System.loadLibrary("stlport_shared");
+		//System.loadLibrary("stlport_shared");
+		System.loadLibrary("gnustl_shared");
+		System.loadLibrary("fex_shared");
 	}
 	
 	public static final int INFO_TITLE = 0;
@@ -36,6 +38,7 @@ public abstract class DroidSoundPlugin {
 	public static final int INFO_SUBTUNE_NO = 10;
 	public static final int INFO_FREQUENCY = 11;
 	public static final int INFO_CHANNELS = 12;
+	public static final int INFO_YEAR = 13;
 	
 	//public static final int SIZEOF_INFO = 11;
 
@@ -76,19 +79,20 @@ public abstract class DroidSoundPlugin {
 		List<DroidSoundPlugin> pluginList;
 		synchronized (lock) {				
 			pluginList = new ArrayList<DroidSoundPlugin>();
+			pluginList.add(new OpenMPTPlugin());
 			pluginList.add(new VGMPlugin());
 			pluginList.add(new VGMStreamPlugin());
 			pluginList.add(new PSFPlugin());
 			pluginList.add(new SidplayfpPlugin());
-			pluginList.add(new ModPlugin());
+			//pluginList.add(new ModPlugin());
 			pluginList.add(new GMEPlugin());
 			pluginList.add(new HivelyPlugin());
 			pluginList.add(new SC68Plugin());
+			pluginList.add(new USFPlugin());
 			pluginList.add(new HEPlugin());
 			pluginList.add(new HTPlugin());
 			pluginList.add(new HQPlugin());
 			pluginList.add(new NDSPlugin());
-			pluginList.add(new SexyPSFPlugin());
 			pluginList.add(new RSNPlugin());
 			pluginList.add(new GSFPlugin());
 			pluginList.add(new MP3Plugin());
@@ -100,9 +104,11 @@ public abstract class DroidSoundPlugin {
 	}
 	
 	
-	public boolean loadInfo(FileSource fs) {
+	public boolean loadInfo(FileSource fs) 
+	{
 		return load(fs);
 	}
+	
 	public abstract boolean load(FileSource fs);
 	public abstract void unload();	
 	public boolean canHandle(FileSource fs) { return false; }

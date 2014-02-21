@@ -14,7 +14,7 @@ int total_samples = 0;
 
 bool ignore_loop = false;
 bool force_loop = false;
-double loop_count = 1.0f;
+double loop_count = 2.0f;
 
 int channels;
 int samplerate = 0;

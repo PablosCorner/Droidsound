@@ -7,13 +7,14 @@
 
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.READ_PHONE_STATE" />
 	<uses-permission android:name="android.permission.WRITE_SETTINGS" />
 	<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
 	<uses-sdk
-		android:minSdkVersion="11"
-		android:targetSdkVersion="19" />
+		android:minSdkVersion="7"
+		android:targetSdkVersion="7" />
 
 	<application
 		android:icon="@drawable/droidsound64x64"
@@ -103,9 +104,16 @@
 				<data android:pathPattern=".*\\..*\\.xm" />
 				<data android:pathPattern=".*\\.m3u" />
 				<data android:pathPattern=".*\\..*\\.m3u" />
+								
 				<data android:host="*" />
 			</intent-filter>
-			
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<data android:scheme="file" />
+				<data android:mimeType="application/zip" />
+			</intent-filter> 
+									
 		</activity>
 
 		<receiver android:name="com.ssb.droidsound.service.RemoteControlReceiver" >
@@ -120,7 +128,7 @@
 		<activity android:name="com.ssb.droidsound.HelpActivity" />
 
 		<!-- provider android:name="com.ssb.droidsound.provider.SongProvider" android:authorities="com.ssb.droidsound.provider" / -->
-
+	
 		<meta-data
 			android:name="android.app.default_searchable"
 			android:value="com.ssb.droidsound.PlayerActivity" />

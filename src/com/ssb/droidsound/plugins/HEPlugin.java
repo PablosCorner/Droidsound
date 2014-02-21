@@ -122,16 +122,30 @@ public class HEPlugin extends DroidSoundPlugin {
 		{
 			return PSFFile.parseLength(tagMap.get("length"));
 		}
+		else if (what == INFO_FREQUENCY)
+		{
+			if (extension.contains("PSF2"))
+			{
+				return 48000;
+			}
+				
+			else
+			{
+				return 44100;
+			}
+		}
 		
 		return 0;
 	}
 
+	
 	@Override
 	public int getSoundData(short[] dest, int size)
 	{
 		return N_getSoundData(songRef, dest, size);
 	}
 
+	
 	@Override
 	public String getStringInfo(int what) {
 		
@@ -147,7 +161,7 @@ public class HEPlugin extends DroidSoundPlugin {
 	@Override
 	public boolean load(FileSource fs)
 	{
-		tagMap = PSFFile.getTags(fs.getContents(), (int) fs.getLength());
+		tagMap = PSFFile.getTags(fs.getData(), (int) fs.getLength());
 
 		FileSource lib_fs = null;
 		FileSource lib_fs2 = null;
@@ -181,7 +195,7 @@ public class HEPlugin extends DroidSoundPlugin {
 	{
 		info = new String [128];
 		
-		tagMap = PSFFile.getTags(fs.getContents(), (int) fs.getLength());
+		tagMap = PSFFile.getTags(fs.getData(), (int) fs.getLength());
 		
 		if(tagMap != null)
 		{

@@ -15,8 +15,9 @@ public class VGMPlugin extends DroidSoundPlugin {
 	
 	private long songRef;
 	private static String extension = "";
-	private static HashMap<String, String> infoMap = new HashMap<String, String>();
-
+	private static HashMap<Integer, String> infoMap = new HashMap<Integer, String>(); 
+	private static HashMap<String, String> tagMap = new HashMap<String, String>();
+	
 	@Override
 	public String getVersion() {
 		return "VGMPlay 0.40_4 by Valley Bell";
@@ -24,6 +25,7 @@ public class VGMPlugin extends DroidSoundPlugin {
 		
 	@Override
 	public boolean canHandle(FileSource fs) {
+		
 		boolean res = PlayerActivity.prefs.getBoolean("use_vgmplay", false);
 		if (!res)
 			return false;
@@ -39,20 +41,15 @@ public class VGMPlugin extends DroidSoundPlugin {
 		list.put("plugin", "VGMPlay");
 		list.put("format", extension);
 
-		if (infoMap == null)
+		if (tagMap == null)
 			return;
 
-		list.put("copyright", infoMap.get("ReleaseDate"));
-		list.put("game", infoMap.get("GameNameE"));
-		list.put("composer", infoMap.get("AuthorNameE"));
-		list.put("system_name", infoMap.get("SystemNameE"));
-		list.put("title", infoMap.get("TrackNameE"));
-		/*
-		list.put("platform", infoMap.get("platform"));
-		list.put("creator", creator);
-		list.put("notes", notes);
-		*/
-		
+		list.put("copyright", tagMap.get("ReleaseDate"));
+		list.put("game", tagMap.get("GameNameE"));
+		list.put("composer", tagMap.get("AuthorNameE"));
+		list.put("system_name", tagMap.get("SystemNameE"));
+		list.put("title", tagMap.get("TrackNameE"));
+	
 	}
 	
 	@Override
@@ -68,20 +65,36 @@ public class VGMPlugin extends DroidSoundPlugin {
 
 	@Override
 	public String getStringInfo(int what) {
-		return null;
+		return infoMap.get(what);
 	}
 
 	@Override
-	public boolean load(FileSource fs) 
+	public boolean loadInfo(FileSource fs)
 	{
 		
-		infoMap = GD3Parser.getTags(fs.getFile().getPath());
+		tagMap = GD3Parser.getTags(fs.getFile().getPath());
+		if (tagMap == null)
+		{
+			return false;
+		}
 		
-		songRef = N_load(fs.getFile().getPath());
+		infoMap.put(INFO_TITLE, tagMap.get("TrackNameE"));
+		infoMap.put(INFO_GAME, tagMap.get("GameNameE"));
+		infoMap.put(INFO_COPYRIGHT, tagMap.get("ReleaseDate"));
+		infoMap.put(INFO_AUTHOR, tagMap.get("AuthorNameE"));
+		return true;
 
+	} 
+	
+	@Override
+	public boolean load(FileSource fs) 
+	{
+		tagMap = GD3Parser.getTags(fs.getFile().getPath());
+
+		songRef = N_load(fs.getFile().getPath());
 		return songRef != 0;
 	}
-
+	
 	@Override
 	public void unload() {
 		if (songRef != 0)
@@ -94,5 +107,6 @@ public class VGMPlugin extends DroidSoundPlugin {
 
 	native public long N_load(String filename);
 	native public void N_unload(long song);
-	native public int N_getSoundData(long song, short [] dest, int size);	
+	native public int N_getSoundData(long song, short [] dest, int size);
+
 }

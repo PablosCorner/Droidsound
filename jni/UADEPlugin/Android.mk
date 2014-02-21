@@ -3,6 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := uade
+LOCAL_CFLAGS := -O3
 
 FE = uade/frontends/common
 
@@ -18,7 +19,6 @@ LOCAL_SRC_FILES := \
                 $(FE)/uadecontrol.c \
                 $(FE)/vplist.c \
                 uade/unixatomic.c
-
 
 LOCAL_SRC_FILES += \
                 uade/audio.c \
@@ -46,15 +46,13 @@ LOCAL_SRC_FILES += \
                 uade/uadeipc.c \
                 uade/uademain.c 
 
+				
 LOCAL_C_INCLUDES := \
                 $(LOCAL_PATH)/uade \
                 $(LOCAL_PATH)/uade/include \
                 $(LOCAL_PATH)/uade/frontends/include \
                 $(LOCAL_PATH)/$(FE) \
-
-
-LOCAL_CFLAGS := -O3
-
+			
 LOCAL_LDLIBS := -llog
 
 include $(BUILD_SHARED_LIBRARY)

@@ -54,6 +54,8 @@ public class HttpSongSource {
 	private static Map<String, CacheEntry> dirMap = new HashMap<String, CacheEntry>();
 	
 	private static Map<String, CacheEntry> allfilesdirMap = new HashMap<String, CacheEntry>();
+
+	private static List<String> failed_ftps = new ArrayList<String>();
 	
 	private static Map<String, Character> htmlMap = new HashMap<String, Character>();
 
@@ -169,29 +171,39 @@ public class HttpSongSource {
 						{
 							Log.d(TAG, "List has %d entries ", dirList.size());
 							path = dirList.get(0);
-							//dirList.remove(0);
+
 							Log.d(TAG, "Found " + path);
-							
 						}
 					}
 					if(path != null)
 					{
 						boolean result = false;
+						Log.d(TAG, "Trying to get directory from FTP/HTTP");
+						
 						result = getDirFromHTTP(path);
-
-						if (dirList.size() > 0)
-							dirList.remove(0);
+						if (result == true)
+						{
+							Log.d(TAG, "SUCCESS, got directory from FTP/HTTP");
+						}
 						if (result == false)
 						{
-							failed = true;
+							
+							//failed_ftps.add(path);
+							Log.d(TAG, "FAILURE, connection failed to FTP/HTTP");
+							
+							//Intent intent = new Intent("com.sddb.droidsound.FAILED_SERVER_CONN");
+							//context.sendBroadcast(intent);
 						}
+						
+						if (dirList.size() > 0)
+							dirList.remove(path);
 					}
 					
 					else
 						break;
 				}
 			}
-
+			Log.d(TAG, "FTP/HTTP WORKER EXITING");
 			return;
 			
 		}
@@ -251,7 +263,7 @@ public class HttpSongSource {
 					
 					if (cur_ftp == null)
 					{
-						Intent intent = new Intent("com.sddb.droidsound.FAILED");
+						Intent intent = new Intent("com.sddb.droidsound.FAILED_SERVER_CONN");
 						context.sendBroadcast(intent);
 						return false;
 					}
@@ -261,7 +273,12 @@ public class HttpSongSource {
 						int replycode = cur_ftp.getReplyCode();
 						if (replycode < 200 || replycode > 299)
 						{
-							return false;
+							cur_ftp = FTPStreamSource.intGetFTP(pathName);
+							replycode = cur_ftp.getReplyCode();
+							if (replycode < 200 || replycode > 299)
+							{
+								return false;
+							}
 						}
 						
 						Log.d(TAG, "FTP connected");
@@ -458,6 +475,8 @@ public class HttpSongSource {
 			{
 				
 				httpWorker.failed = false;
+				httpWorker.doQuit = true;
+				
 				
 				Toast toast = Toast.makeText(ctx, "Failed connecting to the site, check the URL", Toast.LENGTH_SHORT);
 				TextView v = (TextView) toast.getView().findViewById(android.R.id.message);
@@ -474,10 +493,11 @@ public class HttpSongSource {
 			return ce.cursor;
 		}
 		
-		if(httpThread == null)
+		if (pathName.startsWith("http://"))
+			enableHttpResponseCache();
+		
+		if(httpThread == null || !httpThread.isAlive())
 		{
-			//enableHttpResponseCache();
-			
 			httpWorker = new HTTPWorker(ctx);
 			httpThread = new Thread(httpWorker);
 			httpThread.start();
@@ -485,12 +505,20 @@ public class HttpSongSource {
 			{
 				Thread.sleep(100);
 			} 
+			
 			catch (InterruptedException e) {
 			}
-		}		
-		httpWorker.getDir(pathName);
+			httpWorker.doQuit = false;
+		}
 		
 		MatrixCursor cursor = new MatrixCursor(new String [] { "TITLE", "TYPE", "PATH", "FILENAME"} );
+
+		//if (failed_ftps.contains(pathName))
+		//	return cursor;
+
+		httpWorker.getDir(pathName);
+		
+		//MatrixCursor cursor = new MatrixCursor(new String [] { "TITLE", "TYPE", "PATH", "FILENAME"} );
 		//Toast.makeText(ctx, "...working...", Toast.LENGTH_SHORT).show();
 		cursor.addRow(new Object [] { "...working...", SongDatabase.TYPE_FILE, null, "" } );
 		return cursor;

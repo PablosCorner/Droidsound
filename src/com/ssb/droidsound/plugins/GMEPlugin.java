@@ -90,7 +90,6 @@ public class GMEPlugin extends DroidSoundPlugin {
 		if (isGZIPPED(fs)) // is packed with zlib
 		{
 			currentSong = N_loadFile(fs.getFile().getPath());
-
 		}
 		
 		else if (fs.getExt().equals("GYM"))
@@ -98,7 +97,7 @@ public class GMEPlugin extends DroidSoundPlugin {
 			//check if its packed, if packed then unpack it with zlib
 			
 			byte[] contents = new byte[(int)fs.getLength()];
-			contents = fs.getContents();
+			contents = fs.getData();
 			
 			if (contents[428] != 0)
 			{
@@ -136,7 +135,7 @@ public class GMEPlugin extends DroidSoundPlugin {
 			}
 			else
 			{
-				currentSong = N_load(fs.getContents(), (int) fs.getLength());
+				currentSong = N_load(fs.getData(), (int) fs.getLength());
 			}
 		
 		
@@ -184,15 +183,18 @@ public class GMEPlugin extends DroidSoundPlugin {
 		}
 
 		else
-			currentSong = N_load(fs.getContents(), (int) fs.getLength());
+			currentSong = N_load(fs.getData(), (int) fs.getLength());
 		return (currentSong != 0);
 	}
 
 	@Override
 	public void unload() {
-		if(currentSong > 0)
+		if(currentSong != 0)
+		{
 			N_unload(currentSong);
-		currentSong = 0;
+			currentSong = 0;
+		}
+		
 	}
 	
 	@Override

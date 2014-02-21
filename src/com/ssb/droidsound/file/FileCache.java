@@ -7,12 +7,8 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import android.os.Environment;
-import android.preference.PreferenceManager;
-import android.widget.Toast;
 
 import com.ssb.droidsound.PlayerActivity;
-import com.ssb.droidsound.SettingsActivity;
-import com.ssb.droidsound.plugins.DroidSoundPlugin;
 import com.ssb.droidsound.utils.Log;
 
 
@@ -54,6 +50,8 @@ public class FileCache
 	private String exDir;
 	private int totalSize;
 	private static long limitSize;
+	private static long extraSize;
+	private static long freeSpace;
 	
 	public static synchronized FileCache getInstance()
 	{
@@ -71,28 +69,46 @@ public class FileCache
 				
 		newFiles = new ArrayList<File>();
 		exDir = Environment.getExternalStorageDirectory().getPath();
-		//long freeSpace = Environment.getExternalStorageDirectory().getFreeSpace();
+		
+		freeSpace = Environment.getExternalStorageDirectory().getFreeSpace();
 		cacheDir = new File(exDir + "/droidsound/fileCache");
 		Log.d(TAG, "Created dir '%s'", cacheDir.getPath());
 		cacheDir.mkdirs();
 		
 		//read the limitsize from SETTINGS!!!
 		
-		String cacheSize = PlayerActivity.prefs.getString("FileCache.fcsize", "64");
-		Integer cacheSz = Integer.parseInt((String) cacheSize);
-			
+		String cacheSize = PlayerActivity.prefs.getString("FileCache.fcsize", "32");
+		int cacheSz = Integer.parseInt(cacheSize);
 		limitSize = cacheSz * 1024 * 1024; // 16MB default
 
 		totalSize = 0;
 		indexFiles(cacheDir);
 	}
+	
+
+		
+	private void DeleteRecursive(File fileOrDirectory) 
+	{
+		if (fileOrDirectory.isDirectory())
+		        for (File child : fileOrDirectory.listFiles())
+		            DeleteRecursive(child);
+		    fileOrDirectory.delete();
+	}
+	public void emptyfileCache() {
+		File f = new File(exDir + "/droidsound/fileCache/");
+		DeleteRecursive(f);
+	}
+	
 	public static long getLimitSize(){
 		return limitSize;
 	}
 	
 	public void setLimitSize(long ls)
 	{
-		limitSize = ls;
+		if (ls == -1)
+			limitSize = freeSpace;
+		else
+			limitSize = (ls * 1024 * 1024);
 		limit(limitSize);		
 	}
 
@@ -112,6 +128,11 @@ public class FileCache
 						{
 							fileNameList.add(f.getPath());
 							fileList.add(new CacheEntry(f));
+							if (f.length() >= limitSize)
+							{
+								extraSize = f.length();
+								limitSize += extraSize;
+							}
 							totalSize += f.length();
 						}
 					}
@@ -141,6 +162,11 @@ public class FileCache
 					Log.d(TAG, "Adding FILE: %s", f.getPath());
 					fileNameList.add(f.getPath());
 					fileList.add(new CacheEntry(f));
+					if (f.length() >= limitSize)
+					{
+						extraSize = f.length();
+						limitSize += extraSize;
+					}
 					totalSize += f.length();
 
 				}
@@ -249,7 +275,5 @@ public class FileCache
 	public void purge() {
 		limit(-1);
 	}
-
-	
 	
 }

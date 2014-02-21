@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import android.annotation.TargetApi;
+
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -84,7 +84,7 @@ public class PlayerService extends Service implements PlayerInterface {
 			hasAudioFocus = false;
 		}
 	}
-	
+	public static Context mycontext;
 	private RemoteControlWrapper remoteControl;
 	private AudioFocusWrapper afWrapper;
 
@@ -95,7 +95,6 @@ public class PlayerService extends Service implements PlayerInterface {
 
 	protected String saySomething;
 
-	
 	PlayQueue playQueue;
 	
 	private TextToSpeech textToSpeech;
@@ -111,7 +110,6 @@ public class PlayerService extends Service implements PlayerInterface {
 	private Builder notificationBuilder;
 
 
-	
 	public static PlayerInterface getPlayerInterface() {
 		return playerInterface;
 	}
@@ -122,9 +120,7 @@ public class PlayerService extends Service implements PlayerInterface {
 		
 		if(newsong)
 			info.clear();
-		
-		
-		
+				
 		Map<String, Object> newInfo = new HashMap<String, Object>();
 		player.getSongDetails(newInfo);
 		
@@ -169,12 +165,15 @@ public class PlayerService extends Service implements PlayerInterface {
 			return;
 
 		Iterator<IPlayerServiceCallback> it = callbacks.iterator();
-		while(it.hasNext()) {
+			
+		while(it.hasNext()) 
+		{
 			IPlayerServiceCallback cb = it.next();
 			try {
+				
 				cb.update(updates, newsong);
 			} catch (RemoteException e1) {
-				//e1.printStackTrace();
+				e1.printStackTrace();
 				it.remove();
 			}
 		}
@@ -306,9 +305,12 @@ public class PlayerService extends Service implements PlayerInterface {
 			text = songTitle + ".";
 		}
 		Log.d(TAG, "Saying '%s'", text);
-		if(ttsStatus >=0 && textToSpeech != null) {
+		if(ttsStatus >=0 && textToSpeech != null)
+		{
 			textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null);
-		} else {
+		} 
+		else 
+		{
 			saySomething = text;
 		}	
 
@@ -506,7 +508,7 @@ public class PlayerService extends Service implements PlayerInterface {
 		return false;
     }
     
-	@TargetApi(8)
+
 	@Override
 	public void onCreate()
 	{
@@ -604,7 +606,7 @@ public class PlayerService extends Service implements PlayerInterface {
 		notificationBuilder.setContentIntent(contentIntent);		
 
 	    playerInterface = this;
-	    
+   
 	}
 
 	void beforePlay(String name) {
@@ -694,13 +696,16 @@ public class PlayerService extends Service implements PlayerInterface {
 		
 		TelephonyManager tm = (TelephonyManager)getSystemService(TELEPHONY_SERVICE);
 		tm.listen(phoneStateListener, 0);
-		
+				
 		unregisterReceiver(mediaReceiver);
 		
 		player.stop();
 		whenStopped();
 		player = null;
 		playerThread = null;
+
+		
+				
 	}
 	
 	private final IPlayerService.Stub mBinder = new IPlayerService.Stub() {
@@ -726,7 +731,7 @@ public class PlayerService extends Service implements PlayerInterface {
 				try {
 					cb.update(mapToArray(info), false);
 				} catch (RemoteException e1) {
-					//e1.printStackTrace();
+					e1.printStackTrace();
 				}
 			}
 			Log.d(TAG, "Adding %s", cb.toString());
@@ -734,11 +739,11 @@ public class PlayerService extends Service implements PlayerInterface {
 		}
 
 		@Override
-		public void unRegisterCallback(IPlayerServiceCallback cb)
-				throws RemoteException {
+		public void unRegisterCallback(IPlayerServiceCallback cb) throws RemoteException {
 			
 			Log.d(TAG, "Removing %s", cb.toString());
 			callbacks.remove(cb);
+			
 		}
 
 		
@@ -765,6 +770,7 @@ public class PlayerService extends Service implements PlayerInterface {
 		public void stop() throws RemoteException {
 			player.stop();
 			whenStopped();
+			
 		}
 
 
@@ -952,6 +958,7 @@ public class PlayerService extends Service implements PlayerInterface {
 	public void stop() {
 		player.stop();
 		whenStopped();
+		
 		
 	}
 

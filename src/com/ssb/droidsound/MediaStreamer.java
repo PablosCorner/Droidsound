@@ -35,6 +35,7 @@ public class MediaStreamer implements Runnable {
 	private volatile boolean started;
 	private volatile boolean prepared;
 	private volatile boolean loaded;
+	private String playURL = "";
 	
 	//private String httpName;
 	private List<MetaString> metaStrings = new ArrayList<MetaString>();
@@ -149,7 +150,7 @@ V/MediaStreamer(12369): icy-metaint: 16000
 	void httpStream() throws IOException {
 
 		//localMPConnection = null;
-		loaded = false;
+		loaded = false;		
 		retryDelay = 500;
 		
 		while(!doQuit) {
@@ -162,6 +163,7 @@ V/MediaStreamer(12369): icy-metaint: 16000
 				Log.d(TAG, "Looping, doQuit is " + (doQuit ? "SET" : "UNSET"));
 	
 				String httpName = httpNames.get(httpNo);
+				playURL = httpName;
 				StreamingHttpConnection httpConn = null;
 				int response = -1;
 				
@@ -173,13 +175,10 @@ V/MediaStreamer(12369): icy-metaint: 16000
 					try {
 						httpConn = new StreamingHttpConnection(url);
 					} catch (IOException e) {
+						e.printStackTrace();
 						break;
 					}
-					/*URLConnection conn = url.openConnection();
-					if (!(conn instanceof HttpURLConnection))
-						throw new IOException("Not a HTTP connection");
-					HttpURLConnection httpConn = (HttpURLConnection) conn; */
-					
+									
 					httpConn.setAllowUserInteraction(false);
 					httpConn.setInstanceFollowRedirects(true);
 					httpConn.setRequestMethod("GET");
@@ -214,8 +213,12 @@ V/MediaStreamer(12369): icy-metaint: 16000
 					String cl = httpConn.getHeaderField("content-length");
 					contentLength = -1;
 					try {
-						contentLength = Integer.parseInt(cl);
-					} catch (NumberFormatException e) {
+						if (cl != null)
+							contentLength = Integer.parseInt(cl);
+					} 
+					catch (NumberFormatException e)
+					{
+						e.printStackTrace();
 					}
 					
 					if(contentType.trim().startsWith("audio/mp"))
@@ -228,11 +231,14 @@ V/MediaStreamer(12369): icy-metaint: 16000
 	
 					Log.d(TAG, "META INTERVAL %d", metaInterval);
 					
-					if(localMPConnection == null) {
+					/*
+					if(localMPConnection == null)
+					{
 						localMPConnection = new LocalMPConnection();
 						localMPConnection.setContentType(contentType);
 						localMPConnection.accept();
 					}
+					*/
 	
 					int size;
 					frameHeader = new byte[4];
@@ -266,14 +272,19 @@ V/MediaStreamer(12369): icy-metaint: 16000
 					if(!parseMp3)
 						usec = -1000;
 	
-					while (!doQuit) {
+					while (!doQuit)
+					{
 						int rem = buffer.length;
 						rem = updateMeta(in, rem);
 	
-						if(rem > 0) {
-							try {
+						if(rem > 0)
+						{
+							try 
+							{
 								size = in.read(buffer, 0, rem);
-							} catch (IOException e) {
+							} 
+							catch (IOException e)
+							{
 								Log.d(TAG, "####### LOST CONNECTION");
 								if(!fileMode)
 									httpNo--;
@@ -322,9 +333,9 @@ V/MediaStreamer(12369): icy-metaint: 16000
 							metaCounter += size;						
 							totalBytes += size;
 	
-							if(tagSize == 0 || tagFilled >= tagSize) {						
+							/*if(tagSize == 0 || tagFilled >= tagSize) {
 								localMPConnection.write(buffer, 0, size);
-							}
+							}*/
 							
 							//if(metaCounter == metaInterval)
 							//	Log.d(TAG, "META TIME");
@@ -338,19 +349,16 @@ V/MediaStreamer(12369): icy-metaint: 16000
 								last_usec = usec;														
 								int sl = (int) ((usec/1000) * (contentLength-extraSize) /  (totalFrameBytes));
 								Log.d(TAG, "%d seconds in %dKB out of %dKB = %d seconds total", usec/1000000, totalBytes/1024, contentLength/1024, sl/1000);
-								//if(sl/1000 != songLength/1000) {
-									songLength = sl;
-									gotID3 = true;
-								//}
+								songLength = sl;
+								gotID3 = true;
+
 							}
-							
-	
 						}
-						
 					}
 					
 					if(!doRetry) {
-						localMPConnection.close();
+						
+						//localMPConnection.close();
 						localMPConnection = null;
 					}
 					httpConn.disconnect();
@@ -367,14 +375,18 @@ V/MediaStreamer(12369): icy-metaint: 16000
 				break;
 			}
 			
-			if(doQuit) {
+			if(doQuit)
+			{
 				hasQuit = true;		
 				Log.d(TAG, "THREAD ENDING");
 				
-				if(localMPConnection != null) {
+				if(localMPConnection != null)
+				{
 					localMPConnection.close();
 					localMPConnection = null;
+					
 				}
+				
 			} else {
 				Log.d(TAG, "SLEEPING %d before retrying", retryDelay);
 				try {
@@ -496,11 +508,7 @@ V/MediaStreamer(12369): icy-metaint: 16000
 							frameSize++;
 
 						usec += frameSize * 1000 / (bitRate/8000);
-						
-						
 						totalFrameBytes += frameSize;
-						
-
 						nextFramePos += frameSize;
 						
 						if(avgBitrate == 0)
@@ -518,10 +526,7 @@ V/MediaStreamer(12369): icy-metaint: 16000
 				} else nextFramePos = -1;
 				frameHeaderBits = 0;
 				if(nextFramePos == -1) {
-					//Log.d(TAG, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-					//Log.d(TAG, "!!!!!!!!!!!!!!!!!!!!!!!! LOST SYNC !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 					Log.d(TAG, "!!!!!!!!!!!!!!!!!!!!!!!! LOST SYNC !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-					//Log.d(TAG, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 				}
 			} else
 				break;
@@ -550,7 +555,8 @@ V/MediaStreamer(12369): icy-metaint: 16000
 			//Log.d(TAG, "Read %d META bytes", size);
 
 			
-			if(metaPos == metaSize) {
+			if(metaPos == metaSize)
+			{
 				String meta =  new String(metaArray, 1, metaSize-1);
 				//Log.d(TAG, "META DONE: " + meta);
 				
@@ -601,48 +607,58 @@ V/MediaStreamer(12369): icy-metaint: 16000
 		return (int) (usec/1000 - (mediaPlayer == null ? 0 : mediaPlayer.getCurrentPosition()));
 	}
 	
+	
+	
 	public int update() {
 		
 		if(hasQuit)
 			return -1;
 		
-		if(localMPConnection == null || !localMPConnection.isListening())
-			return 0;
+		//if(localMPConnection == null || !localMPConnection.isListening())
+		//	return 0;
 				
 		if(!loaded) {
 			try {
-				localMPConnection.connect(mediaPlayer);
-				//mediaPlayer.setDataSource(String.format("http://127.0.0.1:%d/", socketPort));
+				started = false;
+				mediaPlayer.reset();
+				//localMPConnection.connect(mediaPlayer);
+				mediaPlayer.setDataSource(playURL);
 				loaded = true;
 				Log.d(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PREPARING ");
-				mediaPlayer.setOnPreparedListener(new OnPreparedListener() {
+
+				mediaPlayer.setOnPreparedListener(new OnPreparedListener(){
 					@Override
-					public void onPrepared(MediaPlayer mp) {
+					public void onPrepared(MediaPlayer mp){
 						prepared = true;
+						mp.start();
 					}
 				});
+
 				mediaPlayer.prepareAsync();
+								
+
 			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IllegalStateException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+				loaded = false;
+				prepared = false;
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 		
 		if(!prepared) {
-			//Log.d(TAG, "-------- Not prepared yet");
 			return 0;
 		}
 		
 		if(!started) {			
 			Log.d(TAG, "MEDIASTREAMER STARTING ");
-			mediaPlayer.start();
-			started = true;
+			if (prepared) {
+				//mediaPlayer.start();
+				started = true;
+				
+			}
 		}
 		
 		int rc = mediaPlayer.getCurrentPosition();
@@ -655,6 +671,7 @@ V/MediaStreamer(12369): icy-metaint: 16000
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 			rc = mediaPlayer.getCurrentPosition();
 			if(rc == lastPos) {
@@ -670,8 +687,8 @@ V/MediaStreamer(12369): icy-metaint: 16000
 		//	lastPos  = rc;
 		//}
 		return rc;
-	}	
-
+	}
+	
 	@Override
 	public void run() {
 		for(int i=0; i<32; i++) {
@@ -680,6 +697,7 @@ V/MediaStreamer(12369): icy-metaint: 16000
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (Error e2) {
+				e2.printStackTrace();
 				return;
 				//e2.printStackTrace();
 			}
@@ -750,8 +768,6 @@ V/MediaStreamer(12369): icy-metaint: 16000
 		//else
 		info.put("plugin", "STREAM");		
 		info.put("format", "stream");
-
-		
 		
 		if(songAlbum != null && songAlbum.length() > 0) {
 			info.put("album", songAlbum);

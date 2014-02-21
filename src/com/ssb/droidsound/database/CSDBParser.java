@@ -48,11 +48,6 @@ public class CSDBParser implements DataSource {
 		} catch (SQLException e) {
 		}
 		
-		// db.execSQL("DROP TABLE IF EXISTS RELEASES;");
-		// db.execSQL("DROP TABLE IF EXISTS GROUPS;");
-		// db.execSQL("DROP TABLE IF EXISTS EVENTS;");
-		// db.execSQL("DROP TABLE IF EXISTS RELEASESIDS;");
-		
 		db.execSQL("CREATE TABLE IF NOT EXISTS " + "RELEASES" + " (" + BaseColumns._ID + " INTEGER PRIMARY KEY," +
 				"ID INTEGER," +
 				"NAME TEXT," +
@@ -176,16 +171,7 @@ public class CSDBParser implements DataSource {
 		return ok;
 	}
 
-	/*
-	 * CSDB:EVENTS/X2008/EdgeOfDisgrace/  song.sid
-	 * CSDB:RELEASES/EdgeOfDisgrace/ song.sid
-	 * CSDB:RELEASES/SomeCollection/ song.sid
-	 * CSDB:GROUPS/BoozeDesign/EdgeOfDisgrace/ song.sid
-	 * 
-	 * select * from releasesids where group=booze release=eod
-	 * 
-	 */
-	
+
 	static class DirWrapper extends CursorWrapper {
 
 		public DirWrapper(Cursor cursor) {

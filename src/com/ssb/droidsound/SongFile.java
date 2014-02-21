@@ -3,7 +3,10 @@ package com.ssb.droidsound;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 public class SongFile {
 
@@ -17,8 +20,10 @@ public class SongFile {
 	private String prefix;
 	private String suffix;
 	private String midfix;
-	private String zipPath;
-	private String zipName;
+	private String arcPath;
+	private String arcName;
+	private long position;
+
 	
 	//private String tuneString;
 	private String title;
@@ -27,7 +32,10 @@ public class SongFile {
 	private String protocol;
 	
 	//private static Locale locale = Locale.getDefault();
-	
+
+	private static final Set<String> ARCHIVE_EXTENSIONS = new HashSet<String>(Arrays.asList(
+			".ZIP", ".7Z", ".RAR", ".GZ")); 
+
 	public SongFile(SongFile s) {
 		subtune = s.subtune;
 		playtime = s.playtime;
@@ -37,11 +45,12 @@ public class SongFile {
 		prefix = s.prefix;
 		suffix = s.suffix;
 		midfix = s.midfix;
-		zipPath = s.zipPath;
-		zipName = s.zipName;
+		arcPath = s.arcPath;
+		arcName = s.arcName;
 		title = s.title;
 		composer = s.composer;
 		protocol = s.protocol;
+		position = s.position;
 	}
 	
 	public SongFile(File f) {
@@ -56,6 +65,27 @@ public class SongFile {
 		subtune = -1;
 		playtime = -1;
 		protocol = "";
+
+		if (fname.contains("/MLDB/"))
+		{
+			String modland_path_prefix = "/pub/modules";
+			String modland_ftp = PlayerActivity.prefs.getString("Modland_server", "modland.ziphoid.com");
+			String songPath = fname.substring(fname.indexOf("/MLDB") + 5);
+			fname = "ftp://" + modland_ftp + modland_path_prefix + songPath;
+		}
+		
+		if (fname.contains(".db_source"))
+		{
+			String modland_path_prefix = "/pub/modules";
+			String modland_ftp = PlayerActivity.prefs.getString("Modland_server", "modland.ziphoid.com");
+			String songPath = fname.substring(fname.indexOf(".db_source") + 10);
+			fname = "ftp://" + modland_ftp + modland_path_prefix + songPath;
+		}
+			
+
+		if (fname.contains(".fs_source"))
+			fname = PlayerActivity.translate_fss_sourcePath(fname);
+	
 		if(fname.startsWith("file://"))
 		{
 			try {
@@ -123,10 +153,16 @@ public class SongFile {
 			midfix = fileName.substring(firstDot, lastDot+1);
 		}
 
-		int zip = s[0].toUpperCase(Locale.ENGLISH).indexOf(".ZIP/");
-		if(zip > 0) {
-			zipPath = s[0].substring(0, zip+4);
-			zipName = s[0].substring(zip+5);
+		for (String ext : ARCHIVE_EXTENSIONS)
+		{
+			String ext_ = ext + "/";
+			int archive = s[0].toUpperCase(Locale.ENGLISH).indexOf(ext_);
+			if(archive > 0) 
+			{
+				arcPath = s[0].substring(0, archive + ext.length());
+				arcName = s[0].substring(archive + ext.length() + 1);
+				break;
+			}
 		}
 		
 		file = new File(path, fileName);
@@ -187,12 +223,12 @@ public class SongFile {
 		}
 	}
 
-	public String getZipPath() {
-		return zipPath;
+	public String getArcPath() {
+		return arcPath;
 	}
 
-	public String getZipName() {
-		return zipName;
+	public String getArcName() {
+		return arcName;
 	}
 
 	public String getPath() {
@@ -227,7 +263,6 @@ public class SongFile {
 		return file.exists();
 	}
 	
-
 	public String getParent() {
 		return protocol + file.getParent();
 	}

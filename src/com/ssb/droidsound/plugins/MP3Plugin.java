@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 
 import com.ssb.droidsound.MediaStreamer;
@@ -313,6 +314,8 @@ public class MP3Plugin extends DroidSoundPlugin {
 				{
 					if(httpThread == null) {
 						mediaPlayer = new MediaPlayer();
+						mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
 						Log.d(TAG, "Creating thread");
 						
 						streamer = new MediaStreamer(pls.getMediaList(), mediaPlayer, false);
@@ -342,11 +345,13 @@ public class MP3Plugin extends DroidSoundPlugin {
 		{
 			Log.d(TAG, "LOAD %s", file.getPath());
 			mediaPlayer = new MediaPlayer();
+			mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+			
 			mediaPlayer.setDataSource(file.getPath());
 
 			mediaPlayer.prepare();
 			prepared = true;			
-			//mediaPlayer.start();
+			mediaPlayer.start();
 			started = true;
 			
 			id3Tag = new ID3Tag(file);
@@ -371,6 +376,7 @@ public class MP3Plugin extends DroidSoundPlugin {
 		} 
 		catch (IOException e)
 		{
+			e.printStackTrace();
 			return false;
 		}
 
@@ -424,6 +430,7 @@ public class MP3Plugin extends DroidSoundPlugin {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 				counter--;
 			}

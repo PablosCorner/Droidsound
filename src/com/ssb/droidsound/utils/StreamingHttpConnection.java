@@ -33,7 +33,7 @@ public class StreamingHttpConnection {
 		requestProperties = new String();
 		
 		addRequestProperty("Host", url.getHost());
-		addRequestProperty("User-Agent", "Droidsound 1.2 (Linux;Android)");
+		addRequestProperty("User-Agent", "Droidsound 1.6 (Linux;Android)");
 		addRequestProperty("Connection", "Close");
 
 		httpSocket = new Socket(url.getHost(), port);

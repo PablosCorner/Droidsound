@@ -19,6 +19,7 @@ public class HTPlugin extends DroidSoundPlugin {
 	private static final String TAG = "HTPlugin";
 	
 	private static Map<String, String> tagMap = new HashMap<String, String>();
+	private static HashMap<Integer, String> infoMap = new HashMap<Integer, String>();
 	
 	@Override
 	public String getVersion() {
@@ -95,13 +96,32 @@ public class HTPlugin extends DroidSoundPlugin {
 
 	@Override
 	public String getStringInfo(int what) {
-		return null;
+		return infoMap.get(what);
 	}
+	
+	@Override
+	public boolean loadInfo(FileSource fs)
+	{
+		tagMap = PSFFile.getTags(fs.getData(), (int) fs.getLength());
 
+		if (tagMap == null)
+		{
+			return false;
+		}
+
+		infoMap.put(INFO_TITLE, tagMap.get("title"));
+		infoMap.put(INFO_GAME, tagMap.get("game"));
+		infoMap.put(INFO_COPYRIGHT, tagMap.get("copyright"));
+		infoMap.put(INFO_LENGTH, tagMap.get("length"));
+		infoMap.put(INFO_AUTHOR, tagMap.get("artist"));
+		infoMap.put(INFO_YEAR, tagMap.get("year"));
+		return true;
+
+	} 
 	@Override
 	public boolean load(FileSource fs)
 	{
-		tagMap = PSFFile.getTags(fs.getContents(), (int) fs.getLength());
+		tagMap = PSFFile.getTags(fs.getData(), (int) fs.getLength());
 
 		FileSource lib_fs = null;
 		FileSource lib_fs2 = null;
@@ -144,8 +164,14 @@ public class HTPlugin extends DroidSoundPlugin {
 	}
 
 	@Override
-	public void unload() {
-		N_unload(songRef);
+	public void unload() 
+	{
+		if (songRef != 0)
+		{
+			N_unload(songRef);			
+		}
+		
+
 	}
 	
 	@Override

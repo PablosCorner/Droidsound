@@ -12,7 +12,7 @@ import java.io.InputStream;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Environment;
+
 
 import com.ssb.droidsound.FileIdentifier;
 import com.ssb.droidsound.PlayerActivity;
@@ -136,7 +136,7 @@ public class FileSystemSource implements DataSource {
 	@Override
 	public String getPathTitle(File file) {		
 		//if(displayTitle != null) return displayTitle;
-		String n = file.getName();
+		//String n = file.getName();
 		//if(n.contains(NAME)) 
 		//	return "Filesystem";
 		String name = file.getName().replace(NAME, "");

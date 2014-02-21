@@ -21,6 +21,8 @@
 <string name="del_dir">Delete</string>
 <string name="del_file">Delete</string>
 <string name="del_plist">Delete</string>
+<string name="del_filebrowser">Delete Filebrowser</string>
+<string name="del_vfolder">Delete Virtual Folder</string>
 <string name="make_wav">Create Ringtone</string>
 <string name="do_del_plist">Really delete playlist?</string>
 <string name="do_del_dir">Really delete directory?</string>
@@ -46,6 +48,7 @@
 <string name="name_folder">Folder name</string>
 <string name="name_link">URI and name</string>
 <string name="name_filesystem">Mountpoint and name</string>
+<string name="name_moddb">Modland DB title</string>
 <string name="settings">Settings</string>
 
 <string name="next">Next</string>
@@ -98,6 +101,7 @@ to download more music from the web.</string>
 	<item>Playlist</item>
 	<item>Network Link</item>
 	<item>FileBrowser</item>	
+	<item>Modland DB</item>	
 </string-array>
 
 <string-array name="indexing_opts">
@@ -203,18 +207,25 @@ to download more music from the web.</string>
 <item>1024</item>
 <item>2048</item>
 <item>4096</item>
+<item>-1</item>
 </string-array>
 
-<string-array name="filecache_vals">
-<item>0</item>
-<item>1</item>
-<item>2</item>
-<item>3</item>
-<item>4</item>
-<item>5</item>
-<item>6</item>
-<item>7</item>
-<item>8</item>
-</string-array>
+<string-array name="mlservers_opts">
+<item>Modland</item>
+<item>Ziphoid</item>
+<item>ftp.rave.ca</item>
+<item>MindKiller</item>
+<item>Amigascne</item>
+<item>Exotica</item>
+</string-array>    
+
+<string-array name="mlservers_vals">
+<item>ftp.modland.com</item>
+<item>modland.ziphoid.com</item>
+<item>ftp.rave.ca</item>
+<item>modland.mindkiller.com</item>
+<item>ftp.amigascne.org/mirrors/ftp.modland.com</item>
+<item>aero.exotica.org.uk/pub/mirrors/modland</item>
+</string-array>    
 
 </resources>

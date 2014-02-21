@@ -1356,7 +1356,7 @@ void dumpcustom (void)
            (unsigned int)intena, (unsigned int)intreq, (unsigned int)vpos, (unsigned int)current_hpos(), cycles);
     write_log ("COP1LC: %08lx, COP2LC: %08lx\n", (unsigned long)cop1lc, (unsigned long)cop2lc);
     if (timeframes) {
-    write_log ("Average frame time: %d ms [frames: %d time: %d]\n",
+    write_log ("Average frame time: %lx ms [frames: %lx time: %lx]\n",
            frametime / timeframes, timeframes, frametime);
     if (total_skipped)
         write_log ("Skipped frames: %d\n", total_skipped);

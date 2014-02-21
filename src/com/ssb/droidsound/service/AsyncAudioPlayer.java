@@ -32,6 +32,7 @@ public class AsyncAudioPlayer implements Runnable
 	private LinkedList<SampleArray> buffers;
 
 	private boolean doStart;
+	
 
 	public static enum Command
 	{
@@ -68,13 +69,13 @@ public class AsyncAudioPlayer implements Runnable
 		FREQ = freq;
 		channels = chancount;
 		SEC = freq * 2;
+		
 	}
 	
 	@Override
 	public void run()
 	{
 		init();
-
 		try 
 		{
 			while(true)
@@ -122,6 +123,7 @@ public class AsyncAudioPlayer implements Runnable
 							
 			}
 		} 
+			
 		catch (InterruptedException e)
 		{
 			return;
@@ -177,7 +179,9 @@ public class AsyncAudioPlayer implements Runnable
 		
 		if (channels == 1)
 			set_channels = AudioFormat.CHANNEL_OUT_MONO;
-	
+		
+		bufSize = (int) Math.ceil( bufSize / 100.0) * 100; 
+		
 		audioTrack = new AudioTrack(
 				AudioManager.STREAM_MUSIC, 
 				FREQ, 
@@ -185,16 +189,16 @@ public class AsyncAudioPlayer implements Runnable
 				AudioFormat.ENCODING_PCM_16BIT, 
 				bufSize,  // buffer size
 				AudioTrack.MODE_STREAM);
-		
 		audioTrack.setPlaybackRate(FREQ);
 		buffers = new LinkedList<SampleArray>();
 		framesWritten = 0;
 		framesRead = 0;
+
 	}
 	
 	private LinkedList<short []> bucket = new LinkedList<short []>();
 	private int arraySize = -1;
-	
+
 	public short [] getArray(int size)
 	{
 		synchronized (bucket)

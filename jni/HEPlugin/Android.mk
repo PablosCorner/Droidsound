@@ -19,10 +19,24 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := highlyexp
 
-LOCAL_SRC_FILES := heplugin.cpp
+LOCAL_SRC_FILES := heplugin.cpp \
+	he/psx.c \
+	he/ioptimer.c \
+	he/iop.c \
+	he/bios.c \
+	he/r3000dis.c \
+	he/r3000asm.c \
+	he/r3000.c \
+	he/vfs.c \
+	he/spucore.c \
+	he/spu.c \
+	he/mkhebios.c \
+	he/psf2fs.c \
+	he/psflib.c
+	
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/he
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/
 
-MY_SOURCES := $(wildcard $(LOCAL_PATH)/he/*.c)
-LOCAL_SRC_FILES += $(MY_SOURCES:$(LOCAL_PATH)%=%)
 LOCAL_LDLIBS := -llog -lz
 LOCAL_CFLAGS = -DEMU_COMPILE -DEMU_LITTLE_ENDIAN
 

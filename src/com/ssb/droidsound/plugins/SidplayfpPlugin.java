@@ -286,8 +286,10 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 	public boolean loadInfo(FileSource fs)
 	{
 		final byte[] header = new byte[128];
+		songInfo = null;
 		
 		songInfo = new Info();
+		
 		if(fs.getExt().equals("PRG")) {
 			songInfo.name = fs.getName();
 			Log.d(TAG, "######################## PRG LOAD OK");
@@ -301,9 +303,7 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 			
 			e.printStackTrace();
 		}
-		
-		
-		
+				
 		try 
 		{
 			String s = new String(header, 0, 4, "ISO-8859-1");
@@ -312,6 +312,7 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 			{
 				return false;
 			}
+			
 			songInfo.format = s;
 			songInfo.name = new String(header, 0x16, 0x20, "ISO-8859-1").replaceAll("\0", "");
 			songInfo.composer = new String(header, 0x36, 0x20, "ISO-8859-1").replaceAll("\0", "");
@@ -469,7 +470,7 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 		int type = -1;
 		currentFrames = 0;
 		
-		byte [] module = fs.getContents();
+		byte [] module = fs.getData();
 		String name = fs.getName();
 		int size = (int) fs.getLength();
 		
@@ -480,7 +481,7 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 		if((s.equals("PSID") || s.equals("RSID")))
 			type = 0;
  
-		else if(name.toLowerCase().endsWith(".prg")) 
+		else if(name.toUpperCase().endsWith(".PRG")) 
 			type = 1;
 		
 		else if(module[0] == 0x01 && module[1] == 0x08)
@@ -512,10 +513,24 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 			Log.d(TAG, "######################## PRG LOAD OK");
 			songInfo.format = "PRG";
 			currentTune = songInfo.startSong = 0;
-			//TODO: FIX THIS
-			//boolean rc = currentPlugin.load(fs);
+			loadInfo(fs);
 			
+			for(Entry<Integer, Integer> e : optMap.entrySet())
+			{
+				N_setOption(e.getKey(), e.getValue());
+			}
+			currentSong = N_load(fs.getData(), (int) fs.getLength());
+			
+			if(currentSong == 0)
+			{
+				return false;
+			}
+			findLength(module, size);
+			optMap.clear();	
+
 			fs.close();
+			module = null;
+						
 			return true;
 			
 		} 
@@ -528,18 +543,20 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 			N_setOption(e.getKey(), e.getValue());
 		}
 		
-		currentSong = N_load(fs.getContents(), (int) fs.getLength());
+		currentSong = N_load(fs.getData(), (int) fs.getLength());
 				
 		if(currentSong == 0)
 		{
+			module = null;
 			return false;
+			
 		}
 		
 		findLength(module, size);
 		optMap.clear();	
 		fs.close();
+		module = null;
 		return true; 
-
 		
 		
 	}
@@ -589,16 +606,32 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 		
 		else if (val instanceof Integer)
 			v = (Integer)val;
+		
 		if (opt.equals("sid_model"))
 		{
 			if (v==0)
+			{
+				v = 1;
+			}
+			
+			else
+			{
 				v+=1;
+			}
+				
+				
 		}
 
 		if (opt.equals("video_mode"))
 		{
-			if (v==0)
+			if (v == 0)
+			{
+				v = 1;
+			}
+			else
+			{
 				v+=1;
+			}
 		}
 
 
@@ -623,7 +656,7 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 	@Override
 	public String getVersion()
 	{
-		return "libsidplay2fp 1.2.0 beta";
+		return "libsidplay2fp 1.2.2 beta";
 	}
 		
 	@Override

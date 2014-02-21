@@ -126,7 +126,7 @@ subtext              sidetext
 /* Default for all items */
 item {
 	color : #000000;
-	background-color: #cccccc;
+	background-color: #000000;
 	font: bold;
 	
 	1-padding-left: 8dp;
@@ -140,7 +140,7 @@ item {
 	2-font : "bold";
 	3-font : "bold";
 	
-	1-font-size: "24sp";
+	1-font-size: "20sp";
 	2-font-size : "14sp";
 	3-font-size : "10sp";
 	
@@ -240,7 +240,7 @@ body {
 	white-space: nowrap;
 	overflow: hidden;
 	font-weight:bold;
-	font-size:16pt; 
+	font-size:6pt; 
 	padding-left: 4pt;
 	padding-top: 4pt;
 }

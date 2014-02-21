@@ -9,6 +9,7 @@ public interface Archive {
 	public interface Entry {
 		public String getPath();
 		public long getSize();
+		public long getPosition();
 	}
 	
 	Iterator<Entry> getIterator();	
@@ -16,5 +17,6 @@ public interface Archive {
 	FileSource getFileSource(Entry entry);
 	void close();
 	int getFileCount();
+	
 	
 }

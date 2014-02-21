@@ -1,14 +1,16 @@
 package com.ssb.droidsound.file;
 
-import java.io.ByteArrayOutputStream;
+
 import java.io.File;
 import java.io.FileInputStream;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import java.util.Locale;
 import org.apache.commons.net.ftp.FTPClient;
 import com.ssb.droidsound.utils.DataFileSource;
 import com.ssb.droidsound.utils.Log;
@@ -24,19 +26,28 @@ public abstract class FileSource
 	int bufferPos;
 	long size;
 
-
 	private boolean isFile;
 	private String baseName;
 	private String reference;
 	private CharSequence refPath;
 	private FTPClient my_ftp = null;
-	
+
 	public FileSource(String ref)
 	{
+		buffer = null;
 		reference = ref;
 		int slash = ref.lastIndexOf('/');
 		baseName = ref.substring(slash + 1);
 		refPath = slash > 0 ? ref.subSequence(0, slash+1) : "";
+	}
+	
+	public FileSource(String name, byte[] bs)
+	{
+		buffer = bs;
+		this.baseName = name;
+		this.file = null;
+		this.size = bs.length;
+		this.isFile = false;		
 	}
 
 	public static FileSource create(String ref)
@@ -44,21 +55,25 @@ public abstract class FileSource
 
 		FileSource fs;
 		
-		if(ref.toLowerCase().startsWith("http"))
+		if(ref.toLowerCase().startsWith("http://"))
 		{
 			fs = new StreamSource(ref);
 		} 
-		
-		else if(ref.toLowerCase().startsWith("ftp"))
-		{
+		else if(ref.toLowerCase().startsWith("ftp://"))
 			fs = new FTPStreamSource(ref);
-		} 
-		
+ 
 		else if(ref.toLowerCase().contains(".zip/"))
-		{
-			fs = new ZipFileSource(ref);
-		}
+			fs = new ArcFileSource(ref);
 		
+		else if(ref.toLowerCase().contains(".rar/"))
+			fs = new ArcFileSource(ref);
+		
+		else if(ref.toLowerCase().contains(".7z/"))
+			fs = new ArcFileSource(ref);
+
+		else if(ref.toLowerCase().contains(".gz/"))
+			fs = new ArcFileSource(ref);
+
 		else
 		{
 			fs = new RealFileSource(new File(ref));
@@ -80,7 +95,6 @@ public abstract class FileSource
 	}
 	
 	protected File intGetFile() { return null; }
-	protected byte [] intGetContents() { return null; }
 	protected InputStream intGetStream() throws IOException { return null; }
 
 	protected URL intGetFTPURL() throws IOException { return null; }
@@ -88,195 +102,169 @@ public abstract class FileSource
 	protected FileSource intGetRelative(String name) { return null; }
 
 
-	public FileSource(String name, byte[] bs)
+	// get data from InputStream and save to file
+	public void storeData(InputStream is)
 	{
-		buffer = bs;
-		this.baseName = name;
-		this.file = null;
-		this.size = bs.length;
-		this.isFile = false;		
-	}
-
-	public boolean savedata_to_file(byte[] buffer)
-	{
-		try
-		{
-			FileOutputStream fos;
-			file = FileCache.getInstance().getFile(reference);
-			
-			fos = new FileOutputStream(file);
-			fos.write(buffer);
-			fos.flush();
-			fos.close();
-			
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-
-		return true;
-		
-		
-	}
-	
-	public byte[] download_data(InputStream is)
-	{
-		
-		ByteArrayOutputStream bs = new ByteArrayOutputStream();
-		byte [] data = new byte [65536 * 2];
+		byte [] data = new byte [16384];
 		int n;
+		size = 0;
+
+		FileOutputStream fos;
+		file = FileCache.getInstance().getFile(reference);
+				
 		try
 		{
+			fos = new FileOutputStream(file);
 			while ((n = is.read(data, 0, data.length)) != -1)
 			{
-				bs.write(data, 0, n);
+				fos.write(data, 0, n);
+				fos.flush();
+				size += n;
 			}
-			bs.flush();
-			bs.close();
 			
 			is.close();
-			buffer = bs.toByteArray();
-			size = buffer.length;
+			fos.close();
+			fos = null;
 		}
 		
 		catch (IOException e)
 		{
 			e.printStackTrace();
-			return null;
+			data = null;
+			is = null;
+
+			return;
 		}
 		
-		return buffer;		
+		data = null;
+		is = null;
+		
+		return;		
 		
 	}
-	
-	
-	//
-	// returns buffer containing the song data
-	//
-	public byte [] getContents() {
-
+	private byte [] getDataToBuffer() 
+	{
 		if(buffer == null)
 		{
-			
-			buffer = intGetContents();
-			size = getLength();
-			if(buffer == null)
+			buffer = new byte[(int) size];
+
+			try
 			{
-				InputStream is = null;
-				try
+				FileInputStream fis = new FileInputStream(file);
+				fis.read(buffer);
+				fis.close();
+				fis = null;
+			} 
+			catch (IOException e)
+			{
+				return null;
+			}
+		}
+		
+		return buffer;
+		
+	}
+	private byte [] getDataFromCache() throws IOException
+	{
+		file = FileCache.getInstance().getFile(reference);
+		if(file.exists())
+		{
+			buffer = new byte[(int) file.length()];
+			FileInputStream fis = new FileInputStream(file);
+			fis.read(buffer);
+			fis.close();
+			fis = null;
+			return buffer;
+		}
+		return null;
+		
+	}
+	// returns buffer containing the song data
+	public byte [] getData()
+	{
+
+		if (buffer == null)
+		{
+			size = getLength();
+			InputStream is = null;
+			
+			try
+			{
+				
+				// see if its in fileCache
+				if (reference.toLowerCase(Locale.ENGLISH).contains(".7z/"))
+					buffer = getDataFromCache();
+
+				else if (reference.toLowerCase(Locale.ENGLISH).contains(".zip/"))
+					buffer = getDataFromCache();
+
+				else if (reference.toLowerCase(Locale.ENGLISH).contains(".rar/"))
+					buffer = getDataFromCache();
+
+				else if (reference.toLowerCase(Locale.ENGLISH).contains(".gz/"))
+					buffer = getDataFromCache();
+				
+				else if (reference.contains("tp://"))
+					buffer = getDataFromCache();
+
+				if (buffer != null) {
+					size = buffer.length;
+					return buffer;
+				}
+				
+				// after this point we need to return the downloaded/extracted data to buffer
+				
+				if (reference.startsWith("ftp://"))
 				{
-					// see if its in fileCache
-					if (reference.contains("tp://"))
+					while (true)
 					{
-						file = FileCache.getInstance().getFile(reference);
-						if(file.exists())
+						
+						my_ftp = FTPStreamSource.intGetFTP(reference);
+						if (my_ftp != null)
 						{
-							buffer = new byte[(int) file.length()];
-							FileInputStream fis = new FileInputStream(file);
-							fis.read(buffer);
-							fis.close();
-							size = buffer.length;
-							return buffer;
+							break;
 						}
 						
 					}
-					if (reference.contains("ftp://"))
-					{
-						while (true)
-						{
-							my_ftp = FTPStreamSource.intGetFTP(reference);
-							if (my_ftp != null)
-							{
-								break;
-							}
-						}
-						String host_path = intgetPath();
-						is = my_ftp.retrieveFileStream(host_path);
-					}
-					else
-					{
-						is = intGetStream();
-					}
+					String host_path = intgetPath();
+					is = my_ftp.retrieveFileStream(host_path);
 					
-				} 
-				catch (IOException e1)
-				{
 				}
+				else
+				{
+					is = intGetStream();
+				}
+				
+			} 
+			catch (IOException e1)
+			{
+			}
+				
 				if(is != null)
 				{
-					download_data(is);
-					savedata_to_file(buffer);
+					buffer = null;
+					storeData(is);
+										
 					if (my_ftp != null)
-					{
-						try
-						{
-							my_ftp.logout();
-							my_ftp.disconnect();
-							my_ftp = null;
-						} 
-						catch (IOException e) 
-						{
-							e.printStackTrace();
-						}
-					}
+						FTPStreamSource.ftpclose();
+					
 				} 
 				else
 				{
 					getFile();
-					if(buffer == null)
-					{
-						buffer = new byte[(int) size];
-						try
-						{
-							FileInputStream fis = new FileInputStream(file);
-							fis.read(buffer);
-							fis.close();
-						} 
-						catch (IOException e)
-						{
-							return null;
-							//e.printStackTrace();
-						}
-					}
 				}
+				getDataToBuffer();
 			}	
-
-		}
+	
 		return buffer;
-		
 	}
-	
-	public long getLength() {
-		return size;
-	}
-	
-	//
-	// this function returns filelist from wanted directory (http/ftp)
-	//
-	/*
-	public String scanRemoteFiles(String path, String filename)
-	{
-		MatrixCursor ce = HttpSongSource.getFilesInCurPath(path);
-		ce.moveToFirst();
-		while (ce.isAfterLast() == false)
-		{
-			String str = ce.getString(ce.getColumnIndex("FILENAME"));
-			ce.moveToNext();
-		}
+
 		
-	
-		return "joo";			
-		
-	}
-	*/
-	
 	//
 	// this function does 2 things, download the file and return the file name
 	//
 	public File getFile()
 	{
-		
 		if(file == null)
 		{
 			// First see if we can get the file directly
@@ -286,9 +274,8 @@ public abstract class FileSource
 				size = file.length();
 				return file;
 			}
-
-			file = FileCache.getInstance().getFile(reference);			
 			
+			file = FileCache.getInstance().getFile(reference);			
 			if(file.exists())
 			{
 				Log.d(TAG, "LUCKY! File '%s' exists already\n", file.getPath());
@@ -297,10 +284,7 @@ public abstract class FileSource
 			}
 			
 			if(buffer == null)
-				buffer = intGetContents();
-			
-			if(buffer == null)
-				getContents();
+				getData();
 		}
 		if (file.exists())
 		{
@@ -314,16 +298,7 @@ public abstract class FileSource
 		return baseName;
 	}
 	
-	public Boolean renameFile(String newName)
-	{
-					
-		File file = new File(this.file.getPath());
-		File newfile = new File(newName);
-				
-		boolean success = file.renameTo(newfile);
-		
-		return success;
-	}
+	
 	public FileSource getRelative(String name)
 	{
 		FileSource fs = null;
@@ -377,10 +352,6 @@ public abstract class FileSource
 		return ext.toUpperCase();
 	}
 
-	public boolean isFile()
-	{
-		return isFile;
-	}
 
 	public int read(byte[] data) throws IOException
 	{
@@ -391,8 +362,7 @@ public abstract class FileSource
 		} 
 		if (reference.contains("ftp://"))
 		{
-			
-			
+						
 			
 		}
 		else
@@ -406,15 +376,16 @@ public abstract class FileSource
 			
 			
 		file = intGetFile();
-		if(file !=null) {
+		if(file != null) {
 			inputStream = new FileInputStream(file);
 			return inputStream.read(data);
 		}
 		return -1;
 	}
-
+	
 	public void close()
 	{
+		buffer = null;
 		if(inputStream != null)
 			try {
 				inputStream.close();
@@ -423,13 +394,11 @@ public abstract class FileSource
 		inputStream = null;
 	}
 
-	public String getReference()
-	{
+	public String getReference(){
 		return reference;
 	}
 	
-	public String getLocalPath()
-	{
+	public String getLocalPath() {
 		return this.file.getPath();
 	}
 	
@@ -439,5 +408,18 @@ public abstract class FileSource
 		int slash = reference.lastIndexOf('/');
 		refPath = (String) (slash > 0 ? reference.subSequence(0, slash+1) : "");
 		return refPath;
+	}
+
+	public long getLength() {
+		return size;
+	}
+
+	public boolean isFile(){
+		return isFile;
+	}
+
+	protected byte[] intGetContents() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

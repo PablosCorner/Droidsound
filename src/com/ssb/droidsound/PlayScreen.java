@@ -77,8 +77,8 @@ public class PlayScreen {
 
 	private Engine engine;
 
-	private String defTemplate;
-	private String streamTemplate;
+	//private String defTemplate;
+	//private String streamTemplate;
 
 	private String empty = "<html><body style=\"background-color: #%06x;\"></body></body>";
 
@@ -214,8 +214,8 @@ public class PlayScreen {
 		//infoText.getSettings();
 		//infoText.setBackgroundColor(backgroundColor);
 		
-		defTemplate = Utils.readAsset(activity, "templates/def.html");
-		streamTemplate = Utils.readAsset(activity, "templates/stream.html");
+		//defTemplate = Utils.readAsset(activity, "templates/def.html");
+		//streamTemplate = Utils.readAsset(activity, "templates/stream.html");
 		
 		themeDir = new File(Environment.getExternalStorageDirectory(), "droidsound/theme");
 		templateDir = new File(themeDir, "templates");

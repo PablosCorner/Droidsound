@@ -29,7 +29,7 @@ browser-header.title {
 }
 
 browser-header.subtitle {
-	font-size: "10sp";
+	font-size: "12sp";
 }
 
 /* Search header (Displaying current search) */
@@ -42,7 +42,7 @@ search-header {
 
 search-header.title {
 	font-weight:bold;
-	font-size:28sp;
+	font-size:20sp;
 	
 	
 }
@@ -138,7 +138,7 @@ item {
 	sub.color: #aaaaaa;
 	side.color: #ccccff;
 
-	main.font : "bold";
+	/*main.font : "bold";*/
 	/*sub.font : "bold"; */
 	side.font : "bold"; 
 	
@@ -156,49 +156,54 @@ item {
 /* Settings for specific file types */
 
 item.folder {
-	main.font-size: "10sp";
+	main.font-size: "18sp";
 	main.color : #ffff80;
 	icon.image : "icons/gflat_folder.png";
 }
 
 item.network {
-	main.font-size: "10sp";
+	main.font-size: "18sp";
 	main.color : #ffff80;
 	icon.image : "icons/gflat_net_folder.png";
 }
 
 item.archive {
-	main.font-size: "10sp";
+	main.font-size: "18sp";
 	main.color : #ffff80;
 	icon.image : "icons/gflat_package.png";
 }
 
 item.media {
-	main.font-size: "10sp";
+	main.font-size: "18sp";
 	main.color : #ffcc80;
 	icon.image : "icons/gflat_mus_folder.png";
 }
 
 item.csdb {
-	main.font-size: "10sp";
+	main.font-size: "18sp";
 	main.color : #ffcc80;
 	icon.image : "icons/gflat_bag.png";
 }
 
 item.filesys {
-	main.font-size: "10sp";
-	main.color : #ffcc80;
+	main.font-size: "18sp";
+	main.color : #34b12e;
 	icon.image : "icons/gflat_folder.png";
 }
 
+item.vfolder {
+	main.font-size: "18sp";
+	main.color : #c800c8;
+	icon.image : "icons/gflat_folder.png";
+}
 
 item.playlist {
-	main.font-size: "10sp";
+	main.font-size: "18sp";
 	icon.image : "icons/gflat_note3.png";
 }
 
 item.favorites {
-	main.font-size: "10sp";
+	main.font-size: "18sp";
 	icon.image : "icons/gflat_heart.png";
 }
 

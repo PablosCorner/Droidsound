@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import java.io.FileOutputStream;
+
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewPager; 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,9 +18,14 @@ import java.nio.channels.FileChannel;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+
 import android.app.Activity;
 import android.app.AlertDialog;
+
 import android.app.Dialog;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
@@ -28,17 +35,21 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
-import android.support.v4.view.ViewPager;
+
 import android.text.InputType;
 import android.util.SparseArray;
 import android.util.TypedValue;
@@ -68,24 +79,28 @@ import com.ssb.droidsound.database.CSDBParser;
 import com.ssb.droidsound.database.FileSystemSource;
 import com.ssb.droidsound.database.MediaSource;
 import com.ssb.droidsound.database.SongDatabase;
+import com.ssb.droidsound.file.FTPStreamSource;
 import com.ssb.droidsound.playlistview.FileInfo;
 import com.ssb.droidsound.playlistview.PlayListView;
 import com.ssb.droidsound.plugins.DroidSoundPlugin;
+import com.ssb.droidsound.service.AudioSettingsContentObserver;
 import com.ssb.droidsound.service.PlayerService;
 import com.ssb.droidsound.service.SongMeta;
 import com.ssb.droidsound.utils.Log;
 
+import com.ssb.droidsound.utils.NativeArcFile;
 import com.ssb.droidsound.utils.Unzipper;
 import com.ssb.droidsound.utils.Utils;
 import com.viewpagerindicator.TitlePageIndicator;
-//import android.os.PowerManager;
+
 
 @SuppressWarnings("deprecation") // No fragment support 
 public class PlayerActivity extends Activity  {
 	private static final String TAG = "PlayerActivity";
 	public static final int VERSION = 18;
 	
-		
+
+	
 	private static class Config {
 		int ttsStatus;
 		SearchCursor searchCursor;
@@ -109,7 +124,9 @@ public class PlayerActivity extends Activity  {
 			super.close();
 		}
 	}
-
+	public static Context context;
+	public static AudioSettingsContentObserver mSettingsContentObserver;
+	
 	public static final int FILE_VIEW = 0;
 	public static final int INFO_VIEW = 1;
 	public static final int SEARCH_VIEW = 2;
@@ -147,9 +164,10 @@ public class PlayerActivity extends Activity  {
 
 	private int searchDirDepth;
 
+	public File sdPath = null;
 	private File modsDir;
 	private String currentPath;
-	public static int currentVolume;
+
 	private AudioManager amg = null;
 
 	//private int backDown;
@@ -191,11 +209,11 @@ public class PlayerActivity extends Activity  {
 	};
 
 	private void setDirectory(String path, PlayListView plv) {
-
+	
 		if(plv == null) {
 			plv = currentPlaylistView;
 		}
-
+		
 		if(path == null) {
 			String p = plv.getPath();
 			if(p != null) {
@@ -223,27 +241,48 @@ public class PlayerActivity extends Activity  {
 		if(plv == searchListView)
 			so = state.sortOrderSearch;
 
+		int charCount = path.length() - path.replaceAll("/", "").length();
+		if (path.startsWith("/mnt/sdcard") || path.startsWith("/mnt/extSdCard")) {
+			if (charCount <= 3) {
+				path = modsDir.getPath();
+			}
+		}
+		else if (path.startsWith("/storage/emulated")) {
+			if (charCount <= 4) {
+				path = modsDir.getPath();
+			}
+			
+		}
+	
+
 		Cursor cursor = songDatabase.getFilesInPath(path, so);
-		// Cursor cursor = songDatabase.getFilesInPath("http://swimmer.se/mp3/", sortOrder);
 		plv.setCursor(cursor, path);
 
 		File f = new File(path);
 
-		if(f.equals(modsDir))
-		{
+		if(f.equals(modsDir)){
 			atTop = true;
 		} 
-		else
-		{
+		else {
 			atTop = false;
 		}
+
+		
 		if(plv == playListView)
 		{
 			state.dirTitle = songDatabase.getPathTitle();
-			if(state.dirTitle == null) {
+			if(state.dirTitle == null)
+			{
 				state.dirTitle = f.getName();
 			}
-			state.dirSubTitle = f.getParent().replaceFirst(modsDir.getParent(), "");
+
+			if (f.getName().contains(".fs_source"))
+				state.dirTitle = "./";
+						
+			if (path.contains(".fs_source"))
+				state.dirSubTitle = PlayerActivity.translate_fss_sourcePath(path);
+			else
+				state.dirSubTitle = f.getParent().replaceFirst(modsDir.getParent(), "");
 			
 			dirText.setText(state.dirTitle);
 			pathText.setText(state.dirSubTitle);		
@@ -382,7 +421,13 @@ public class PlayerActivity extends Activity  {
 			if(searchCursor != null) {
 				searchCursor.realClose();
 			}
-			searchCursor = new SearchCursor(songDatabase.search(query, currentPath, state.sortOrderSearch));
+			
+			Cursor c = songDatabase.search(query, currentPath, state.sortOrderSearch);
+			if (c == null)
+			{
+				return;
+			}
+			searchCursor = new SearchCursor(c);
 			searchQuery = query;
 			searchDirDepth = 0;
 			if(searchCursor != null) {
@@ -394,7 +439,7 @@ public class PlayerActivity extends Activity  {
 	}
 	
 
-	private static boolean copyFile(File in, File out) {
+	public static boolean copyFile(File in, File out) {
 		FileChannel inChannel = null;
 		FileChannel outChannel = null;
 		try {
@@ -471,14 +516,17 @@ public class PlayerActivity extends Activity  {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		
+		context = this;
 		first_run = false;
+
+		// register here the audiosetting observer, the only way to observe volume changes when screen is off
+		mSettingsContentObserver = new AudioSettingsContentObserver( getApplicationContext(), new Handler() ); 
+		getApplicationContext().getContentResolver().registerContentObserver( android.provider.Settings.System.CONTENT_URI, true, mSettingsContentObserver );
 		
+
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "#### onCreate()");
 		
-		prefs = PreferenceManager.getDefaultSharedPreferences(this);
-				
 		DroidSoundPlugin.setContext(getApplicationContext());
 	
 		Intent intent = getIntent();
@@ -530,8 +578,10 @@ public class PlayerActivity extends Activity  {
 
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		amg = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-		currentVolume = amg.getStreamVolume(AudioManager.STREAM_MUSIC);
 		
+		int currentVolume = amg.getStreamVolume(AudioManager.STREAM_MUSIC);
+		Log.d(TAG,"Initial volume level: %d",currentVolume);
+		AudioSettingsContentObserver.setOriginalVolume(currentVolume);
 
 		state.ttsStatus = TTS_UNCHECKED;
 		
@@ -539,8 +589,9 @@ public class PlayerActivity extends Activity  {
 		
 		final ThemeManager tm = ThemeManager.getInstance();
 		tm.init();
+		File extFile = Environment.getExternalStorageDirectory();
 
-		File dsroot = new File("/mnt/sdcard/dsroot");
+		File dsroot = new File(extFile,"dsroot");
 		if (!dsroot.exists())
 			first_run = true;
 		dsroot = null;
@@ -607,7 +658,9 @@ public class PlayerActivity extends Activity  {
 		//flipper.addView(playListView);
 		//flipper.addView(playScreen.getView());
 		//flipper.addView(searchListView);
-	
+		
+		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		
 		state.seekingSong = 0;
 		currentPlaylistView = playListView;
 		modsDir = null; 	//new File("/XXX");
@@ -621,8 +674,9 @@ public class PlayerActivity extends Activity  {
 		} 
 		else
 		{
-			if (cp != currentPath)
-				currentPath = modsDir.getPath();
+			//if (cp != currentPath)
+			//	currentPath = modsDir.getPath();
+			currentPath = cp;
 		}
 		atTop = currentPath.equals(modsDir);
 		
@@ -632,8 +686,8 @@ public class PlayerActivity extends Activity  {
 		state.receiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
-				// TODO Auto-generated method stub
-
+				
+				
 				if(intent.getAction().equals("com.sddb.droidsound.REQUERY"))
 				{
 					Log.d(TAG, "REQUERY");
@@ -676,21 +730,28 @@ public class PlayerActivity extends Activity  {
 					if(progressDialog != null) {
 						int percent = intent.getIntExtra("PERCENT", 0);
 						String path = intent.getStringExtra("PATH");
-						if(percent > 0) {
+						if(percent > 0 && percent <= 100) {
 							progressDialog.setMessage(String.format("Updating database...\n%s %02d%%", path, percent));
-						} else {
+						}
+						else if (percent > 100) {
+							progressDialog.setMessage(String.format("Updating database...\n%s %d", path, percent));
+						}
+						else {
 							progressDialog.setMessage(String.format("Updating database...\n%s", path));
 						}
 					}
 
 				}
-				else if (intent.getAction().equals("com.sddb.droidsound.FAILED"))
+				/*
+				else if (intent.getAction().equals("com.sddb.droidsound.FAILED_SERVER_CONN"))
 				{
 					Log.d(TAG,"Failed!");
+					Toast.makeText(getApplicationContext(), "Failed connecting server", Toast.LENGTH_LONG).show();
 					if(flipper != null)
 						flipper.flipTo(FILE_VIEW);
 					
 				}
+				*/
 			}
 		};
 
@@ -699,9 +760,10 @@ public class PlayerActivity extends Activity  {
 		filter.addAction("com.sddb.droidsound.OPEN_DONE");
 		filter.addAction("com.sddb.droidsound.SCAN_DONE");
 		filter.addAction("com.sddb.droidsound.SCAN_UPDATE");
-		filter.addAction("com.sddb.droidsound.FAILED");		
+		filter.addAction("com.sddb.droidsound.FAILED_SERVER_CONN");		
 		// filter.addAction("com.sddb.droidsound.DOWNLOAD_DONE");
 		registerReceiver(state.receiver, filter);
+		
 
 
 		boolean created = false;
@@ -779,7 +841,7 @@ public class PlayerActivity extends Activity  {
 
 				if(fi != null) {
 
-					if(fi.type == SongDatabase.TYPE_DIR || fi.type == SongDatabase.TYPE_ARCHIVE || fi.type == SongDatabase.TYPE_PLIST) {
+					if(fi.type == SongDatabase.TYPE_VDIR || fi.type == SongDatabase.TYPE_DIR || fi.type == SongDatabase.TYPE_ARCHIVE || fi.type == SongDatabase.TYPE_PLIST) {
 						setDirectory(fi.getPath(), plv);
 						plv.setScrollPosition(null);
 						if(plv == searchListView) {
@@ -890,6 +952,52 @@ public class PlayerActivity extends Activity  {
 				Log.d(TAG, "TB Sortorder now %d", state.sortOrderPlayList);
 			}
 		});
+		
+
+		// **************************************************************************
+		// check if connected, then check for new allmods.zip
+		//
+		extFile = Environment.getExternalStorageDirectory();
+		File file = new File(extFile + "/droidsound", "allmods.zip");
+		long curFilesize = 0;
+		if (file.exists())
+			curFilesize = file.length();
+
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo netInfo = cm.getActiveNetworkInfo();
+		
+		if (netInfo != null && netInfo.isConnected() && curFilesize != 0) 
+		{
+			//Toast toast = Toast.makeText(PlayerActivity.this, "CONNECTED, Checking Modland...", Toast.LENGTH_LONG);
+			//toast.show();
+			
+			String ftpserver = prefs.getString("Modland_server", "modland.ziphoid.com");
+			FTPClient modftp = FTPStreamSource.intGetFTP("ftp://"+ftpserver);
+		
+			try {
+				FTPFile[] ftpfiles = modftp.listFiles("allmods.zip");
+				long filesize = ftpfiles[0].getSize();
+				modftp.logout();
+				modftp.disconnect();
+				
+				long change = curFilesize - filesize;
+				change = Math.abs(change);
+				if (change > 50000)
+				{
+									
+					NotificationManager mNotificationManager =(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+	
+					NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+					        .setSmallIcon(R.drawable.note36)
+					        .setContentTitle("MODLAND")
+					        .setContentText("A new allmods.zip available");
+					mNotificationManager.notify(1, mBuilder.build());
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+		}
 
 		Log.d(TAG, "ON CREATE DONE");
 	}
@@ -907,25 +1015,6 @@ public class PlayerActivity extends Activity  {
 		songDatabase.registerDataSource(MediaSource.NAME, ms);
 		
 		FileSystemSource.BasePath = "";
-
-		// *************************************************************************
-		// create here the filesystem, loop through all the .fs_source files
-		String md = prefs.getString("modsDir", null);
-		File[] files = new File(md).listFiles();
-		for ( File file : files )
-		{
-			if (file.getName().contains(FileSystemSource.NAME))
-			{
-				String fs_title = file.getName();
-				FileSystemSource fss = new FileSystemSource();
-				songDatabase.registerDataSource(fs_title, fss);
-			}
-			
-		}
-		// *************************************************************************
-		
-		//FileSystemSource fss = new FileSystemSource();
-		//songDatabase.registerDataSource(FileSystemSource.NAME, fss);
 
 		dbThread = new Thread(songDatabase);
 		dbThread.start();
@@ -945,7 +1034,7 @@ public class PlayerActivity extends Activity  {
 		dialogShowing = true;
 		showDialog(what);
 	}
-	
+			
 	// *************************************************************************
 	private void setupModsDir()
 	{
@@ -1009,7 +1098,7 @@ public class PlayerActivity extends Activity  {
 		if(moveFileHere != null) {
 			moveFileHere(moveFileHere);
 		}
-
+				
 		foundVersion = prefs.getInt("version", -1);
 		if(foundVersion != VERSION) {
 			File tempFile = new File(modsDir, "Examples.zip");
@@ -1068,8 +1157,8 @@ public class PlayerActivity extends Activity  {
 		// samsung uses /mnt/extSdCard
 		// google uses /mnt/sdcard
 		
-		String sdcard_path_google = "/mnt/sdcard/"; // in samsung case, this is phone's internal memory
-		String sdcard_path_samsung = "/mnt/extSdCard/";
+		//String sdcard_path_google = "/mnt/sdcard/"; // in samsung case, this is phone's internal memory
+		//String sdcard_path_samsung = "/mnt/extSdCard/";
 /*
 		File sdcard = new File(sdcard_path_samsung);
 		if (sdcard.exists())
@@ -1086,7 +1175,7 @@ public class PlayerActivity extends Activity  {
 			}
 		}
 	*/
-		
+		/*
 		mf = new File(modsDir, "SdCard"+FileSystemSource.NAME);
 		if(!mf.exists()) {
 			try {
@@ -1097,7 +1186,7 @@ public class PlayerActivity extends Activity  {
 				e2.printStackTrace();
 			}
 		}
-
+		 	*/
 		
 		mf = new File(modsDir, "Streaming");
 		if(mf.exists()) {
@@ -1135,10 +1224,7 @@ public class PlayerActivity extends Activity  {
 		}
 
 		new File(modsDir, "Favorites.lnk").delete();
-		
-		return;
-
-		
+				
 	}
 	
 // *************************************************************************
@@ -1371,12 +1457,13 @@ public class PlayerActivity extends Activity  {
 			backPressed = true;
 			event.startTracking();
 			return true;
-			
+			/*
 		case KeyEvent.KEYCODE_VOLUME_UP:
 		case KeyEvent.KEYCODE_VOLUME_DOWN:
 		case KeyEvent.KEYCODE_VOLUME_MUTE:			
-			currentVolume = amg.getStreamVolume(AudioManager.STREAM_MUSIC);
-			
+			int currentVolume = amg.getStreamVolume(AudioManager.STREAM_MUSIC);
+			AudioSettingsContentObserver.setCurrentVolume(1);
+			*/
 		}
 
 		//backDown = 0;
@@ -1461,6 +1548,8 @@ public class PlayerActivity extends Activity  {
 		super.onResume();
 		Log.d(TAG, "#### onResume()");
 
+		getApplicationContext().getContentResolver().registerContentObserver( android.provider.Settings.System.CONTENT_URI, true, mSettingsContentObserver );
+
 		player.bindService(this, new ValueChangeHandler(this));
 		
 		//if(songDatabase == null) {
@@ -1504,7 +1593,9 @@ public class PlayerActivity extends Activity  {
 	protected void onPause() {
 		super.onPause();
 		Log.d(TAG, "#### onPause()");
-
+		
+		//getApplicationContext().getContentResolver().unregisterContentObserver(mSettingsContentObserver);
+				
 		//indexSetting = prefs.getString("indexing", "Basic");
 
 		Editor editor = prefs.edit();
@@ -1531,6 +1622,14 @@ public class PlayerActivity extends Activity  {
 		super.onDestroy();
 		Log.d(TAG, "#### onDestroy()");
 
+		Editor editor = prefs.edit();
+		editor.putString("currentPath", currentPath);
+		editor.putBoolean("shuffle", state.shuffleSongs);
+		editor.commit();
+
+		
+		getApplicationContext().getContentResolver().unregisterContentObserver(mSettingsContentObserver);
+		
 		if(state.receiver != null) {
 			unregisterReceiver(state.receiver);
 		}
@@ -1692,7 +1791,7 @@ public class PlayerActivity extends Activity  {
 		inflater.inflate(R.menu.optionsmenu, menu);
 		return true;
 	}
-	
+
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		
@@ -1702,7 +1801,6 @@ public class PlayerActivity extends Activity  {
 		//} else {
 		//	m.setTitle("New");
 		//}
-		
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -1714,14 +1812,23 @@ public class PlayerActivity extends Activity  {
 			startActivity(new Intent(this, SettingsActivity.class));
 			break;
 		case R.id.quit:
+
+			Editor editor = prefs.edit();
+			editor.putString("currentPath", currentPath);
+			editor.putBoolean("shuffle", state.shuffleSongs);
+			editor.commit();
+
+			getApplicationContext().getContentResolver().unregisterContentObserver(mSettingsContentObserver);
+			
 			player.stop();
-			//NativeZipFile.closeCached();
+			NativeArcFile.closeCached();
 			songDatabase.quit();
 			songDatabase = null;
 			
 			//restore original volume just in case
+			int currentVolume = AudioSettingsContentObserver.getOriginalVolume();
 			amg.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume, 0);
-			
+
 			finish();
 			System.runFinalization();
 			System.exit(0);
@@ -1784,12 +1891,43 @@ public class PlayerActivity extends Activity  {
 			break;
 		}
 	}
-	public static int getCurrentVolume()
+	public static String translate_db_sourcePath(String path)
 	{
-		return currentVolume;
+		String pfix = "";
+		int _dbsource_idx = path.indexOf(".db_source");
+		if (_dbsource_idx != -1)
+		{
+			String db_filename = path.substring(0, path.indexOf(".db_source")) + ".db_source";
+			int remain_path_idx = path.indexOf(".db_source") + 10 ;
+			String remain_path = path.substring(remain_path_idx);
+			
+			pfix = FileSystemSource.getFilesystemPath(new File(db_filename));
+			pfix = pfix.concat(remain_path);
+			return pfix;
+		}
+		
+		else
+			return path;
+		
+	}
+	public static String get_db_source(String path)
+	{
+		String dbpath = "";
+		int _dbsource_idx = path.indexOf(".db_source");
+		if (_dbsource_idx != -1)
+		{
+			String db_filename = path.substring(0, path.indexOf(".db_source")) + ".db_source";
+			dbpath = FileSystemSource.getFilesystemPath(new File(db_filename));
+			return dbpath;
+		}
+		
+		else
+			return path;
+		
 	}
 	
-	public static String fix_fs_sourcePath(String path)
+	
+	public static String translate_fss_sourcePath(String path)
 	{
 		String pfix = "";
 	
@@ -1809,15 +1947,15 @@ public class PlayerActivity extends Activity  {
 		
 		else
 			return path;
-		
-		
-		
 	}
+	
 	@Override
 	protected Dialog onCreateDialog(int id) {
+		
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
+			
+		
 		if(confirmables.get(id) != null) {
 			final Runnable runnable = confirmables.get(id);
 			builder.setMessage(id);
@@ -1879,6 +2017,9 @@ public class PlayerActivity extends Activity  {
 					case 3:
 						showDialog(R.string.name_filesystem);
 						break;
+					case 4:
+						showDialog(R.string.name_moddb);
+						break;
 						
 					}
 				}
@@ -1916,7 +2057,64 @@ public class PlayerActivity extends Activity  {
 			});
 			break;
 			
+		case R.string.name_moddb:
+			
+			final CharSequence[] items = {"Internal Memory", "External SDCard"};
+									
+			final EditText input_dbfolder = new EditText(this);
+					
+			input_dbfolder.setText("ModlandDB");
+
+			input_dbfolder.setInputType(InputType.TYPE_CLASS_TEXT);
+						
+			LinearLayout test1 = new LinearLayout(this);
+			test1.setOrientation(1); //1 is for vertical orientation
+			test1.addView(input_dbfolder);
+
+		    builder.setView(test1);
+		    		    
+		    sdPath = Environment.getExternalStorageDirectory();
+
+			builder.setSingleChoiceItems(items, 0,  new DialogInterface.OnClickListener(){
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					if (which == 0)
+					{
+						sdPath = Environment.getExternalStorageDirectory();
+					}
+					else{
+						sdPath = new File("/mnt/extSdCard");
+					}
+				}
+			});
+						
+			builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() 
+			{
+				@Override
+				public void onClick(DialogInterface dialog, int which)
+				{
+					String db_path = input_dbfolder.getText().toString();
+					String md = prefs.getString("modsDir", null);
+					songDatabase.doMLDB(sdPath.getPath() + "/" + db_path);
+					songDatabase.scan(false, md);
+					playListView.rescan();						
+					
+
+				}
+			});
+			builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			});
+			
+			break;
+			
+			
 		case R.string.name_filesystem:
+			
 			final EditText input_fsname = new EditText(this);
 			final EditText input_fstitle = new EditText(this);
 						
@@ -1945,12 +2143,11 @@ public class PlayerActivity extends Activity  {
 					
 					String md = prefs.getString("modsDir", null);
 					
-					FileSystemSource fss = new FileSystemSource();
-					fss.setFilesystemPath(fs_path, fs_title);
-					
-					songDatabase.registerDataSource(fs_title+".fs_source", fss);
-					
-					songDatabase.rescan(md);
+					File file = new File(md, fs_title+".fs_source");
+
+					songDatabase.createFileBrowser(file, fs_path);
+										
+					songDatabase.scan(false, md);
 					playListView.rescan();
 
 				}
@@ -1996,7 +2193,7 @@ public class PlayerActivity extends Activity  {
 						if(!file.exists())
 						{							
 							songDatabase.createLink(file, url.toString());
-							songDatabase.scan(false, currentPath);
+							//songDatabase.scan(false, currentPath);
 							playListView.rescan();
 						}
 					} catch (MalformedURLException e) {
@@ -2021,7 +2218,7 @@ public class PlayerActivity extends Activity  {
 				public void onClick(DialogInterface dialog, int which) {
 					String folderName = input2.getText().toString();
 
-					String pfix = fix_fs_sourcePath(currentPath);
+					String pfix = translate_fss_sourcePath(currentPath);
 					
 					File f = new File(pfix, folderName);
 										
@@ -2144,7 +2341,7 @@ public class PlayerActivity extends Activity  {
 			type = cursor.getInt(t);
 		}
 
-		//File file = currentPlaylistView.getFile(info.position);
+		File file = currentPlaylistView.getFile(info.position);
 
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.songmenu, menu);
@@ -2171,19 +2368,68 @@ public class PlayerActivity extends Activity  {
 
 		switch(type) {
 		case SongDatabase.TYPE_FILE:
-			menu.setGroupVisible(R.id.on_file, true);
+			if (file.getPath().contains("/MLDB/"))
+			{
+				menu.setGroupVisible(R.id.on_vfile, true);
+				menu.setGroupVisible(R.id.on_file, false);
+			}
+			else {
+				menu.setGroupVisible(R.id.on_vfile, false);
+				menu.setGroupVisible(R.id.on_file, true);
+			}
+	
 			menu.setGroupVisible(R.id.on_dir, false);
 			menu.setGroupVisible(R.id.on_plist, false);
+			menu.setGroupVisible(R.id.on_filebrowser, false);
+			menu.setGroupVisible(R.id.on_vfolder, false);
 			break;
-
+			
+		case SongDatabase.TYPE_VDIR:
+			menu.setGroupVisible(R.id.on_filebrowser, false);
+			menu.setGroupVisible(R.id.on_file, false);
+			menu.setGroupVisible(R.id.on_dir, false);
+			menu.setGroupVisible(R.id.on_plist, false);
+			menu.setGroupVisible(R.id.on_vfolder, true);
+			menu.setGroupVisible(R.id.on_vfile, false);
+			break;
+			
 		case SongDatabase.TYPE_DIR:
+			
+			// check here if its filebrowser instead of normal dir
+			if (file.getName().contains(".fs_source"))
+			{
+				menu.setGroupVisible(R.id.on_filebrowser, true);
+				menu.setGroupVisible(R.id.on_dir, false);
+			}
+			else if (file.getPath().contains("/MLDB"))
+			{
+				menu.setGroupVisible(R.id.on_filebrowser, false);
+				menu.setGroupVisible(R.id.on_file, false);
+				menu.setGroupVisible(R.id.on_dir, false);
+				menu.setGroupVisible(R.id.on_plist, false);
+				menu.setGroupVisible(R.id.on_vfolder, false);
+				menu.setGroupVisible(R.id.on_vfile, false);
+	
+			}
+			else
+			{
+				menu.setGroupVisible(R.id.on_filebrowser, false);
+				menu.setGroupVisible(R.id.on_dir, true);
+			}
+			menu.setGroupVisible(R.id.on_file, false);
+			menu.setGroupVisible(R.id.on_plist, false);
+
+			break;
+			
 		case SongDatabase.TYPE_ARCHIVE:
+			menu.setGroupVisible(R.id.on_filebrowser, false);
 			menu.setGroupVisible(R.id.on_file, false);
 			menu.setGroupVisible(R.id.on_dir, true);
 			menu.setGroupVisible(R.id.on_plist, false);
 			break;
 
 		case SongDatabase.TYPE_PLIST:
+			menu.setGroupVisible(R.id.on_filebrowser, false);
 			menu.setGroupVisible(R.id.on_file, false);
 			menu.setGroupVisible(R.id.on_dir, false);
 			menu.setGroupVisible(R.id.on_plist, true);
@@ -2193,14 +2439,19 @@ public class PlayerActivity extends Activity  {
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
+		
 		// SQLiteDatabase db;
+		
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+		
 		// PlayListView.FileInfo finfo = (PlayListView.FileInfo)
 		// playListView.getItemAtPosition(info.position);
 		// Cursor cursor = playListView.getCursor(info.position);
+	
 		File file = currentPlaylistView.getFile(info.position);
 		state.operationSong = new SongFile(currentPlaylistView.getPath(info.position));
 		Log.d(TAG, "%d %s %d %d", item.getItemId(), item.getTitle(), info.position, info.id);
+		
 		// int pi = cursor.getColumnIndex("PATH");
 		// String path = playListView.getDirectory();
 		// if(pi >= 0) {
@@ -2220,7 +2471,10 @@ public class PlayerActivity extends Activity  {
 
 		switch(item.getItemId()) {
 		case R.id.go_dir:
-			setDirectory(state.operationSong.getParent(), playListView);
+			if (file.getParent().contains("/MLDB/"))
+				setDirectory(file.getParent(), playListView);
+			else
+				setDirectory(state.operationSong.getParent(), playListView);
 			currentPlaylistView.setScrollPosition(file.getPath());
 			// flipper.setDisplayedChild(0);
 			updateFileView();
@@ -2260,7 +2514,17 @@ public class PlayerActivity extends Activity  {
 			
 
 		case R.id.scan_dir:
-			songDatabase.scanDir(file.getPath());
+			if (file.getPath().contains(".fs_source"))
+			{
+				
+				String scanPath = translate_fss_sourcePath(file.getPath());
+				songDatabase.scanDir(scanPath);
+				Log.d(TAG, "rescan path: %s", scanPath);
+			}
+			else
+			{
+				songDatabase.scanDir(file.getPath());
+			}
 			break;
 		case R.id.del_dir:
 			//operationFile = file;
@@ -2331,6 +2595,19 @@ public class PlayerActivity extends Activity  {
 			}
 
 			break;
+
+		case R.id.del_vfolder:
+			songDatabase.deleteFile(file);
+			file.delete();
+			setDirectory(null);
+			break;
+			
+		case R.id.del_filebrowser:
+			songDatabase.deleteFile(file);
+			file.delete();
+			setDirectory(null);
+			break;
+			
 		default:
 			return super.onContextItemSelected(item);
 		}
