@@ -175,9 +175,17 @@ public class AsyncAudioPlayer implements Runnable
 	
 	private void init()
 	{
-		int set_channels = AudioFormat.CHANNEL_OUT_STEREO;
-		
-		if (channels == 1)
+		int set_channels = 0;
+
+		if (channels == 6)
+			set_channels = AudioFormat.CHANNEL_OUT_5POINT1;
+		else if (channels == 4)
+			set_channels = AudioFormat.CHANNEL_OUT_QUAD;
+		else if (channels == 8)
+			set_channels = AudioFormat.CHANNEL_OUT_7POINT1;
+		else if (channels == 2)
+			set_channels = AudioFormat.CHANNEL_OUT_STEREO;
+		else if (channels == 1)
 			set_channels = AudioFormat.CHANNEL_OUT_MONO;
 		
 		bufSize = (int) Math.ceil( bufSize / 100.0) * 100; 

@@ -873,6 +873,12 @@ public class Player implements Runnable
 		if(lastPos > playPos)
 			lastPos = -1;
 
+		if (songlength_ms < 10000 && !songEnded && playPos == 0)
+		{
+			songEnded = true;
+			audioPlayer.mark();
+			
+		}
 		if (songlength_ms > 10000 && playPos >= songlength_ms - 7500 && !songEnded)
 		{
 			songEnded = true;
@@ -900,7 +906,6 @@ public class Player implements Runnable
 				{
 					AudioSettingsContentObserver.setfadingOut(true);
 					AudioSettingsContentObserver.decreaseCurrentVolume(1);
-
 				}
 			}
 		}
@@ -915,7 +920,12 @@ public class Player implements Runnable
 
 		short [] samples = audioPlayer.getArray(dataSize);
 		
-		if(!songEnded)
+		if(songlength_ms < 10000 && playPos + 500 < songlength_ms)
+		{
+			len = currentPlugin.getSoundData(samples, dataSize);
+		} 
+		
+		else if(!songEnded)
 		{
 			len = currentPlugin.getSoundData(samples, dataSize);
 		} 
@@ -924,7 +934,7 @@ public class Player implements Runnable
 			Thread.sleep(100);
 			len = dataSize;
 			Arrays.fill(samples, 0, len, (short) 0);
-			if(audioPlayer.markReached())
+			if((audioPlayer.markReached() && songlength_ms >= 10000) || playPos + 500 >= songlength_ms)
 			{
 				Message msg = mHandler.obtainMessage(MSG_DONE);
 				mHandler.sendMessage(msg);

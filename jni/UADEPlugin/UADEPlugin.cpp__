@@ -1,0 +1,114 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include <android/log.h>
+#include "com_ssb_droidsound_plugins_UADEPlugin.h"
+
+extern "C" {
+
+}
+#define INFO_TITLE 0
+#define INFO_AUTHOR 1
+#define INFO_LENGTH 2
+#define INFO_TYPE 3
+#define INFO_COPYRIGHT 4
+#define INFO_GAME 5
+#define INFO_SUBTUNES 6
+#define INFO_STARTTUNE 7
+
+#define MAX_LEN 256
+#define OPT_FILTER 1
+#define OPT_RESAMPLING 2
+#define OPT_NTSC 3
+#define OPT_SPEEDHACK 4
+#define OPT_PANNING 5
+
+static jstring NewString(JNIEnv *env, const char *str)
+{
+	static jchar *temp, *ptr;
+
+	temp = (jchar *) malloc((strlen(str) + 1) * sizeof(jchar));
+
+	ptr = temp;
+	while(*str) {
+		unsigned char c = (unsigned char)*str++;
+		*ptr++ = (c < 0x7f && c >= 0x20) || c >= 0xa0 || c == 0xa ? c : '?';
+	}
+	//*ptr++ = 0;
+	jstring j = env->NewString(temp, ptr - temp);
+
+	free(temp);
+
+	return j;
+}
+ 
+JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1exit(JNIEnv *env, jobject obj)
+{
+	return;
+}
+
+
+JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1init(JNIEnv *env, jobject obj, jstring basedir)
+{
+	return;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1canHandle(JNIEnv *, jobject, jstring)
+{
+	return true;
+}
+
+JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1loadFile(JNIEnv *env, jobject obj, jstring fname)
+{
+
+
+	return 1;
+}
+
+JNIEXPORT void Java_com_ssb_droidsound_plugins_UADEPlugin_N_1unload(JNIEnv *env, jobject obj, jlong song)
+{
+	return;
+
+}
+
+
+JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1getSoundData(JNIEnv *env, jobject obj, jlong song, jshortArray sArray, jint size)
+{
+	
+	return -1;
+
+
+}
+
+JNIEXPORT jboolean JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1seekTo(JNIEnv *, jobject, jlong, jint)
+{
+	
+	return false;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1setTune(JNIEnv *env, jobject obj, jlong song, jint tune)
+{
+	return true;
+}
+
+JNIEXPORT jstring JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1getStringInfo(JNIEnv *env, jobject obj, jlong song, jint what)
+{
+	return NewString(env, "");
+}
+
+
+
+JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1setOption(JNIEnv *env, jclass cl, jint what, jint val)
+{
+
+	return;
+}
+
+
+JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_UADEPlugin_N_1getIntInfo(JNIEnv *env, jobject obj, jlong song, jint what)
+{
+
+	return -1;
+}
+
