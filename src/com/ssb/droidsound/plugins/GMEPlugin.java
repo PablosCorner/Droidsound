@@ -211,7 +211,6 @@ public class GMEPlugin extends DroidSoundPlugin {
 		currentFrames += len/2;
 		if(loopMode == 0 && songLength > 0 && currentFrames / 44100 >= (songLength/1000))
 			return -1;
-		
 		return len;
 	}
 	
@@ -225,9 +224,9 @@ public class GMEPlugin extends DroidSoundPlugin {
 			use_vgm_vgz = true;			
 		}
 		
-		if(opt.equals("loop"))
+		if(opt.equals("genericLoop"))
 		{
-			loopMode  = (Integer)val;
+			loopMode = (Boolean)val ? 1 : 0;
 		}
 	}
 

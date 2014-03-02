@@ -45,6 +45,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.BaseColumns;
+import android.widget.Toast;
 
 import com.ssb.droidsound.FileIdentifier;
 
@@ -1418,6 +1419,9 @@ public class SongDatabase implements Runnable {
 		}
 
 		if(rdb == null && pathName.contains("/MLDB")) {
+			
+			Toast.makeText(PlayerActivity.context, "ModDB Activated", Toast.LENGTH_LONG).show();
+			
 			int idx = pathName.indexOf("/MLDB");
 			String _path = pathName.substring(0, idx);
 			dbName = _path + "/" + "modland.moddb"; 
@@ -1441,12 +1445,13 @@ public class SongDatabase implements Runnable {
 		String path = "";
 		String fname = "";
 	
-		if (rdb.isOpen() && (pathName.contains(".db_source") ))
+		if (rdb.isOpen() && (pathName.contains(".db_source") && !curdbName.contains(".moddb") ))
 		{
 			rdb.close();
 			String dbpath = PlayerActivity.get_db_source(pathName);
 			rdb = SQLiteDatabase.openDatabase(dbpath, null, SQLiteDatabase.OPEN_READONLY | SQLiteDatabase.NO_LOCALIZED_COLLATORS);
 			curdbName = rdb.getPath();
+			Toast.makeText(PlayerActivity.context, "ModDB Activated", Toast.LENGTH_LONG).show();
 		}
 		
 		if(pathName.contains(".db_source"))
@@ -1454,6 +1459,7 @@ public class SongDatabase implements Runnable {
 			pathName = PlayerActivity.translate_db_sourcePath(pathName);
 			pathName = pathName.replace("/modland.moddb", "/MLDB"); // MLDB is static identifier for Modland entries in the DB file
 			file = new File(pathName);
+
 		}
 		
 		else if(pathName.contains(".fs_source")) 
@@ -1814,6 +1820,8 @@ public class SongDatabase implements Runnable {
 					break;
 			    String name = line.split("\t")[1].trim();
 			    String[] parts = name.split("/");
+			    if (parts.length < 3)
+			    	continue;
 
 			    if (parts[0].equals("Ad Lib") || parts[0].equals("Video Game Music")) {
 			        if (parts.length == 4)

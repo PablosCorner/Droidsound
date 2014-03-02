@@ -4,13 +4,14 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+
 
 import java.util.regex.*;
 
 import android.annotation.SuppressLint;
 import android.os.Environment;
 
+import com.ssb.droidsound.PlayerActivity;
 import com.ssb.droidsound.file.FileSource;
 import com.ssb.droidsound.utils.Log;
 import com.ssb.droidsound.utils.Unzipper;
@@ -44,6 +45,7 @@ public class SC68Plugin extends DroidSoundPlugin
 	private Unzipper unzipper = null;
 
 	private boolean done_fileinfo = false;
+	private boolean loopmode = false;
 	
 	public SC68Plugin() {
 
@@ -71,24 +73,10 @@ public class SC68Plugin extends DroidSoundPlugin
 	@Override
 	public void setOption(String opt, Object val)
 	{
-		int v  = -1;
-		if(val instanceof Boolean)
-		{
-			v = (Boolean)val ? 1 : 0;
-		} 
-		else if(val instanceof Integer)
-		{
-			v = (Integer)val;
-		}
+		if (opt == "genericLoop")
+			loopmode = (Boolean)val;
 		
-		for(int i=0; i < sc68options.length; i++)
-		{
-			if(sc68options[i].equals(opt))
-			{
-				optMap.put(optvals[i], v);
-				break;
-			}
-		}
+		return;
 	}
 	
 	@Override
@@ -103,7 +91,10 @@ public class SC68Plugin extends DroidSoundPlugin
 	{
 		Log.d(TAG, "Unloading");
 		if(currentSong != 0)
-			N_unload(currentSong);		
+		{
+			N_unload(currentSong);
+		}
+		currentSong = 0;
 	}
 
 	@Override
@@ -112,7 +103,7 @@ public class SC68Plugin extends DroidSoundPlugin
 		// fill the usual infos from SNDH header
 		loadInfo(fs);
 				
-		int loop_mode = 1;
+		int loop_mode = 0;
 		if(unzipper != null) {
 			while(!unzipper.checkJob("sc68data.zip")) {
 				try {
@@ -130,23 +121,22 @@ public class SC68Plugin extends DroidSoundPlugin
 			
 		
 		// set the options here
-		for(Entry<Integer, Integer> e : optMap.entrySet())
+		for(int opt : optvals)
 		{
-			
-			if (e.getKey() == SC68_OPT_LOOPING && e.getValue() == 1)
-			{
-				loop_mode = -1; //loop forever
-			}
-			else if(e.getKey() == SC68_OPT_LOOPING && e.getValue() == 0)
-			{
-				loop_mode = 0; //loop once
+			if (opt == SC68_OPT_ASID)
+			{ 
+				boolean aSid = PlayerActivity.prefs.getBoolean("SC68Plugin.aSIDfilter", false);
+				if (aSid)
+					N_setOption(currentSong, SC68_OPT_ASID, 1);
 			}
 			
-			else
+			else if (opt == SC68_OPT_LOOPING)
 			{
-				N_setOption(currentSong, e.getKey(), e.getValue());
+				loopmode = PlayerActivity.prefs.getBoolean("generic_loop", false);
+				if (loopmode)
+					loop_mode = -1; //loop forever
 			}
-			
+		
 		}
 		
 		
@@ -396,7 +386,7 @@ public class SC68Plugin extends DroidSoundPlugin
 	@Override
 	public String getVersion()
 	{
-		return "Version 3.0.0b [r409]\nCopyright (C) 2013 Benjamin Gerard";
+		return "Version 3.0.0b [r436]\nCopyright (C) 2014 Benjamin Gerard";
 	}
 	
 	native public static int N_setOption(long song, int what, int val); 

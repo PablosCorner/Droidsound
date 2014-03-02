@@ -1,13 +1,12 @@
 package com.ssb.droidsound.plugins;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.io.File;
 
 import com.ssb.droidsound.file.FileSource;
-
-
 
 public class GSFPlugin extends DroidSoundPlugin {
 	
@@ -18,11 +17,11 @@ public class GSFPlugin extends DroidSoundPlugin {
 	private Set<String> extensions;
 	
 	static String [] ex = { "GSF", "MINIGSF" };
-	
+	private static Map<String, String> tagMap = new HashMap<String, String>();
 	long currentSong = 0;
 
 	private String[] info;
-	
+	private static String extension = "";
 	private FileSource libFile;
 
 	public GSFPlugin() {
@@ -34,6 +33,7 @@ public class GSFPlugin extends DroidSoundPlugin {
 	
 	@Override
 	public boolean canHandle(FileSource fs) {
+		extension = fs.getExt().toUpperCase();
 		return extensions.contains(fs.getExt());
 	}
 
@@ -41,25 +41,45 @@ public class GSFPlugin extends DroidSoundPlugin {
 	@Override
 	public void getDetailedInfo(Map<String, Object> list) {
 		
-		//String s = N_getStringInfo(currentSong, INFO_TYPE);
-		//if(s != null & s.length() > 0) {
-			list.put("Format", "GSF/Gameboy Advance");
-		//}
-		//s = N_getStringInfo(currentSong, INFO_COPYRIGHT);
-		if(info[INFO_COPYRIGHT] != null) {
-			list.put("Copyright", info[INFO_COPYRIGHT]);
+		list.put("plugin", "GSFPlugin");
+		list.put("format", extension);
+
+		if (tagMap == null)
+		{
+			return;
 		}
-		//s = N_getStringInfo(currentSong, INFO_GAME);
-		if(info[INFO_GAME] != null) {
-			list.put("Game", info[INFO_GAME]);
+		
+		if (tagMap.containsKey("artist"))
+		{
+			String composer = tagMap.get("artist");
+			list.put("composer", composer);
+			tagMap.remove("artist");
 		}
+		
+		if (tagMap.containsKey("game"))
+		{
+			String game = tagMap.get("game");
+			list.put("game", game);
+			tagMap.remove("game");
+		}
+
+		if (tagMap.containsKey("title"))
+		{
+			String title = tagMap.get("title");
+			list.put("title", title);
+			tagMap.remove("title");
+		}
+		for (Map.Entry<String, String> entry : tagMap.entrySet())
+		{
+			list.put(entry.getKey(), entry.getValue());
+		}
+
 	}
 	
 	@Override
 	public boolean load(FileSource fs) {
-		
-		
-		Map<String, String> tagMap = PSFFile.getTags(fs.getData(), (int) fs.getLength());
+				
+		tagMap = PSFFile.getTags(fs.getData(), (int) fs.getLength());
 		info = new String [128];
 		if(tagMap != null) {			
 			info[INFO_TITLE] = tagMap.get("title");
@@ -148,7 +168,9 @@ public class GSFPlugin extends DroidSoundPlugin {
 
 	@Override
 	public void unload() {
-		N_unload(currentSong);
+		if (currentSong != 0){
+			N_unload(currentSong);
+		}
 		currentSong = 0;
 	}
 	

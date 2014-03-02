@@ -29,8 +29,14 @@ extern "C" {
 #define com_ssb_droidsound_plugins_SC68Plugin_INFO_SUBTUNE_AUTHOR 9L
 #undef com_ssb_droidsound_plugins_SC68Plugin_INFO_SUBTUNE_NO
 #define com_ssb_droidsound_plugins_SC68Plugin_INFO_SUBTUNE_NO 10L
-#undef com_ssb_droidsound_plugins_SC68Plugin_SIZEOF_INFO
-#define com_ssb_droidsound_plugins_SC68Plugin_SIZEOF_INFO 11L
+#undef com_ssb_droidsound_plugins_SC68Plugin_INFO_FREQUENCY
+#define com_ssb_droidsound_plugins_SC68Plugin_INFO_FREQUENCY 11L
+#undef com_ssb_droidsound_plugins_SC68Plugin_INFO_CHANNELS
+#define com_ssb_droidsound_plugins_SC68Plugin_INFO_CHANNELS 12L
+#undef com_ssb_droidsound_plugins_SC68Plugin_INFO_YEAR
+#define com_ssb_droidsound_plugins_SC68Plugin_INFO_YEAR 13L
+#undef com_ssb_droidsound_plugins_SC68Plugin_INFO_DETAILS_CHANGED
+#define com_ssb_droidsound_plugins_SC68Plugin_INFO_DETAILS_CHANGED 15L
 #undef com_ssb_droidsound_plugins_SC68Plugin_OPT_FILTER
 #define com_ssb_droidsound_plugins_SC68Plugin_OPT_FILTER 1L
 #undef com_ssb_droidsound_plugins_SC68Plugin_OPT_RESAMPLING
@@ -41,6 +47,30 @@ extern "C" {
 #define com_ssb_droidsound_plugins_SC68Plugin_OPT_SPEED_HACK 4L
 #undef com_ssb_droidsound_plugins_SC68Plugin_OPT_PANNING
 #define com_ssb_droidsound_plugins_SC68Plugin_OPT_PANNING 5L
+#undef com_ssb_droidsound_plugins_SC68Plugin_OPT_FILTER_BIAS
+#define com_ssb_droidsound_plugins_SC68Plugin_OPT_FILTER_BIAS 6L
+#undef com_ssb_droidsound_plugins_SC68Plugin_OPT_SID_MODEL
+#define com_ssb_droidsound_plugins_SC68Plugin_OPT_SID_MODEL 7L
+#undef com_ssb_droidsound_plugins_SC68Plugin_SC68_OPT_ASID
+#define com_ssb_droidsound_plugins_SC68Plugin_SC68_OPT_ASID 1L
+#undef com_ssb_droidsound_plugins_SC68Plugin_SC68_OPT_LOOPING
+#define com_ssb_droidsound_plugins_SC68Plugin_SC68_OPT_LOOPING 2L
+/*
+ * Class:     com_ssb_droidsound_plugins_SC68Plugin
+ * Method:    N_setOption
+ * Signature: (JII)I
+ */
+JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1setOption
+  (JNIEnv *, jclass, jlong, jint, jint);
+
+/*
+ * Class:     com_ssb_droidsound_plugins_SC68Plugin
+ * Method:    N_PlaySong
+ * Signature: (JII)J
+ */
+JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1PlaySong
+  (JNIEnv *, jobject, jlong, jint, jint);
+
 /*
  * Class:     com_ssb_droidsound_plugins_SC68Plugin
  * Method:    N_load
@@ -111,32 +141,16 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1getIntInfo
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1setDataDir
-  (JNIEnv *, jclass, jstring);
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     com_ssb_droidsound_plugins_SC68Plugin
  * Method:    N_unice
- * Signature: ([B[B)V
+ * Signature: ([B)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1unice
   (JNIEnv *, jobject, jbyteArray);
 
-/*
- * Class:     com_ssb_droidsound_plugins_SC68Plugin
- * Method:    N_setOption
- * Signature: (JII)I
- */
-JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1setOption
-  (JNIEnv *, jclass, jlong, jint, jint);
-
-/*
- * Class:     com_ssb_droidsound_plugins_SC68Plugin
- * Method:    N_PlaySong
- * Signature: (JII)J
- */
-JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1PlaySong
- (JNIEnv *, jobject, jlong, jint, jint);
-  
 #ifdef __cplusplus
 }
 #endif

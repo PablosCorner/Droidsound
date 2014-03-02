@@ -31,6 +31,14 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1unload
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1getSoundData
   (JNIEnv *, jobject, jlong, jshortArray, jint);
 
+  /*
+ * Class:     com_ssb_droidsound_plugins_USFPlugin
+ * Method:    N_getIntInfo
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1getIntInfo
+  (JNIEnv *, jobject, jlong, jint); 
+  
 #ifdef __cplusplus
 }
 #endif

@@ -78,6 +78,7 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 	private static final int OPT_FORCED_SID_MODEL = 9;
 	private static final int OPT_FORCED_VIDEO_MODE = 10;
 	private static final int OPT_SID_RESAMPLING = 11;
+	private static final int OPT_LOOP_MODE = 12;
 	
 	private static boolean forced_sid_options = false;
 	
@@ -105,6 +106,7 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 	    sid_options.put("forced_video_mode",OPT_FORCED_VIDEO_MODE);
 	    sid_options.put("forced_sid_model",OPT_FORCED_SID_MODEL);
 	    sid_options.put("filter_bias",OPT_FILTERBIAS);
+	    sid_options.put("loop_mode",OPT_LOOP_MODE);	    
 	    isoptions_done = true;
 	}
 	
@@ -324,6 +326,10 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 				songInfo.second_sid_addr = (Integer) (0x0000d000 | (header[0x7a] & 0xff) << 4);
 
 			
+			boolean loop_mode = PlayerActivity.prefs.getBoolean("generic_loop", false);
+			loopMode = (Boolean)loop_mode ? 1 : 0;
+			
+			
 			forced_sid_options = PlayerActivity.prefs.getBoolean("SidplayfpPlugin.force_options", false);
 			
 			setOption("second_sid_addr", songInfo.second_sid_addr);
@@ -342,14 +348,16 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 
  			if (forced_sid_options)
  			{
- 				String sid_model = PlayerActivity.prefs.getString("SidplayfpPlugin.sid_model", "0");
- 				String video_mode = PlayerActivity.prefs.getString("SidplayfpPlugin.video_mode", "0");
+ 				String sid_model = PlayerActivity.prefs.getString("SidplayfpPlugin.sid_model", "1");
+ 				String video_mode = PlayerActivity.prefs.getString("SidplayfpPlugin.video_mode", "1");
 
- 				songInfo.videoMode = Integer.valueOf(video_mode) + 1;
- 				songInfo.sidModel = Integer.valueOf(sid_model) + 1;
+ 				songInfo.videoMode = Integer.valueOf(video_mode);
+ 				songInfo.sidModel = Integer.valueOf(sid_model);
 
  				setOption("forced_video_mode", 1);
  				setOption("forced_sid_model", 1);
+ 				
+
  			}
  			else
  			{
@@ -585,6 +593,7 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 		{
 			N_unload(currentSong);
 			currentSong = 0;
+			songInfo = null;
 		}
 	}
 
@@ -607,34 +616,6 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 		else if (val instanceof Integer)
 			v = (Integer)val;
 		
-		if (opt.equals("sid_model"))
-		{
-			if (v==0)
-			{
-				v = 1;
-			}
-			
-			else
-			{
-				v+=1;
-			}
-				
-				
-		}
-
-		if (opt.equals("video_mode"))
-		{
-			if (v == 0)
-			{
-				v = 1;
-			}
-			else
-			{
-				v+=1;
-			}
-		}
-
-
 		optMap.put(k, v);
 		
 	}
@@ -656,7 +637,7 @@ public class SidplayfpPlugin extends DroidSoundPlugin
 	@Override
 	public String getVersion()
 	{
-		return "libsidplay2fp 1.2.2 beta";
+		return "libsidplay2fp 1.3.0";
 	}
 		
 	@Override

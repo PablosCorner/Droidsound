@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <types.h>
+#include <endian.h>
 #include <jni.h>
 #include <android/log.h>
 #include "com_ssb_droidsound_plugins_USFPlugin.h"
@@ -15,7 +17,7 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1load(JNIEnv
 {
   	
 	usf_loader_state * state = new usf_loader_state;
-	state->emu_state = malloc( get_usf_state_size() );
+	state->emu_state = malloc( usf_get_state_size() );
 	usf_clear( state->emu_state );
 		
 	const char *filename = env->GetStringUTFChars(fname, NULL);
@@ -27,6 +29,7 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1load(JNIEnv
 	
 	usf_set_compare( state->emu_state, state->enable_compare );
 	usf_set_fifo_full( state->emu_state, state->enable_fifo_full );
+	usf_start(state->emu_state);
 	
 	return (long)state;
 }
@@ -50,4 +53,17 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1getSoundData
 	env->ReleaseShortArrayElements(sArray, dest, 0);
 
 	return size;
+}
+
+JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1getIntInfo(JNIEnv *env, jobject obj, jlong song, jint what)
+{
+	usf_loader_state * usf_state = (usf_loader_state*)song;
+	switch(what)
+	{
+		case 11:
+			{
+				return usf_get_sample_rate( usf_state->emu_state);
+			} 
+	}
+
 }

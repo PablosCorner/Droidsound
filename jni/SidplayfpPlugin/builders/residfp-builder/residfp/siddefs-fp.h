@@ -24,6 +24,15 @@
 #  define M_PI    3.14159265358979323846
 #endif
 
+// Branch prediction macros, lifted off the Linux kernel.
+#if RESID_BRANCH_HINTS && HAVE_BUILTIN_EXPECT
+#  define likely(x)      __builtin_expect(!!(x), 1)
+#  define unlikely(x)    __builtin_expect(!!(x), 0)
+#else
+#  define likely(x)      (x)
+#  define unlikely(x)    (x)
+#endif
+
 namespace reSIDfp {
 
 typedef enum { MOS6581=1, MOS8580 } ChipModel;
@@ -36,7 +45,7 @@ extern "C"
 #ifndef __VERSION_CC__
 extern const char* residfp_version_string;
 #else
-const char* residfp_version_string = "1.2.0beta";
+const char* residfp_version_string = "2.0.0alpha";
 #endif
 }
 

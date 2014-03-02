@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewPager; 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import org.apache.commons.net.ftp.FTPFile;
 import android.app.Activity;
 import android.app.AlertDialog;
 
+import android.app.ActionBar;
 import android.app.Dialog;
 import android.app.NotificationManager;
 import android.app.ProgressDialog;
@@ -60,8 +62,11 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
+
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -124,6 +129,8 @@ public class PlayerActivity extends Activity  {
 			super.close();
 		}
 	}
+	private static ActionBar bar;
+	private static long downTime;
 	public static Context context;
 	public static AudioSettingsContentObserver mSettingsContentObserver;
 	
@@ -490,6 +497,32 @@ public class PlayerActivity extends Activity  {
 		searchTitle = (TextView) sl.findViewById(R.id.search_text);
 		searchSubtitle = (TextView) sl.findViewById(R.id.subsearch_text);
 
+		View myView = (View) playListView; 
+		myView.setOnTouchListener(new OnTouchListener() {
+		    public boolean onTouch(View v, MotionEvent event) {
+		    	int action = event.getAction();
+		        int count = event.getPointerCount();
+		        		        
+		        if (count > 2 && action == 2)
+		        {
+			        if (event.getDownTime() - downTime < 1000)
+			        	return true;
+
+		        	downTime = event.getDownTime();	
+		        	bar = getActionBar();
+		        	if (bar.isShowing())
+		        		bar.hide();
+		        	else {
+		        		bar.setTitle("Settings");
+		        		bar.show();
+		        	}
+       	
+		        	return true; 		
+		        }
+		        return false;
+		       
+		    }
+		});
 		
 		flipper.onFlip(new Pager.FlipCallback()
 		{
@@ -513,17 +546,79 @@ public class PlayerActivity extends Activity  {
 		
 
 	}
+	
+   	public void checkModland()
+   	{
+   		
+		// **************************************************************************
+		// check if connected, then check for new allmods.zip
+		//
+		File extFile = Environment.getExternalStorageDirectory();
+		File file = new File(extFile + "/droidsound", "allmods.zip");
+		long curFilesize = 0;
+		if (file.exists())
+			curFilesize = file.length();
 
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo netInfo = cm.getActiveNetworkInfo();
+		
+		if (netInfo != null && netInfo.isConnected() && curFilesize != 0) 
+		{
+			//Toast toast = Toast.makeText(PlayerActivity.this, "CONNECTED, Checking Modland...", Toast.LENGTH_LONG);
+			//toast.show();
+			
+			String ftpserver = PlayerActivity.prefs.getString("Modland_server", "modland.ziphoid.com");
+			FTPClient modftp = FTPStreamSource.intGetFTP("ftp://"+ftpserver+"/allmods.zip");
+
+			if (modftp == null)
+			{
+				netInfo = null;
+				return;
+			}
+				
+		
+			try {
+				FTPFile[] ftpfiles = modftp.listFiles("allmods.zip");
+				long filesize = ftpfiles[0].getSize();
+				modftp.logout();
+				modftp.disconnect();
+				modftp = null;
+				
+				long change = curFilesize - filesize;
+				change = Math.abs(change);
+				if (change > 50000)
+				{
+									
+					NotificationManager mNotificationManager =(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+	
+					NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+					        .setSmallIcon(R.drawable.note36)
+					        .setContentTitle("MODLAND")
+					        .setContentText("A new allmods.zip available");
+					mNotificationManager.notify(1, mBuilder.build());
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+		}
+   	}
+
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		context = this;
 		first_run = false;
-
+		
+	    bar = getActionBar();
+	    bar.setDisplayUseLogoEnabled(false);
+	    bar.setDisplayShowTitleEnabled(false);
+						
 		// register here the audiosetting observer, the only way to observe volume changes when screen is off
 		mSettingsContentObserver = new AudioSettingsContentObserver( getApplicationContext(), new Handler() ); 
 		getApplicationContext().getContentResolver().registerContentObserver( android.provider.Settings.System.CONTENT_URI, true, mSettingsContentObserver );
 		
-
+		
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "#### onCreate()");
 		
@@ -610,6 +705,7 @@ public class PlayerActivity extends Activity  {
 		
 		playListView.init();
 		searchListView.init();
+				
 		
 		tm.registerListener("root", new ThemeManager.SelectorListener() {
 			@Override
@@ -952,52 +1048,6 @@ public class PlayerActivity extends Activity  {
 				Log.d(TAG, "TB Sortorder now %d", state.sortOrderPlayList);
 			}
 		});
-		
-
-		// **************************************************************************
-		// check if connected, then check for new allmods.zip
-		//
-		extFile = Environment.getExternalStorageDirectory();
-		File file = new File(extFile + "/droidsound", "allmods.zip");
-		long curFilesize = 0;
-		if (file.exists())
-			curFilesize = file.length();
-
-		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo netInfo = cm.getActiveNetworkInfo();
-		
-		if (netInfo != null && netInfo.isConnected() && curFilesize != 0) 
-		{
-			//Toast toast = Toast.makeText(PlayerActivity.this, "CONNECTED, Checking Modland...", Toast.LENGTH_LONG);
-			//toast.show();
-			
-			String ftpserver = prefs.getString("Modland_server", "modland.ziphoid.com");
-			FTPClient modftp = FTPStreamSource.intGetFTP("ftp://"+ftpserver);
-		
-			try {
-				FTPFile[] ftpfiles = modftp.listFiles("allmods.zip");
-				long filesize = ftpfiles[0].getSize();
-				modftp.logout();
-				modftp.disconnect();
-				
-				long change = curFilesize - filesize;
-				change = Math.abs(change);
-				if (change > 50000)
-				{
-									
-					NotificationManager mNotificationManager =(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-	
-					NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
-					        .setSmallIcon(R.drawable.note36)
-					        .setContentTitle("MODLAND")
-					        .setContentText("A new allmods.zip available");
-					mNotificationManager.notify(1, mBuilder.build());
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-		}
 
 		Log.d(TAG, "ON CREATE DONE");
 	}
@@ -1304,6 +1354,34 @@ public class PlayerActivity extends Activity  {
 		moveFileHere = null;
 	}
 
+	
+	@Override
+	public boolean onTouchEvent(MotionEvent event){ 
+	        
+	    int action = MotionEventCompat.getActionMasked(event);
+	        
+	    switch(action) {
+	        case (MotionEvent.ACTION_DOWN) :
+	            Log.d(TAG,"Action was DOWN");
+	            return true;
+	        case (MotionEvent.ACTION_MOVE) :
+	            Log.d(TAG,"Action was MOVE");
+	            return true;
+	        case (MotionEvent.ACTION_UP) :
+	            Log.d(TAG,"Action was UP");
+	            return true;
+	        case (MotionEvent.ACTION_CANCEL) :
+	            Log.d(TAG,"Action was CANCEL");
+	            return true;
+	        case (MotionEvent.ACTION_OUTSIDE) :
+	            Log.d(TAG,"Movement occurred outside bounds " +
+	                    "of current screen element");
+	            return true;      
+	        default : 
+	            return super.onTouchEvent(event);
+	    }      
+	}
+	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.d(TAG, "Got speech result %d", resultCode);
@@ -1457,6 +1535,13 @@ public class PlayerActivity extends Activity  {
 			backPressed = true;
 			event.startTracking();
 			return true;
+		case KeyEvent.KEYCODE_MENU:
+			if (bar.isShowing())
+				bar.hide();
+			else if (!bar.isShowing())
+				bar.show();
+			return true;
+				
 			/*
 		case KeyEvent.KEYCODE_VOLUME_UP:
 		case KeyEvent.KEYCODE_VOLUME_DOWN:

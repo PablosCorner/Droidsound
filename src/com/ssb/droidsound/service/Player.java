@@ -73,6 +73,8 @@ public class Player implements Runnable
 	public static final int MSG_WAVDUMPED = 7;
 	public static final int MSG_RESTART = 8;
 	public static final int MSG_FAILED = 99;
+	public static final int MSG_SET_SHUFFLE = 100;
+	public static final int MSG_SET_REPEAT = 100;
 
 	private Handler mHandler;
 	
@@ -110,6 +112,7 @@ public class Player implements Runnable
 	private AudioManager audiomanager;
 
 	private boolean usefadeOut = false;
+	private boolean genericLoop = false;
 
 	public Player(AudioManager am, Handler handler, Context ctx)
 	{
@@ -324,6 +327,13 @@ public class Player implements Runnable
 	{
 		Message msg = null;
 		usefadeOut = PlayerActivity.prefs.getBoolean("fadeout", false);
+		genericLoop = PlayerActivity.prefs.getBoolean("generic_loop", false);
+		loopMode = (Boolean)genericLoop ? 1 : 0;
+
+		msg = mHandler.obtainMessage(MSG_SET_REPEAT, loopMode, 0);
+		mHandler.sendMessage(msg);
+
+
 		
 		if(currentPlugin != null)
 		{
@@ -447,13 +457,20 @@ public class Player implements Runnable
 				songDetails.put(SongMeta.SUBTUNE_COMPOSER, getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_AUTHOR));
 
 				songlength_ms = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_LENGTH);
-				if (songlength_ms <= 0)
+				if (genericLoop) {
+					songlength_ms = 0;
+					songDetails.put(SongMeta.LENGTH, songlength_ms);
+					currentPlugin.setOption("genericLoop", true);
+				}
+					
+
+				if (songlength_ms <= 0 && !genericLoop)
 				{
 					songlength_ms = Integer.valueOf(PlayerActivity.prefs.getString("default_length", "180")) * 1000;
 					songDetails.put(SongMeta.LENGTH, songlength_ms);
 				}
 
-				currentPlugin.setOption("loop", loopMode);
+				
 				
 			}
 
@@ -475,9 +492,17 @@ public class Player implements Runnable
 				songDetails.put(SongMeta.SUBTUNE_COMPOSER, getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_AUTHOR));
 				startedFromSub = true;
 
-				songlength_ms = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_LENGTH);
 
-				if (songlength_ms <= 0)
+				
+				songlength_ms = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_LENGTH);
+				if (genericLoop) {
+					songlength_ms = 0;
+					songDetails.put(SongMeta.LENGTH, songlength_ms);
+					currentPlugin.setOption("genericLoop", true);
+				}
+
+
+				if (songlength_ms <= 0 && !genericLoop)
 				{
 					songlength_ms = Integer.valueOf(PlayerActivity.prefs.getString("default_length", "180")) * 1000;
 					songDetails.put(SongMeta.LENGTH, songlength_ms);
@@ -703,7 +728,7 @@ public class Player implements Runnable
 									reloadSong();
 								}
 							songEnded = false;
-							audioPlayer.seekTo(-1);
+							audioPlayer.seekTo(0);
 							Message msg = mHandler.obtainMessage(MSG_RESTART, null);
 							mHandler.sendMessage(msg);
 							if(currentState == State.SWITCHING)
@@ -756,7 +781,14 @@ public class Player implements Runnable
 									songDetails.put(SongMeta.SUBTUNE_COMPOSER, getPluginInfo(DroidSoundPlugin.INFO_SUBTUNE_AUTHOR));
 
 									songlength_ms = currentPlugin.getIntInfo(DroidSoundPlugin.INFO_LENGTH);
-									if (songlength_ms <= 0)
+									
+									if (genericLoop) {
+										songlength_ms = 0;
+										songDetails.put(SongMeta.LENGTH, songlength_ms);
+										currentPlugin.setOption("genericLoop", true);
+									}
+									
+									if (songlength_ms <= 0 && !genericLoop)
 									{
 										songlength_ms = Integer.valueOf(PlayerActivity.prefs.getString("default_length", "180")) * 1000;
 										songDetails.put(SongMeta.LENGTH, songlength_ms);
@@ -873,13 +905,13 @@ public class Player implements Runnable
 		if(lastPos > playPos)
 			lastPos = -1;
 
-		if (songlength_ms < 10000 && !songEnded && playPos == 0)
+		if (!genericLoop && songlength_ms < 10000 && !songEnded && playPos == 0)
 		{
 			songEnded = true;
 			audioPlayer.mark();
 			
 		}
-		if (songlength_ms > 10000 && playPos >= songlength_ms - 7500 && !songEnded)
+		if (!genericLoop && songlength_ms > 10000 && playPos >= songlength_ms - 7500 && !songEnded)
 		{
 			songEnded = true;
 			audioPlayer.mark();
@@ -923,11 +955,13 @@ public class Player implements Runnable
 		if(songlength_ms < 10000 && playPos + 500 < songlength_ms)
 		{
 			len = currentPlugin.getSoundData(samples, dataSize);
+			
 		} 
 		
 		else if(!songEnded)
 		{
 			len = currentPlugin.getSoundData(samples, dataSize);
+			
 		} 
 		else 
 		{
@@ -944,7 +978,7 @@ public class Player implements Runnable
 
 		if(len < 0)
 		{
-			if(playPos > 5000)
+			if(playPos > 5000 && !genericLoop)
 			{
 				Log.d(TAG, "SONG ENDED HERE");
 				songEnded = true;

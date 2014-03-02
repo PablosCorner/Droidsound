@@ -19,7 +19,7 @@ flipper {
 /* Browser header (Displaying current directory) */
 browser-header {
 	color: #ffffff;
-	background: -webkit-linear-gradient(top, #2F2727, #1a82f7);
+	background: -webkit-linear-gradient(top, #2F2727, #1af782);
 	padding-left: 2dp;	
 }
 
@@ -110,8 +110,10 @@ controls.pause {
 }
 
 controls.seekbar {
-	progress-background: linear-gradient(left, #404060, #404040);
+	progress-background: linear-gradient(left, #0000a0, #0000a0);
 	/*thumb-image: img/mg_stop.png;*/
+
+	
 }
 
 

@@ -30,13 +30,13 @@
 #ifdef ARCH_MIN_SSSE3
 #define ARCH_MIN_SSE2
 #include <tmmintrin.h>
-#include <arm_neon.h>
 #endif
 #ifdef ARCH_MIN_SSE2
 #include <emmintrin.h>
+#endif
+#ifdef ANDROID
 #include <arm_neon.h>
 #endif
-
 typedef unsigned char byte;
 
 #ifndef RCPREG_DEFINED
@@ -44,10 +44,12 @@ typedef unsigned char byte;
 typedef uint32_t RCPREG;
 #endif
 
-NOINLINE void message(const char* body, int priority)
+NOINLINE void message(usf_state_t * state, const char* body, int priority)
 {
     (void)body;
     (void)priority;
+    if ( priority > 1 )
+        DisplayError( state, "%s", body );
 }
 
 /*

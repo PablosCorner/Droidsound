@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.ssb.droidsound.PlayerActivity;
 import com.ssb.droidsound.file.FileSource;
 
 public class OpenMPTPlugin extends DroidSoundPlugin {
@@ -15,8 +16,17 @@ public class OpenMPTPlugin extends DroidSoundPlugin {
 	
 	private static String extension = "";
 	private long songRef;	
+	private boolean loopmode = false;
 	
-	
+	@Override
+	public void setOption(String opt, Object val)
+	{
+		if (opt == "genericLoop")
+			loopmode = (Boolean)val;
+		
+		return;
+	}
+
 	@Override
 	public String getVersion() {
 		return "libOpenMPT v0.2.3596";
@@ -76,7 +86,8 @@ public class OpenMPTPlugin extends DroidSoundPlugin {
 
 	@Override
 	public boolean load(FileSource fs) {
-		songRef = N_load(fs.getFile().getPath());
+		loopmode = PlayerActivity.prefs.getBoolean("generic_loop", false);
+		songRef = N_load(fs.getFile().getPath(), loopmode);
 		return songRef != 0;
 	}
 
@@ -98,7 +109,7 @@ public class OpenMPTPlugin extends DroidSoundPlugin {
 	native public boolean N_setTune(long song, int tune);
 	native public String N_getStringInfo(long song, int what); 
 	native public int N_getIntInfo(long song, int what);
-	native public long N_load(String filename);
+	native public long N_load(String filename, boolean loopmode);
 	native public void N_unload(long song);
 	native public int N_getSoundData(long song, short [] dest, int size);	
 }

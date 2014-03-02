@@ -1,6 +1,8 @@
 #ifndef _USF_INTERNAL_H_
 #define _USF_INTERNAL_H_
 
+#include "cpu.h"
+
 struct usf_state_helper
 {
     size_t offset_to_structure;
@@ -50,7 +52,7 @@ struct usf_state
 #endif
     
     int DPH;
-    
+
     // rsp/rsp.h
     int temp_PC;
     short MFC0_count[32];
@@ -68,6 +70,9 @@ struct usf_state
     int32_t SampleRate;
     int16_t samplebuf[16384];
     size_t samples_in_buffer;
+    
+    const char * last_error;
+    char error_message[1024];
     
     // cpu.c
     uint32_t NextInstruction, JumpToLocation, AudioIntrReg;

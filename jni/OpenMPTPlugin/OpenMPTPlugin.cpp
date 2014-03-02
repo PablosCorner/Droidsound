@@ -45,7 +45,7 @@ static jstring NewString(JNIEnv *env, const char *str)
 	return j;
 }
 
-JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_OpenMPTPlugin_N_1load(JNIEnv *env, jobject obj, jstring fname)
+JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_OpenMPTPlugin_N_1load(JNIEnv *env, jobject obj, jstring fname, jboolean loopmode)
 {
 	openmpt_module* mod = 0;
 	FILE* file = NULL;
@@ -53,6 +53,8 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_OpenMPTPlugin_N_1load(JN
 	const char *filename = env->GetStringUTFChars(fname, NULL);
 	file = fopen(filename,"rb");
 	mod = openmpt_module_create(openmpt_stream_get_file_callbacks(), file, NULL, NULL, NULL);
+	if (loopmode)
+		openmpt_module_set_repeat_count(mod, -1);
 	fclose(file);
 	return (long)mod;
 }
@@ -73,6 +75,7 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_OpenMPTPlugin_N_1getSound
     env->ReleaseShortArrayElements(sArray, ptr, 0); 
 	return size;
 }
+
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_OpenMPTPlugin_N_1getIntInfo(JNIEnv *env, jobject obj, jlong song, jint what)
 {
 	openmpt_module* mod = (openmpt_module*)song;
@@ -105,7 +108,7 @@ JNIEXPORT jstring JNICALL Java_com_ssb_droidsound_plugins_OpenMPTPlugin_N_1getSt
 			char *instEnd = instruments + sizeof(instruments) - 48;
 			int pat = openmpt_module_get_num_patterns(mod);
 			int ns = openmpt_module_get_num_samples(mod);
-			memset(ptr,0,2048);
+			memset(ptr, 0, 2048);
 			if ((ns * 48) > 2048)
 				return  NewString(env, instruments); 
 			

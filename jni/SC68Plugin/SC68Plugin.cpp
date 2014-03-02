@@ -41,7 +41,7 @@
 #define OPT_ASID_FILTER 1000
 
 
-static char data_dir[1024];
+static char data_dir[260];
 
 static jstring NewString(JNIEnv *env, const char *str)
 {
@@ -83,6 +83,8 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1load(JNIEn
 {
 
 	sc68_init_t init68;
+	sc68_create_t create68; 
+	sc68_t * sc68 = 0; 
 	
 	memset(&init68, 0, sizeof(init68));
 
@@ -104,9 +106,11 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1load(JNIEn
 	//rsc68_set_share(data_dir);
 	rsc68_set_user(data_dir);
 
+	memset(&create68,0,sizeof(create68));
+	create68.sampling_rate = 44100;
 
-    sc68_t *sc68 = sc68_create(NULL);
-    if (! sc68) {
+    sc68 = sc68_create(&create68);
+    if (!sc68) {
         __android_log_print(ANDROID_LOG_VERBOSE, "SC68Plugin", "Create failed");
         return 0;
     }
@@ -119,10 +123,11 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1load(JNIEn
 	}
 
 	jbyte *ptr = env->GetByteArrayElements(bArray, NULL);
+
 	int res = sc68_load_mem(sc68, ptr, size);
 	env->ReleaseByteArrayElements(bArray, ptr, 0);
 	
-	if (res)
+	if (res != 0)
 	{
 		__android_log_print(ANDROID_LOG_VERBOSE, "SC68Plugin", "Rejected song input, load_mem failed");
 		sc68_destroy(sc68);
@@ -132,7 +137,7 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1load(JNIEn
     
 	PlayData *pd = (PlayData*)malloc(sizeof(PlayData));
     pd->sc68 = sc68;
-    
+
 	pd->finished = false;
 	return (long) pd;
 }
@@ -312,8 +317,7 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1getIntInfo(
     return -1;
 }
 
-
-JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1setDataDir(JNIEnv *env, jclass klass, jstring dataDir)
+JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1setDataDir(JNIEnv *env, jobject obj, jstring dataDir)
 {
     const char *filename = env->GetStringUTFChars(dataDir, 0);
     __android_log_print(ANDROID_LOG_VERBOSE, "SC68Plugin", "DataDir: %s", filename);
@@ -348,16 +352,18 @@ JNIEXPORT jbyteArray JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1unice
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1setOption(JNIEnv *env, jclass cl, jlong song, jint option, jint val)
 {
     PlayData *pd = (PlayData*) song;
+	/*
 	if (sc68_music_info(pd->sc68, &pd->info, pd->currentTrack, 0))
 	{
         return -1;
     }
-
+	*/
     int result = -1;
 	__android_log_print(ANDROID_LOG_VERBOSE, "SC68Plugin", "setOption");
 	switch(option)
 	{
 		case SC68_OPT_ASID:
+		{
 			__android_log_print(ANDROID_LOG_VERBOSE, "SC68Plugin", "aSID SETTING");
 		
 			if (val == 0)
@@ -367,17 +373,18 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_SC68Plugin_N_1setOption(J
 				break;
 			}
 
-			if (val == 1)
+			else if (val == 1)
 			{
 				result = sc68_cntl(pd->sc68, SC68_CAN_ASID, SC68_DSK_TRACK);
 				if (result != -1)
 				{
-					result = sc68_cntl(pd->sc68, SC68_SET_ASID, result); 
+					result = sc68_cntl(pd->sc68, SC68_SET_ASID, SC68_ASID_ON); 
 					__android_log_print(ANDROID_LOG_VERBOSE, "SC68Plugin", "ENABLED aSID");
 					
 				} 
 				break;
 			}
+		}
 			
 	}
 	return result;

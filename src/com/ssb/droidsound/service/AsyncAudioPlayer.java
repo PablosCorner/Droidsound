@@ -303,7 +303,7 @@ public class AsyncAudioPlayer implements Runnable
 			bufferTotal = 0;			
 			silence = 0;
 		}
-		if(msec > 0)
+		if(msec >= 0)
 		{
 			int playPos = (playbackPosition  - startPlaybackHead) * 10 / (FREQ / 100);
 			playPosOffset = msec - playPos;

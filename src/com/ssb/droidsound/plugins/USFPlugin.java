@@ -20,19 +20,19 @@ public class USFPlugin extends DroidSoundPlugin {
 	
 	private static Map<String, String> tagMap = new HashMap<String, String>();
 	private static HashMap<Integer, String> infoMap = new HashMap<Integer, String>();
+	private long songRef;
+	private int frequency;
+
 	
 	@Override
 	public String getVersion() {
-		return "LazyUSF Plugin [by Kode54] for N64 format";
+		return "LazyUSF Plugin [Kode54] for N64 format";
 	}
 	
-	private long songRef;
 	@Override
-	public boolean canHandle(FileSource fs) 
-	{
+	public boolean canHandle(FileSource fs) {
 		extension = fs.getExt().toUpperCase();
-		return fs.getExt().equals("USF") || 
-				fs.getExt().equals("MINIUSF");
+		return fs.getExt().equals("USF") || fs.getExt().equals("MINIUSF");
 	}
 	
 	
@@ -78,8 +78,14 @@ public class USFPlugin extends DroidSoundPlugin {
 		{
 			return -1;
 		}
-			
-		if(what == INFO_LENGTH)
+		
+		else if (what == INFO_FREQUENCY)
+		{
+			return N_getIntInfo(songRef, INFO_FREQUENCY);
+		}
+			 
+					
+		else if(what == INFO_LENGTH)
 		{
 			return PSFFile.parseLength(tagMap.get("length"));
 		}
@@ -169,8 +175,6 @@ public class USFPlugin extends DroidSoundPlugin {
 			N_unload(songRef);			
 		}
 		songRef = 0;
-		
-
 	}
 	
 	@Override
@@ -179,6 +183,7 @@ public class USFPlugin extends DroidSoundPlugin {
 		return frequency;
 	}
 	
+	native public int N_getIntInfo(long song, int what);
 	native public long N_load(String fileName);	
 	native public void N_unload(long song);
 	native public int N_getSoundData(long song, short [] dest, int size);	

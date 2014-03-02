@@ -1,6 +1,7 @@
 package com.ssb.droidsound.service;
 
 import java.io.File;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+
 
 
 import android.app.Notification;
@@ -23,6 +25,7 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
+
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -37,6 +40,7 @@ import com.ssb.droidsound.PlayerActivity;
 import com.ssb.droidsound.Playlist;
 import com.ssb.droidsound.R;
 import com.ssb.droidsound.SongFile;
+
 import com.ssb.droidsound.plugins.DroidSoundPlugin;
 import com.ssb.droidsound.utils.Log;
 
@@ -391,6 +395,15 @@ public class PlayerService extends Service implements PlayerInterface {
 				} else
 					ps.updateInfo(false);
 				break;
+			case Player.MSG_SET_REPEAT:
+				
+				if (msg.arg1 == 0)
+					ps.repeatSong = false;
+				else if (msg.arg1 == 1)
+					ps.repeatSong = true;
+				
+				break;
+				
 			default:
 				super.handleMessage(msg);
 			}
@@ -507,7 +520,7 @@ public class PlayerService extends Service implements PlayerInterface {
     	}
 		return false;
     }
-    
+   
 
 	@Override
 	public void onCreate()
@@ -606,7 +619,7 @@ public class PlayerService extends Service implements PlayerInterface {
 		notificationBuilder.setContentIntent(contentIntent);		
 
 	    playerInterface = this;
-   
+	    	       
 	}
 
 	void beforePlay(String name) {

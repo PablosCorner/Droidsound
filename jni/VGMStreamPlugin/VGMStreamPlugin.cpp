@@ -12,7 +12,6 @@ extern "C"
 
 int total_samples = 0;
 
-bool ignore_loop = false;
 bool force_loop = false;
 double loop_count = 2.0f;
 
@@ -23,11 +22,19 @@ int samplerate = 0;
 #define INFO_FREQUENCY 11
 #define INFO_CHANNELS 12
 
-JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_VGMStreamPlugin_N_1loadFile(JNIEnv *env, jobject obj, jstring fname)
+JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_VGMStreamPlugin_N_1loadFile(JNIEnv *env, jobject obj, jstring fname, jboolean loopmode)
 {
     VGMSTREAM * vgmStream = NULL;
 	STREAMFILE * vgmFile = NULL;
 
+	force_loop = false;
+	
+	if (loopmode)
+	{
+		force_loop = true;
+		__android_log_print(ANDROID_LOG_VERBOSE, "VGMStreamPlugin", "Force Loop"); 
+	}
+		
     jboolean iscopy;
     const char *s = env->GetStringUTFChars(fname, &iscopy);
 	
@@ -51,9 +58,10 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_VGMStreamPlugin_N_1loadF
         vgmStream = NULL;
         return 0;
     }
-	   
-    total_samples = get_vgmstream_play_samples(loop_count, 0.0f, 0.0f, vgmStream);
+    
+	total_samples = get_vgmstream_play_samples(loop_count, 0.0f, 0.0f, vgmStream);
 	close_streamfile(vgmFile);
+	__android_log_print(ANDROID_LOG_VERBOSE, "VGMStreamPlugin", "Initialized"); 
     return (long)vgmStream;
 }
 
@@ -82,11 +90,15 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_VGMStreamPlugin_N_1getSou
     }
 
 	render_vgmstream(ptr, size / vgm->channels, vgm);
-	total_samples -= size / vgm->channels;
-	
 	env->ReleaseShortArrayElements(sArray, ptr, 0);
+
+	// stupid hack to 
+	if (!force_loop)
+		total_samples -= size / vgm->channels;
+	
 	if (size <= 0)
 	{
+		__android_log_print(ANDROID_LOG_VERBOSE, "VGMStreamPlugin", "Samples ended"); 
 		return -1;
 	}
 

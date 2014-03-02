@@ -38,7 +38,6 @@ const char TXT_NA[]             = "NA";
 
 Player::Player () :
     // Set default settings for system
-    m_mixer(m_c64.getEventScheduler()),
     m_tune(0),
     m_errorString(TXT_NA),
     m_isPlaying(false),
@@ -133,8 +132,6 @@ void Player::initialise()
     driver.install(m_c64.getMemInterface());
 
     m_c64.resetCpu();
-
-    m_mixer.reset();
 }
 
 bool Player::load(SidTune *tune)
@@ -169,15 +166,20 @@ uint_least32_t Player::play(short *buffer, uint_least32_t count)
     if (!m_tune)
         return 0;
 
-    if (count)
-    {
-        m_mixer.begin(buffer, count);
+    m_mixer.begin(buffer, count);
 
+    if (count && m_mixer.getSid(0))
+    {
         // Start the player loop
         m_isPlaying = true;
 
         while (m_isPlaying && m_mixer.notFinished())
-            m_c64.getEventScheduler()->clock();
+        {
+            for (int i=0; i<OUTPUTBUFFERSIZE; i++)
+                m_c64.getEventScheduler()->clock();
+            m_mixer.clockChips();
+            m_mixer.doMix();
+        }
 
         if (!m_isPlaying)
         {
@@ -190,13 +192,39 @@ uint_least32_t Player::play(short *buffer, uint_least32_t count)
 
         return m_mixer.samplesGenerated();
     }
+    else if (m_mixer.getSid(0))
+    {
+        // Start the player loop
+        m_isPlaying = true;
+
+        const int size = m_c64.getMainCpuSpeed() / m_cfg.frequency;
+        for (int j; j<size; j++)
+        {
+            for (int i=0; i<OUTPUTBUFFERSIZE; i++)
+                m_c64.getEventScheduler()->clock();
+            m_mixer.clockChips();
+            m_mixer.resetBufs();
+        }
+
+        if (!m_isPlaying)
+        {
+            try
+            {
+                initialise();
+            }
+            catch (configError const &e) {}
+        }
+
+        return count;
+    }
     else
     {
-        count = OUTPUTBUFFERSIZE;
-        while (count--)
+        const int size = OUTPUTBUFFERSIZE * (m_c64.getMainCpuSpeed() / m_cfg.frequency);
+        for (int i=0; i<size; i++)
             m_c64.getEventScheduler()->clock();
+        m_mixer.resetBufs();
 
-        return 0;
+        return count;
     }
 }
 

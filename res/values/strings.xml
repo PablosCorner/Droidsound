@@ -165,8 +165,8 @@ to download more music from the web.</string>
 </string-array>
 
 <string-array name="videomode_vals">
-<item>0</item>
 <item>1</item>
+<item>2</item>
 </string-array>
 
 <string-array name="resampling_vals">
@@ -188,13 +188,8 @@ to download more music from the web.</string>
 </string-array>
 
 <string-array name="sid_model_vals">
-<item>0</item>
 <item>1</item>
-</string-array>
-
-<string-array name="psf_opts">
-<item>HighlyEXP</item>
-<item>SexyPSF</item>
+<item>2</item>
 </string-array>
 
 <string-array name="filecache_opts">

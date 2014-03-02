@@ -16,6 +16,7 @@
 
 X := $(call my-dir)
 
+include $(X)/FFMPlugin/Android.mk
 include $(X)/USFPlugin/Android.mk
 include $(X)/OpenMPTPlugin/Android.mk
 include $(X)/VGMStreamPlugin/mpg123.mk

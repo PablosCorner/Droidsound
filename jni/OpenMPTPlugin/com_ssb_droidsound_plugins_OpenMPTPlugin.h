@@ -86,10 +86,10 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_OpenMPTPlugin_N_1getIntIn
 /*
  * Class:     com_ssb_droidsound_plugins_OpenMPTPlugin
  * Method:    N_load
- * Signature: (Ljava/lang/String;)J
+ * Signature: (Ljava/lang/String;Z)J
  */
 JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_OpenMPTPlugin_N_1load
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jstring, jboolean);
 
 /*
  * Class:     com_ssb_droidsound_plugins_OpenMPTPlugin

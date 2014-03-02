@@ -16,7 +16,7 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE := lazyusf
-#LOCAL_ARM_MODE := arm
+LOCAL_ARM_MODE := arm
 
 LOCAL_SRC_FILES := \
 		USFPlugin.cpp \
@@ -35,12 +35,13 @@ LOCAL_SRC_FILES := \
 		lazyusf/usf.c \
 		lazyusf/rsp/rsp.c
 
-LOCAL_LDFLAGS = -Wl,--fix-cortex-a8
+#LOCAL_LDFLAGS = -Wl,--fix-cortex-a8
 LOCAL_LDLIBS := -llog -lz
-LOCAL_CFLAGS = -O3 -DHAVE_NEON=1 -DARCH_MIN_SSSE2 -mfpu=neon
+LOCAL_CFLAGS = -O3 -mfpu=neon -DANDROID
 LOCAL_STATIC_LIBRARIES := cpufeatures 
 LOCAL_C_INCLUDES := \
                 $(LOCAL_PATH)/ \
                 $(LOCAL_PATH)/lazyusf \
 		
 include $(BUILD_SHARED_LIBRARY)
+$(call import-module,cpufeatures) 

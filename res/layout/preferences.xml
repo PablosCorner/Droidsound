@@ -34,7 +34,14 @@
             android:defaultValue="false"
             android:summary="Allow rescans during start"
             />
-      
+    
+    <CheckBoxPreference
+            android:key="generic_loop"
+            android:title="Generic Looping"
+            android:defaultValue="false"
+            android:summary="Loop song forever"
+            />
+    
 	
 	<EditTextPreference
 			android:inputType="numberDecimal"
@@ -117,14 +124,14 @@
 		<ListPreference
 	            android:key="SidplayfpPlugin.sid_model"
 	            android:title="Preferred SID Model"
-	            android:defaultValue="0"
+	            android:defaultValue="1"
                 android:entries="@array/sid_model_opts"
                 android:entryValues="@array/sid_model_vals"
 	            />
 		<ListPreference
 	            android:key="SidplayfpPlugin.video_mode"
 	            android:title="Preferred Video Mode"
-	            android:defaultValue="0"
+	            android:defaultValue="1"
                 android:entries="@array/videomode_opts"
                 android:entryValues="@array/videomode_vals"
 	            />

@@ -23,6 +23,7 @@
 #define OPT_FORCED_SID_MODEL 9
 #define OPT_FORCED_VIDEO_MODE 10
 #define OPT_SID_RESAMPLING 11
+#define OPT_LOOP_MODE 12
 
 struct Player
 {
@@ -36,15 +37,11 @@ struct Player
 
 static bool use_filter = false;
 static int use_playback = 2;   //default to STEREO
-
 static int resampling_mode = 0;
-
 static int defaultSidModel = 0; //MOS6581
 static bool defaultSidModel_forced = false;
-
 static int defaultC64Model = 0; //PAL
 static bool defaultC64Model_forced = false;
-
 static bool use_resid = false;
 static bool use_residfp = false;
 static double filterCurve6581 = 0.5;
@@ -127,7 +124,7 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1load(
 	unsigned int sid_count = 1;
 	bool load_result = false;
 	bool conf_result = false;
-
+		
 	jbyte * ptr = env->GetByteArrayElements(bArray, NULL);
 	
 	Player *player = new Player();
@@ -182,23 +179,50 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1load(
 		sid_count = 2;
 		
 	if (defaultC64Model == 1)
+	{
 		cfg.defaultC64Model = cfg.PAL;
-	else if (defaultC64Model == 2)
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "C64Model PAL");
+	}
+	
+	if (defaultC64Model == 2)
+	{
 		cfg.defaultC64Model = cfg.NTSC;
-	else if (defaultC64Model == 3)
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "C64Model NTSC");
+	}
+	
+	if (defaultC64Model == 3)
+	{
 		cfg.defaultC64Model = cfg.OLD_NTSC;
-	else if (defaultC64Model == 4)
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "C64Model NTSC OLD");
+	}
+	
+	if (defaultC64Model == 4)
+	{
 		cfg.defaultC64Model = cfg.DREAN;
-
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "C64Model DREAN");		
+	}
+	
 	if (defaultSidModel == 1)
+	{
 		cfg.defaultSidModel = cfg.MOS6581;
-	else if (defaultSidModel == 2)
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "C64SidModel MOS6581");
+	}	
+	if (defaultSidModel == 2)
+	{
 		cfg.defaultSidModel = cfg.MOS8580;
-
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "C64SidModel MOS8580");
+	}	
 	if (resampling_mode == 0)
+	{
 		cfg.samplingMethod = cfg.INTERPOLATE;
-	else if (resampling_mode == 1)
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "C64Samplingmethod Interpolate");
+	}
+	
+	if (resampling_mode == 1)
+	{
 		cfg.samplingMethod = cfg.RESAMPLE_INTERPOLATE;
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sidplay2fpPlugin", "C64Samplingmethod Resample");	
+	}		
 
 	if (use_resid)
 	{
@@ -276,10 +300,12 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1unload
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1getSoundData(JNIEnv *env, jobject obj, jlong song, jshortArray sArray, jint size)
 {
 	Player *player = (Player*)song;
+	int samples_created = 0;
 	jshort *ptr = env->GetShortArrayElements(sArray, NULL);
-	size = player->sidemu->play(ptr, size);
+	samples_created = player->sidemu->play(ptr, size);
     env->ReleaseShortArrayElements(sArray, ptr, 0);
-	return size;
+	return samples_created;
+	
 }
 
 JNIEXPORT jboolean JNICALL Java_com_ssb_droidsound_plugins_SidplayfpPlugin_N_1seekTo(JNIEnv *, jobject, jlong, jint)
