@@ -34,9 +34,10 @@
 #ifdef ARCH_MIN_SSE2
 #include <emmintrin.h>
 #endif
-#ifdef ANDROID
+#ifdef ARCH_MIN_ARM_NEON
 #include <arm_neon.h>
 #endif
+
 typedef unsigned char byte;
 
 #ifndef RCPREG_DEFINED

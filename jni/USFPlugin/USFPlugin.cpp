@@ -8,10 +8,15 @@
 #include <android/log.h>
 #include "com_ssb_droidsound_plugins_USFPlugin.h"
 
+#ifdef ARCH_MIN_ARM_NEON
+#include <arm_neon.h>
+#endif
 extern "C" {
 }
 #include "../common/Misc.h"
 #include "lazyusf/misc.h"
+
+int32_t sample_rate;
 
 JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1load(JNIEnv *env, jobject obj, jstring fname)
 {
@@ -30,6 +35,7 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1load(JNIEnv
 	usf_set_compare( state->emu_state, state->enable_compare );
 	usf_set_fifo_full( state->emu_state, state->enable_fifo_full );
 	usf_start(state->emu_state);
+	usf_render(state->emu_state, 0, 0, &sample_rate);
 	
 	return (long)state;
 }
@@ -43,11 +49,11 @@ JNIEXPORT void JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1unload(JNIEn
 
 JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1getSoundData(JNIEnv *env, jobject obj, jlong song, jshortArray sArray, jint size)
 {
-	int32_t sample_rate;
+	
 	usf_loader_state * usf_state = (usf_loader_state*)song;
 
 	jshort *dest = env->GetShortArrayElements(sArray, NULL); 
-	__android_log_print(ANDROID_LOG_VERBOSE, "USFPlugin", "going to create samples: %d", size/2); 
+	//__android_log_print(ANDROID_LOG_VERBOSE, "USFPlugin", "wants samples: %d",size); 
 	usf_render(usf_state->emu_state, dest, size/2, &sample_rate);
 	__android_log_print(ANDROID_LOG_VERBOSE, "USFPlugin", "created samples"); 
 	env->ReleaseShortArrayElements(sArray, dest, 0);
@@ -62,7 +68,7 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1getIntInfo(J
 	{
 		case 11:
 			{
-				return usf_get_sample_rate( usf_state->emu_state);
+				return usf_get_sample_rate(usf_state->emu_state);
 			} 
 	}
 

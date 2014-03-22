@@ -4,7 +4,35 @@
 </head>
 <body bgcolor="#000000" text="#ffffff" link="#a0a0ff", vlink="#a0a0ff">
 <h1>Droidsound Help</h1>
-<i>v1.5</i>
+<i>v1.6</i>
+<h2>Changes from version 1.5</h2>
+<ul>
+	<li>Sega Saturn plugin (SSF/MiniSSF)</li>
+	<li>DreamCast plugin (DSF/MiniDSF)</li>
+	<li>Capcom Qsound plugin (QSF/MiniQSF)</li>
+	<li>NDS Plugin (2SF/Mini2SF)</li>
+	<li>Updated PSF Plugin, plays PSF/MiniPSF and PSF2/MiniPSF2</li>
+	<li>Change in GME; Plays packed .GYM files</li>
+	<li>VGMStream Plugin (see list below for supported formats)</li>
+	<li>Improved SC68 Plugin</li>
+	<li>VGMPlay by Valley Bell</li>
+	<li>Sidplay2/VICE replaced by Sidplay2fp</li>
+</ul>
+
+<t>Other changes:
+<ul>
+	<li>Adjustable File-Cache size (16MB - 4096MB and -1 as unlimited)</li>
+	<li>Dynamic Filecache</li>
+	<li>FTP Client. Allows you to download tunes from FTP sites. Included few pre-defined sites</li>
+	<li>Switched completely to ARMv7 mode due to various reasons</li>
+	<li>Added FileBrowser. Now you can mount any path and copy your music there. Not limited to internal phone memory</li>
+	<li>ModLand virtual filesystem. Browse Modland directory offline</li>
+	<li>Netradio now also works with Samsung devices after JellyBean</li>
+	<li>Improved archive file handling. Recognizes now 7zip, ZIP, RAR and GZ</li>
+	<li>Added Generic Looping</li>
+	<li>Added Fadeout</li>
+	
+</ul>
 <h2>The User Interface</h2>
 
 Droidsound lets you switch between 3 main screens by swiping across the screen or tapping the top indicator.
@@ -73,6 +101,8 @@ Droidsounds includes special support for a few popular song archives;
 <ul>
 <li><b>HVSC</b> - Uses songlengths.txt to show song length for all SIDs in the HVSC C64 archive</li>
 <li><b>spcsets</b> - Uses rsnsets.dat to show fullnames for the spcsets SNES collection</li>
+<li><b>Modland</b> - Uses allmods.txt from modland server(s) to build an offline database. After built, a new entry can be seen in the main menu. To make it searchable, user has to enter in it, a notification message will be shown, after that, the songs can be searched from Search tab. For example by command '.cJeroen Tel' without quotes.</li>
+
 </ul>
 
 <h3>Streaming</h3>
@@ -145,29 +175,30 @@ Hold for more than 2s to turn speech on/off.
 
 <h2>Sourcecode</h2>
 
-The sourcecode can be found on github:<br/>
-<a href=https://github.com/sasq64/droidsound>https://github.com/sasq64/droidsound</a>
-
+The sourcecode of this version can be found on github:<br/>
+<a href=https://github.com/droidmjt/droidsound>https://github.com/droidmjt/droidsound</a>
 
 <h2>File Formats</h2>
 
 In addition to playing MP3, these plugins are currently included:
 
-<h4>libsidplay2 & VICE/reSID</h4>
-<a href="http://sourceforge.net/projects/sidplay2/">http://sourceforge.net/projects/sidplay2/</a>
+<h4>libsidplay2fp</h4>
+<a href="http://sourceforge.net/projects/sidplay-residfp/">http://sourceforge.net/projects/sidplay-residfp/</a>
 
 <ul>
-<li>Plays SID files, music from the Commodore 64.</li>
+<li>Plays SID files, music from the Commodore 64. Implements the most precise C64 emulation. User can choose between 2 different
+builders, ReSID and ReSIDfp</li>
 </ul>
-<h4>modplug</h4>
-<a href="http://sourceforge.net/projects/modplug/">http://sourceforge.net/projects/modplug/</a>
+<h4>libopenMPT</h4>
+<a href="http://openmpt.org/">http://openmpt.org/</a>
 <p>Plays classical Amiga & PC mods. Not all formats are supported.</p>
 
 <ul>
 <li>Composer 669 / UNIS 669 (669)</li>
-<li>ASYLUM Music Format / Advanced Music Format (AMF)</li>
+<li>ASYLUM Music Format / DSMI Advanced Music Format (AMF)</li>
 <li>Extreme's Tracker / Velvet Studio (AMS)</li>
-<li>DigiBooster (DBM)</li>
+<li>Digi Booster Pro (DBM)</li>
+<li>Digi Booster (DIGI)</li>
 <li>X-Tracker (DMF)</li>
 <li>DSIK Format (DSM)</li>
 <li>Farandole Composer (FAR)</li>
@@ -175,10 +206,11 @@ In addition to playing MP3, these plugins are currently included:
 <li>Imago Orpheus (IMF)</li>
 <li>Impulse Tracker (Project) (IT / ITP)</li>
 <li>Jazz Jackrabbit 2 Music (J2B)</li>
-<li>DigiTracker (MDL)</li>
+<li>SoundTracker and compatible (M15 / STK)</li>
+<li>DigiTrakker (MDL)</li>
 <li>OctaMED (MED)</li>
 <li>MO3 compressed modules (MO3)</li>
-<li>ProTracker / NoiseTracker / etc. (MOD)</li>
+<li>ProTracker / NoiseTracker / etc. 4 - 99 channels, 15 or 31 samples (MOD)</li>
 <li>OpenMPT (MPTM)</li>
 <li>MadTracker 2 (MT2)</li>
 <li>MultiTracker (MTM)</li>
@@ -194,8 +226,8 @@ In addition to playing MP3, these plugins are currently included:
 </ul>
 
 
-<h4>GME</h4>
-<a href="http://slack.net/~ant/libs/audio.html">http://slack.net/~ant/libs/audio.html</a>
+<h4>GME - Game Music Emu</h4>
+<a href="https://bitbucket.org/kode54/game_music_emu">https://bitbucket.org/kode54/game_music_emu</a>
 <ul>
 <li>X Spectrum, Amstrad CPC (AY)</li>
 <li>Nintendo Game Boy (GBS)</li>
@@ -217,8 +249,8 @@ In addition to playing MP3, these plugins are currently included:
 </ul>
 
 <h4>SC68</h4>
-<a href="http://sc68.atari.org/">http://sc68.atari.org/</a>
-<p>Plays YM (Atari music).</p>
+<a href="http://sourceforge.net/projects/sc68/">http://sourceforge.net/projects/sc68/</a>
+<p>Plays Atari ST music.</p>
 <ul>
 <li>SNDH</li>
 <li>SC68</li>
@@ -386,12 +418,40 @@ In addition to playing MP3, these plugins are currently included:
 <li>Zen Packer</li>
 </ul>
 
-<h4>SexyPSF</h4>
-<a href="http://projects.raphnet.net/#sexypsf">http://projects.raphnet.net/</a>
-<p>Plays Playstation 1 music.</p>
+<h4>Highly Experimental</h4>
+<a href="https://bitbucket.org/kode54/highly-experimental">https://bitbucket.org/kode54/highly-experimental</a>
+<p>Plays Playstation 1 and 2 music.</p>
 <ul>
 <li>PSF</li>
 <li>MINIPSF</li>
+<li>PSF2</li>
+<li>MINIPSF2</li>
+</ul>
+
+<h4>Highly Theoretical</h4>
+<a href="https://bitbucket.org/kode54/highly-theoretical">https://bitbucket.org/kode54/highly-theoretical</a>
+<p>Plays Sega Saturn and Sega Dreamcast music.</p>
+<ul>
+<li>DSF</li>
+<li>MINIDSF</li>
+<li>SSF</li>
+<li>MINISSF</li>
+</ul>
+
+<h4>Highly Quixotic</h4>
+<a href="https://bitbucket.org/kode54/highly-quixotic">https://bitbucket.org/kode54/highly-quixotic</a>
+<p>Plays Capcom Qsound music.</p>
+<ul>
+<li>QSF</li>
+<li>MINIQSF</li>
+</ul>
+
+<h4>Vio2SF</h4>
+<a href="http://svn.code.sf.net/p/desmume/code/trunk/tools">http://svn.code.sf.net/p/desmume/code/trunk/tools</a>
+<p>Plays Nintendo DS music.</p>
+<ul>
+<li>2SF</li>
+<li>MINI2SF</li>
 </ul>
 
 <h4>PlayGSF</h4>
@@ -400,6 +460,251 @@ In addition to playing MP3, these plugins are currently included:
 <ul>
 <li>GSF</li>
 <li>MINIGSF</li>
+</ul>
+
+<h4>VGMPlay</h4>
+<a href="http://vgm.mdscene.net/forum/">http://vgm.mdscene.net/forum/</a>
+<p>General VGM Discussion and Software has the link to sources. Plays Video Game Music files.</p>
+<ul>
+<li>VGM</li>
+<li>VGZ</li>
+</ul>
+
+<h4>VGMStream</h4>
+<a href="http://sourceforge.net/projects/vgmstream/">http://sourceforge.net/projects/vgmstream/</a>
+<p>Plays huge amount of various game music files.</p>
+
+PS2/PSX ADPCM:
+<ul>
+<li> .ads/.ss2
+<li> .ass
+<li> .ast
+<li> .bg00
+<li> .bmdx
+<li> .ccc
+<li> .cnk
+<li> .dxh
+<li> .enth
+<li> .fag
+<li> .filp
+<li> .gcm
+<li> .gms
+<li> .hgc1
+<li> .ikm
+<li> .ild
+<li> .ivb
+<li> .joe
+<li> .kces
+<li> .khv
+<li> .leg
+<li> .mcg
+<li> .mib, .mi4 (w/ or w/o .mih)
+<li> .mic
+<li> .mihb (merged mih+mib)
+<li> .msa
+<li> .msvp
+<li> .musc
+<li> .npsf
+<li> .pnb
+<li> .psh
+<li> .rkv
+<li> .rnd
+<li> .rstm
+<li> .rws
+<li> .rxw
+<li> .snd
+<li> .sfs
+<li> .sl3
+<li> .smpl (w/ bad flags)
+<li> .ster
+<li> .str+.sth
+<li> .str (MGAV blocked)
+<li> .sts
+<li> .svag
+<li> .svs
+<li> .tec (w/ bad flags)
+<li> .tk5 (w/ bad flags)
+<li> .vas
+<li> .vag
+<li> .vgs (w/ bad flags)
+<li> .vig
+<li> .vpk
+<li> .vs
+<li> .vsf
+<li> .wp2
+<li> .xa2
+<li> .xa30</li>
+</ul>
+GC/Wii DSP ADPCM:
+<ul>
+<li> .aaap
+<li> .agsc
+<li> .amts
+<li> .asr
+<li> .bns
+<li> .bo2
+<li> .capdsp
+<li> .cfn
+<li> .ddsp
+<li> .dsp
+<li>  - standard, optional dual file stereo
+<li>  - RS03
+<li>  - Cstr
+<li>  - _lr.dsp
+<li>  - MPDS
+<li> .gca
+<li> .gcm
+<li> .gsp+.gsp
+<li> .hps
+<li> .idsp
+<li> .ish+.isd
+<li> .lps
+<li> .mpdsp
+<li> .mss
+<li> .mus (not quite right)
+<li> .ndp
+<li> .pdt
+<li> .sdt
+<li> .smp
+<li> .sns
+<li> .spt+.spd
+<li> .ssm
+<li> .stm/.dsp
+<li> .str
+<li> .str+.sth
+<li> .sts
+<li> .swd
+<li> .thp, .dsp
+<li> .tydsp
+<li> .vjdsp
+<li> .waa, .wac, .wad, .wam
+<li> .was
+<li> .wsd
+<li> .wsi
+<li> .ydsp
+<li> .ymf
+<li> .zwdsp</li>
+</ul>
+PCM:
+<ul>
+<li> .aiff (8 bit, 16 bit)
+<li> .asd (16 bit)
+<li> .baka (16 bit)
+<li> .bh2pcm (16 bit)
+<li> .dmsg (16 bit)
+<li> .gcsw (16 bit)
+<li> .gcw (16 bit)
+<li> .his (8 bit)
+<li> .int (16 bit)
+<li> .pcm (8 bit, 16 bit)
+<li> .kraw (16 bit)
+<li> .raw (16 bit)
+<li> .rwx (16 bit)
+<li> .sap (16 bit)
+<li> .snd (16 bit)
+<li> .sps (16 bit)
+<li> .str (16 bit)
+<li> .xss (16 bit)
+<li> .voi (16 bit)
+<li> .wb (16 bit)
+<li> .zsd (8 bit)
+</ul>
+Xbox IMA ADPCM:
+<ul>
+<li> .matx
+<li> .wavm
+<li> .wvs
+<li> .xmu
+<li> .xvas
+<li> .xwav
+</ul>
+
+Yamaha ADPCM:
+<ul>
+<li> .adpcm
+<li> .dcs+.dcsw
+<li> .str
+<li> .spsd
+</ul>
+IMA ADPCM:
+<ul>
+<li> .bar (IMA ADPCM)
+<li> .dvi (DVI IMA ADPCM)
+<li> .hwas (IMA ADPCM)
+<li> .idvi (DVI IMA ADPCM)
+<li> .ivaud (IMA ADPCM)
+<li> .myspd (IMA ADPCM)
+<li> .stma (DVI IMA ADPCM)
+<li> .strm (IMA ADPCM)
+</ul>
+Multi:
+<ul>
+<li> .aifc (SDX2 DPCM, DVI IMA ADPCM)
+<li> .asf, .as4 (8/16 bit PCM, EACS IMA ADPCM)
+<li> .ast (GC AFC ADPCM, 16 bit PCM)
+<li> .aud (IMA ADPCM, WS DPCM)
+<li> .aus (PSX ADPCM, Xbox IMA ADPCM)
+<li> .brstm (GC DSP ADPCM, 8/16 bit PCM)
+<li> .emff (PSX APDCM, GC DSP ADPCM)
+<li> .fsb, .wii (PSX ADPCM, GC DSP ADPCM, Xbox IMA ADPCM)
+<li> .genh (lots)
+<li> .musx (PSX ADPCM, Xbox IMA ADPCM, DAT4 IMA ADPCM)
+<li> .nwa (16 bit PCM, NWA DPCM)
+<li> .psw (PSX ADPCM, GC DSP ADPCM)
+<li> .rwar, .rwav (GC DSP ADPCM, 8/16 bit PCM)
+<li> .rwsd (GC DSP ADPCM, 8/16 bit PCM)
+<li> .rsd (PSX ADPCM, 16 bit PCM, GC DSP ADPCM, Xbox IMA ADPCM, Radical ADPCM)
+<li> .rrds (NDS IMA ADPCM)
+<li> .sad (GC DSP ADPCM, NDS IMA ADPCM, Procyon Studios NDS ADPCM)
+<li> .seg (Xbox IMA ADPCM, PS2 ADPCM)
+<li> .sng, .asf, .str, .eam (EA/XA ADPCM or PSX ADPCM)
+<li> .strm (NDS IMA ADPCM, 8/16 bit PCM)
+<li> .ss7 (EACS IMA ADPCM, IMA ADPCM)
+<li> .swav (NDS IMA ADPCM, 8/16 bit PCM)
+<li> .xwb (16 bit PCM, Xbox IMA ADPCM)
+<li> .wav, .lwav (unsigned 8 bit PCM, 16 bit PCM, GC DSP ADPCM, MS IMA ADPCM)
+</ul>
+Misc:
+<ul>
+<li> .2dx9 (MS ADPCM)
+<li> .aax (CRI ADX ADPCM)
+<li> .acm (InterPlay ACM)
+<li> .adp (GC DTK ADPCM)
+<li> .adx (CRI ADX ADPCM)
+<li> .afc (GC AFC ADPCM)
+<li> .ahx (MPEG-2 Layer II)
+<li> .aix (CRI ADX ADPCM)
+<li> .baf (Blur ADPCM)
+<li> .bgw (FFXI PS-like ADPCM)
+<li> .bnsf (G.722.1)
+<li> .caf (Apple IMA4 ADPCM)
+<li> .de2 (MS ADPCM)
+<li> .kcey (EACS IMA ADPCM)
+<li> .lsf (LSF ADPCM)
+<li> .mwv (Level-5 0x555 ADPCM)
+<li> .ogg, .logg (Ogg Vorbis)
+<li> .p3d (Radical ADPCM)
+<li> .rsf (CCITT G.721 ADPCM)
+<li> .sab (Worms 4 soundpacks)
+<li> .s14/.sss (G.722.1)
+<li> .sc (Activision EXAKT SASSC DPCM)
+<li> .scd (MS ADPCM, MPEG Audio, 16 bit PCM)
+<li> .sd9 (MS ADPCM)
+<li> .smp (MS ADPCM)
+<li> .spw (FFXI PS-like ADPCM)
+<li> .stm renamed .ps2stm (DVI IMA ADPCM)
+<li> .str (SDX2 DPCM)
+<li> .stx (GC AFC ADPCM)
+<li> .um3 (Ogg Vorbis)
+<li> .xa (CD-ROM XA audio)</li>
+</ul>
+Loop assists:
+<ul>
+<li> .mus (playlist for .acm)</li>
+<li> .pos (loop info for .wav)</li>
+<li> .sli (loop info for .ogg)</li>
+<li> .sfl (loop info for .ogg)</li>
+
 </ul>
 
 </body>

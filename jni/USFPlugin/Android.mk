@@ -37,11 +37,12 @@ LOCAL_SRC_FILES := \
 
 #LOCAL_LDFLAGS = -Wl,--fix-cortex-a8
 LOCAL_LDLIBS := -llog -lz
-LOCAL_CFLAGS = -O3 -mfpu=neon -DANDROID
-LOCAL_STATIC_LIBRARIES := cpufeatures 
+LOCAL_ARM_NEON := true
+LOCAL_CFLAGS = -O3 -DARCH_MIN_ARM_NEON -mfpu=neon -mcpu=cortex-a9
+
+
 LOCAL_C_INCLUDES := \
                 $(LOCAL_PATH)/ \
                 $(LOCAL_PATH)/lazyusf \
 		
 include $(BUILD_SHARED_LIBRARY)
-$(call import-module,cpufeatures) 

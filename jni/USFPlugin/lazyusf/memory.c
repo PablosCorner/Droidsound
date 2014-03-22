@@ -383,9 +383,11 @@ void r4300i_LW_PAddr ( usf_state_t * state, uint32_t PAddr, uint32_t * Value ) {
 }
 
 uint32_t r4300i_LW_VAddr ( usf_state_t * state, uint32_t VAddr, uint32_t * Value ) {
-	uintptr_t address = (state->TLB_Map[VAddr >> 12] + VAddr);
+	uintptr_t address = state->TLB_Map[VAddr >> 12];
+	if (address == 0)
+		return 0;
 
-	if (state->TLB_Map[VAddr >> 12] == 0) { return 0; }
+	address += VAddr;
 
 	if((address - (uintptr_t)state->RDRAM) > state->RdramSize) {
 		address = address - (uintptr_t)state->RDRAM;
