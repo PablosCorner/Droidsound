@@ -6,7 +6,7 @@ LOCAL_MODULE    := sidplayfp
 
 LOCAL_ARM_MODE := arm
 
-LOCAL_SRC_FILES :=  SidPlayfpplugin.cpp \
+LOCAL_SRC_FILES :=  SidplayfpPlugin.cpp \
 	builders/resid-builder/resid-builder.cpp \
 	builders/resid-builder/resid-emu.cpp \
 	builders/resid-builder/resid/dac.cc \

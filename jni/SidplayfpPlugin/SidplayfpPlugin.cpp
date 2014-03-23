@@ -8,8 +8,8 @@
 #include "builders/resid-builder/resid.h"
 #include "builders/residfp-builder/residfp.h"
 #include "sidplayfp/sidplayfp.h"
-#include "sidplayfp/sidtuneinfo.h"
-#include "sidplayfp/sidconfig.h"
+#include "sidplayfp/SidTuneInfo.h"
+#include "sidplayfp/SidConfig.h"
 #include "sidplayfp/SidTune.h"
 
 #define OPT_FILTER 1

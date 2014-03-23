@@ -19,7 +19,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := highlyexp
 
-LOCAL_SRC_FILES := heplugin.cpp \
+LOCAL_SRC_FILES := HEPlugin.cpp \
 	he/psx.c \
 	he/ioptimer.c \
 	he/iop.c \

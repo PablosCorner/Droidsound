@@ -121,7 +121,7 @@ LOCAL_SRC_FILES :=  \
 	gme/Z80_Cpu.cpp \
 	gme/higan/smp/smp.cpp \
 	gme/higan/processor/spc700/spc700.cpp \
-	gme/higan/dsp/spc_dsp.cpp \
+	gme/higan/dsp/SPC_DSP.cpp \
 	gme/higan/dsp/dsp.cpp \
 	gme/c140.c \
 	gme/dac_control.c \
