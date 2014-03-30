@@ -21,7 +21,7 @@ LOCAL_MODULE    := highlytheo
 
 LOCAL_ARM_MODE := arm
 
-LOCAL_SRC_FILES := htplugin.cpp \
+LOCAL_SRC_FILES := HTPlugin.cpp \
 	ht/arm.c \
 	ht/dcsound.c \
 	ht/psflib.c \

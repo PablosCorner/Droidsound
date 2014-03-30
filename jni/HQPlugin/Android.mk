@@ -19,7 +19,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := highlyquix
 
-LOCAL_SRC_FILES := hqplugin.cpp \
+LOCAL_SRC_FILES := HQPlugin.cpp \
 	hq/kabuki.c \
 	hq/psflib.c \
 	hq/qmix.c \
