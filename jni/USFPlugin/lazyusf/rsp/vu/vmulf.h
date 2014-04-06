@@ -22,7 +22,7 @@
  * Wrong:  ACC(HI) = -((INT32)(acc) < 0)
  * Right:  ACC(HI) = -(SEMIFRAC < 0)
  */
-//#define SEMIFRAC    (VS[i]*VT[i]*2/2 + 0x8000/2)
+
 #define SEMIFRAC    (VS[i]*VT[i] + 0x4000)
 #endif
 

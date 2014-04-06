@@ -33,6 +33,8 @@ void usf_clear(void * state)
     //USF_STATE->enablecompare = 0;
     //USF_STATE->enableFIFOfull = 0;
     
+    //USF_STATE->enable_hle_audio = 0;
+    
     //USF_STATE->NextInstruction = 0;
     //USF_STATE->JumpToLocation = 0;
     //USF_STATE->AudioIntrReg = 0;
@@ -78,6 +80,11 @@ void usf_set_compare(void * state, int enable)
 void usf_set_fifo_full(void * state, int enable)
 {
     USF_STATE->enableFIFOfull = enable;
+}
+
+void usf_set_hle_audio(void * state, int enable)
+{
+    USF_STATE->enable_hle_audio = enable;
 }
 
 static uint32_t get_le32( const void * _p )
@@ -175,25 +182,17 @@ static int usf_startup(void * state)
     
     return 0;
 }
-int usf_get_sample_rate(void * state)
-{
-	return USF_STATE->SampleRate;
-}
-int usf_start(void * state)
-{
 
-	if ( !USF_STATE->MemoryState )
-    {
-        if ( usf_startup( USF_STATE ) < 0 )
-            return (int)USF_STATE->last_error;
-    }
-	return;
-
-}
 const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * sample_rate)
 {
     USF_STATE->last_error = 0;
     USF_STATE->error_message[0] = '\0';
+    
+    if ( !USF_STATE->MemoryState )
+    {
+        if ( usf_startup( USF_STATE ) < 0 )
+            return USF_STATE->last_error;
+    }
     
     if ( USF_STATE->samples_in_buffer )
     {

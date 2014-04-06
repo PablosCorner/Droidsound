@@ -42,9 +42,8 @@ INLINE static void clr_ci(usf_state_t * state, short* VD, short* VS, short* VT)
 #ifdef ARCH_MIN_ARM_NEON
 
 	int16x8_t vs, vt, zero1,co;
-	short zero[8] = {0};
 			
-	zero1 = vld1q_s16((const int16_t*)zero);
+	zero1 = vdupq_n_s16(0);
 	vs = vld1q_s16((const int16_t*)VS);
 	vt = vld1q_s16((const int16_t*)VT);
 	co = vld1q_s16((const int16_t*)state->co);

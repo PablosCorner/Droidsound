@@ -16,8 +16,6 @@ typedef struct usf_state_helper usf_state_helper_t;
 extern "C" {
 #endif
 
-int usf_get_sample_rate(void * state);
-int usf_start(void * state);
 /* Returns the size of the base emulator state. */
 size_t usf_get_state_size();
 
@@ -31,6 +29,10 @@ void usf_clear(void * state);
    _enablecompare or _enablefifofull tags are present in the file. */
 void usf_set_compare(void * state, int enable);
 void usf_set_fifo_full(void * state, int enable);
+    
+/* This option should speed up decoding significantly, at the expense
+   of accuracy, and potentially emulation bugs. */
+void usf_set_hle_audio(void * state, int enable);
 
 /* This processes and uploads the ROM and/or Project 64 save state data
    present in the reserved section of each USF file. They should be
@@ -45,6 +47,12 @@ int usf_upload_section(void * state, const uint8_t * data, size_t size);
    Requesting zero samples with a null pointer is an acceptable way to
    force at least one block of samples to render and return the current
    sample rate in the variable passed in.
+   Requesting a non-zero number of samples with a null buffer pointer will
+   result in exactly count samples being rendered and discarded.
+   Emulation runs in whole blocks until there have been exactly enough
+   Audio Interface DMA transfers to at least fill count samples, at which
+   point the remainder is buffered in the emulator state until the next
+   usf_render() call.
    Returns 0 on success, or a pointer to the last error message on failure. */
 const char * usf_render(void * state, int16_t * buffer, size_t count, int32_t * sample_rate);
 

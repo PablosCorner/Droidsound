@@ -181,7 +181,7 @@ public class USFPlugin extends DroidSoundPlugin {
 	public int getBufferSize(int frequency)
 	{
 		int bufSize = (int) Math.ceil( frequency / 100.0) * 100;
-		return bufSize * 4;
+		return bufSize * 2;
 	}
 	
 	native public int N_getIntInfo(long song, int what);

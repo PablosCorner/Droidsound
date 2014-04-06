@@ -16,51 +16,41 @@
 INLINE static void do_madn(usf_state_t * state, short* VD, short* VS, short* VT)
 {
 
-#ifdef DISABLED_ARCH_MIN_ARM_NEON
+#ifdef ARCH_MIN_ARM_NEON
 
-	int16x8_t vs,vt, vaccm, vacch, vacc_h,vaccl,one,cond,zero,minus1;
-		 	     
-	zero = vdupq_n_s16(0);
-	minus1 = vdupq_n_s16(-1);
-    vs = vld1q_s16((const int16_t *)VS);
-    vt = vld1q_s16((const int16_t *)VT);
-	vaccl = vld1q_s16((const int16_t *)VACC_L);
-	vaccm = vld1q_s16((const int16_t *)VACC_M);
-	vacch = vld1q_s16((const int16_t *)VACC_H);
+	uint32x4_t zero = vdupq_n_u32(0);
+	uint16x4_t vs_low = vld1_u16((const uint16_t*)VS);
+    uint16x4_t vs_high = vld1_u16((const uint16_t*)VS+4);
+    int16x4_t vt_low = vld1_s16((const int16_t*)VT);
+    int16x4_t vt_high = vld1_s16((const int16_t*)VT+4);
+	uint16x4_t vaccl_low = vld1_u16((const uint16_t*)VACC_L);
+	uint16x4_t vaccl_high = vld1_u16((const uint16_t*)VACC_L+4);
+	uint16x4_t vaccm_low = vld1_u16((const uint16_t*)VACC_M);
+	uint16x4_t vaccm_high = vld1_u16((const uint16_t*)VACC_M+4);
+	int16x4_t vacch_low = vld1_s16((const int16_t*)VACC_H);
+	int16x4_t vacch_high = vld1_s16((const int16_t*)VACC_H+4);
 	
-	int16x4_t low_a = vget_low_s16(vs);
-	int16x4_t low_b = vget_low_s16(vt);
-	int16x4_t high_a = vget_high_s16(vs);
-	int16x4_t high_b = vget_high_s16(vt);
-	uint32x4_t low = vmull_u16((uint16x4_t)low_a, (uint16x4_t)low_b);
-	int32x4_t high = vmull_s16(high_a, high_b);
+	int32x4_t vaccl_l = vmlaq_s32((int32x4_t)vmovl_u16(vaccl_low),(int32x4_t)vmovl_u16(vs_low),vmovl_s16(vt_low));
+	int32x4_t vaccl_h = vmlaq_s32((int32x4_t)vmovl_u16(vaccl_high),(int32x4_t)vmovl_u16(vs_high),vmovl_s16(vt_high));
+	uint32x4_t vaccm_l = vaddq_u32(vmovl_u16(vaccm_low), (uint32x4_t)vshrq_n_s32(vaccl_l,16));
+	uint32x4_t vaccm_h = vaddq_u32(vmovl_u16(vaccm_high),(uint32x4_t)vshrq_n_s32(vaccl_h,16));
+	uint16x4_t vacch_l = vaddhn_u32(vaccm_l, zero);
+	uint16x4_t vacch_h = vaddhn_u32(vaccm_h, zero);
+	int16x4_t vacch_low2 = vadd_s16(vacch_low,(int16x4_t)vacch_l);
+	int16x4_t vacch_high2 = vadd_s16(vacch_high,(int16x4_t)vacch_h);
 
-	int16x8x2_t res = vuzpq_s16((int16x8_t)low,(int16x8_t)high);
-		
-	int16x8_t vacc_l = vaddq_s16(res.val[0],(int16x8_t)vaccl);
-	int16x8_t vacc_m = vaddq_s16(res.val[1],(int16x8_t)vaccm);
+	int16x8_t vaccl = vcombine_s16(vmovn_s32(vaccl_l),vmovn_s32(vaccl_h));
+	uint16x8_t vaccm = vcombine_u16(vmovn_u32(vaccm_l),vmovn_u32(vaccm_h));
+	int16x8_t vacch = vcombine_s16(vacch_low2,vacch_high2);
 
-	cond = vminq_s16(vaccl, zero);
-	cond = vmaxq_s16(cond, minus1);
-	cond = vnegq_s16(cond);
-	
-	int32x4_t vacc_1 = vmovl_s16(vget_low_s16(res.val[1]));
-	int32x4_t vacc_2 = vmovl_s16(vget_high_s16(res.val[1]));
-	uint32x4_t vacc_h1 = vaddq_u32((uint32x4_t)vacc_1,vmovl_u16(vget_low_u16((uint16x8_t)vaccm)));
-	uint32x4_t vacc_h2 = vaddq_u32((uint32x4_t)vacc_2,vmovl_u16(vget_high_u16((uint16x8_t)vaccm)));
-
-	int16x8x2_t vacc_htemp = vuzpq_s16((int16x8_t)vacc_h1,(int16x8_t)vacc_h2);
-	
-	vacc_m = vaddq_s16(vacc_m, cond);
-	vacc_h = vaddq_s16(vacch, vacc_htemp.val[1]);
-	
-	vst1q_s16(VACC_L, vacc_l);
-	vst1q_s16(VACC_M, vacc_m);
-	vst1q_s16(VACC_H, vacc_h);
-	SIGNED_CLAMP_AL(state, VD);
+	vst1q_s16(VACC_L, vaccl);
+	vst1q_s16(VACC_M, (int16x8_t)vaccm);
+	vst1q_s16(VACC_H, vacch);
+    SIGNED_CLAMP_AL(state, VD);
 	return;
 		
 #endif
+
 
     ALIGNED uint32_t addend[N];
     register int i;

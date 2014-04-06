@@ -33,16 +33,28 @@ LOCAL_SRC_FILES := \
 		lazyusf/registers.c \
 		lazyusf/tlb.c \
 		lazyusf/usf.c \
-		lazyusf/rsp/rsp.c
+		lazyusf/rsp/rsp.c \
+		lazyusf/rsp_hle/alist.c \
+		lazyusf/rsp_hle/alist_audio.c \
+		lazyusf/rsp_hle/alist_naudio.c \
+		lazyusf/rsp_hle/alist_nead.c \
+		lazyusf/rsp_hle/audio.c \
+		lazyusf/rsp_hle/cicx105.c \
+		lazyusf/rsp_hle/jpeg.c \
+		lazyusf/rsp_hle/hle.c \
+		lazyusf/rsp_hle/memory.c \
+		lazyusf/rsp_hle/mp3.c \
+		lazyusf/rsp_hle/musyx.c \
+		lazyusf/rsp_hle/plugin.c
 
-#LOCAL_LDFLAGS = -Wl,--fix-cortex-a8
 LOCAL_LDLIBS := -llog -lz
 LOCAL_ARM_NEON := true
-LOCAL_CFLAGS = -O3 -DARCH_MIN_ARM_NEON -mfpu=neon -mcpu=cortex-a9
+LOCAL_CFLAGS = -O3 -DARCH_MIN_ARM_NEON -mfpu=neon #-mcpu=cortex-a8
 
 
 LOCAL_C_INCLUDES := \
                 $(LOCAL_PATH)/ \
                 $(LOCAL_PATH)/lazyusf \
+                $(LOCAL_PATH)/lazyusf/rsp_hle \
 		
 include $(BUILD_SHARED_LIBRARY)

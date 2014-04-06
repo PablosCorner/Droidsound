@@ -4,8 +4,8 @@
 
 #include "desmume/MMU.h"
 #include "desmume/armcpu.h"
-#include "desmume/NDSSystem.h"
-#include "desmume/SPU.h"
+#include "desmume/ndssystem.h"
+#include "desmume/spu.h"
 #include "desmume/cp15.h"
 
 #include "zlib/zlib.h"

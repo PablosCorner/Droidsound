@@ -34,6 +34,7 @@ public class FileIdentifier {
             "IMF", "J2B", "GDM", "UMX",
             "RSN", "RMU",
             "SNDH", "SC68", "SND",
+            "USF", "MINIUSF",
             "CUS","CUST","CUSTOM","SMOD","TFX","SNG","RJP","JPN",
             "AST","AHX","THX","ADPCM","AMC","ABK","AAM","ALP","AON","AON4","AON8","ADSC","MOD_ADSC4",
             "BSS","BD","BDS","UDS","KRIS","CIN","CORE","CM","RK","RKB","DZ","MKIIO","DL","DL_DELI",

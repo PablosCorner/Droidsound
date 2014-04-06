@@ -34,7 +34,7 @@ JNIEXPORT jlong JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1load(JNIEnv
 	
 	usf_set_compare( state->emu_state, state->enable_compare );
 	usf_set_fifo_full( state->emu_state, state->enable_fifo_full );
-	usf_start(state->emu_state);
+
 	usf_render(state->emu_state, 0, 0, &sample_rate);
 	
 	return (long)state;
@@ -51,11 +51,8 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1getSoundData
 {
 	
 	usf_loader_state * usf_state = (usf_loader_state*)song;
-
 	jshort *dest = env->GetShortArrayElements(sArray, NULL); 
-	//__android_log_print(ANDROID_LOG_VERBOSE, "USFPlugin", "wants samples: %d",size); 
 	usf_render(usf_state->emu_state, dest, size/2, &sample_rate);
-	__android_log_print(ANDROID_LOG_VERBOSE, "USFPlugin", "created samples"); 
 	env->ReleaseShortArrayElements(sArray, dest, 0);
 
 	return size;
@@ -68,7 +65,7 @@ JNIEXPORT jint JNICALL Java_com_ssb_droidsound_plugins_USFPlugin_N_1getIntInfo(J
 	{
 		case 11:
 			{
-				return usf_get_sample_rate(usf_state->emu_state);
+				return sample_rate;
 			} 
 	}
 

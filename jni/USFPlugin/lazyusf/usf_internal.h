@@ -2,6 +2,7 @@
 #define _USF_INTERNAL_H_
 
 #include "cpu.h"
+#include "rsp_hle/hle.h"
 
 struct usf_state_helper
 {
@@ -12,6 +13,8 @@ struct usf_state_helper
 #define RCPREG_DEFINED
 typedef uint32_t RCPREG;
 #endif
+
+#include <stdio.h>
 
 struct usf_state
 {
@@ -58,20 +61,36 @@ struct usf_state
     int temp_PC;
     short MFC0_count[32];
     
+    // rsp_hle
+    struct hle_t hle;
+
     uint32_t cpu_running, cpu_stopped;
     
     // options from file tags
     uint32_t enablecompare, enableFIFOfull;
+    
+    // options for decoding
+    uint32_t enable_hle_audio;
     
     // buffering for rendered sample data
     size_t sample_buffer_count;
     int16_t * sample_buffer;
 
     // audio.c
+    // SampleRate is usually guaranteed to stay the same for the duration
+    // of a given track, and depends on the game.
     int32_t SampleRate;
+    // Audio is rendered in whole Audio Interface DMA transfers, which are
+    // then copied directly to the caller's buffer. Any left over samples
+    // from the last DMA transfer that fills the caller's buffer will be
+    // stored here until the next call to usf_render()
     int16_t samplebuf[16384];
     size_t samples_in_buffer;
     
+    // This buffer does not really need to be that large, as it is likely
+    // to only accumulate a handlful of error messages, at which point
+    // emulation is immediately halted and the messages are returned to
+    // the caller.
     const char * last_error;
     char error_message[1024];
     
