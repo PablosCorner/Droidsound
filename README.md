@@ -10,23 +10,29 @@ Added features compared to Google Play version:
  * Sega Saturn plugin (SSF/MiniSSF)
  * DreamCast plugin (DSF/MiniDSF)
  * Capcom Qsound plugin (QSF/MiniQSF)
- * NDS Plugin (2SF/Mini2SF)
- * Secondary PSF Plugin (PSF/MiniPSF, PSF2/MiniPSF2)
+ * Nintendo DS Plugin (2SF/Mini2SF)
+ * PSF Plugin changed (PSF/MiniPSF, PSF2/MiniPSF2)
  * Plays packed .GYM files
  * VGMStream Plugin (too many formats to include)
- * Improved SC68 Plugin
+ * Latest version of SC68 Plugin
  * VGMPlay by Valley Bell
- * Sidplay2 plugin has been replaced by Sidplay2fp
+ * Sidplay2/VICE plugins have been replaced by Sidplay2fp
+ * LazyUSF plugin (USF/MiniUSF)
+  * Optimized for ARM NEON by droidmjt
 
 Other changes:
  
- * Option to change File-Cache size (16MB - 4096MB)
+ * Option to change File-Cache size (16MB - 4096MB and unlimited)
  * Option to clean directory list cache
  * FTP Client. Allows you to download tunes from FTP sites. Included few pre-defined sites.
  * Added ARMv7 support.
  * Added FileBrowser.
   * Now you can mount any path and copy your music there. Not limited to internal phone memory.
- 
+ * ModLand Offline Database
+ * Fade support (will improve later)
+ * Generic looping
+ * shoutCAST streaming works now also with Samsung devices
+
 --------------------------------------------------------------------------------------------
  About those MinixSF formats:
  
