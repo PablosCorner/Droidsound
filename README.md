@@ -13,12 +13,16 @@ Added features compared to Google Play version:
  * Nintendo DS Plugin (2SF/Mini2SF)
  * PSF Plugin changed (PSF/MiniPSF, PSF2/MiniPSF2)
  * Plays packed .GYM files
- * VGMStream Plugin (too many formats to include)
+ * VGMStream plugin (too many formats to include)
  * Latest version of SC68 Plugin
  * VGMPlay by Valley Bell
  * Sidplay2/VICE plugins have been replaced by Sidplay2fp
  * LazyUSF plugin (USF/MiniUSF)
   * Optimized for ARM NEON by droidmjt
+ * S98 plugin
+ * MDX plugin
+ * Adlib plugin
+ * PMD plugin
 
 Other changes:
  
