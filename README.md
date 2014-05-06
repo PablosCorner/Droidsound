@@ -21,7 +21,7 @@ Added features compared to Google Play version:
   * RSP Optimized for ARM NEON by droidmjt
  * S98 plugin (.S98)
  * MDX plugin (.MDX)
- * Adlib plugin (numerous formats)
+ * AdLib plugin (numerous formats)
  * PMD plugin (.M/.M2/.MZ, improves soon)
  * WonderSwan plugin
  * MSXPlug plugin (.KSS, dedicated KSS player, improves soon)
