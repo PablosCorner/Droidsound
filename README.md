@@ -18,11 +18,13 @@ Added features compared to Google Play version:
  * VGMPlay by Valley Bell
  * Sidplay2/VICE plugins have been replaced by Sidplay2fp
  * LazyUSF plugin (USF/MiniUSF)
-  * Optimized for ARM NEON by droidmjt
- * S98 plugin
- * MDX plugin
- * Adlib plugin
- * PMD plugin
+  * RSP Optimized for ARM NEON by droidmjt
+ * S98 plugin (.S98)
+ * MDX plugin (.MDX)
+ * AdLib plugin (numerous formats)
+ * PMD plugin (.M/.M2/.MZ, improves soon)
+ * WonderSwan plugin
+ * MSXPlug plugin (.KSS, dedicated KSS player, improves soon)
 
 Other changes:
  
@@ -33,7 +35,7 @@ Other changes:
  * Added FileBrowser.
   * Now you can mount any path and copy your music there. Not limited to internal phone memory.
  * ModLand Offline Database
- * Fade support (will improve later)
+ * Fade support
  * Generic looping
  * shoutCAST streaming works now also with Samsung devices
 
