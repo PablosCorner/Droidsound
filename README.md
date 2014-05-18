@@ -25,6 +25,7 @@ Added features compared to Google Play version:
  * PMD plugin (.M/.M2/.MZ, improves soon)
  * WonderSwan plugin
  * MSXPlug plugin (.KSS, dedicated KSS player, improves soon)
+ * FFmpeg plugin (Atrac1 (AT1), Atrac3(AT3), Atrac3Plus (AT3+), OMA)
 
 Other changes:
  
