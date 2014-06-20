@@ -1,11 +1,11 @@
-Droidsound-E
+Droidsound-E 
 ============
 
 Droidsound with added features and stuff. 
 
 Added features compared to Google Play version:
  
- New Plugins:
+New Plugins:
 
  * Sega Saturn plugin (SSF/MiniSSF)
  * DreamCast plugin (DSF/MiniDSF)
@@ -29,7 +29,7 @@ Added features compared to Google Play version:
  * MIDI plugins (Emu de MIDI and BASSMIDI)
  * OPUS support
 
- Other changes:
+Other changes:
  
  * Option to change File-Cache size (16MB - 4096MB and unlimited)
  * Option to clean directory list cache
