@@ -1,11 +1,11 @@
-Droidsound
-==========
+Droidsound-E 
+============
 
 Droidsound with added features and stuff. 
 
 Added features compared to Google Play version:
  
- New Plugins:
+New Plugins:
 
  * Sega Saturn plugin (SSF/MiniSSF)
  * DreamCast plugin (DSF/MiniDSF)
@@ -22,10 +22,12 @@ Added features compared to Google Play version:
  * S98 plugin (.S98)
  * MDX plugin (.MDX)
  * AdLib plugin (numerous formats)
- * PMD plugin (.M/.M2/.MZ, improves soon)
+ * PMD plugin (.M/.M2/.MZ)
  * WonderSwan plugin
- * MSXPlug plugin (.KSS, dedicated KSS player, improves soon)
+ * MSXPlug plugin (.KSS, MGS, OPX, BGM, BGR, MPK, MBM )
  * FFmpeg plugin (Atrac1 (AT1), Atrac3(AT3), Atrac3Plus (AT3+), OMA)
+ * MIDI plugins (Emu de MIDI and BASSMIDI)
+ * OPUS support
 
 Other changes:
  
@@ -41,8 +43,8 @@ Other changes:
  * shoutCAST streaming works now also with Samsung devices
 
 --------------------------------------------------------------------------------------------
- About those MinixSF formats:
+ Note about those MinixSF formats:
  
  * They usually need an additional file that has an extension .???lib. In some rare cases the .???lib filename have been changed causing the song fail to load. In order to fix this, you need to manually download the whole song and change the .???lib filename. The correct .???lib filename is always inside the .minixSF file. In most cases, only the case-sensitiveness is the problem.
 
-Needs lots of work still. 
+ * The above problem has been hopefully solved with the latest version of Droidsound. It can figure out the library name now automatically.
