@@ -13,7 +13,7 @@ New Plugins:
  * Nintendo DS Plugin (2SF/Mini2SF)
  * PSF Plugin changed (PSF/MiniPSF, PSF2/MiniPSF2)
  * Plays packed .GYM files
- * VGMStream plugin (too many formats to include)
+ * VGMStream plugin (too many formats to mention here)
  * Latest version of SC68 Plugin
  * VGMPlay by Valley Bell
  * Sidplay2/VICE plugins have been replaced by Sidplay2fp
