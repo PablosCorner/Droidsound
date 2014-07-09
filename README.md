@@ -1,9 +1,11 @@
 Droidsound-E 
 ============
 
-Droidsound with added features and stuff. 
+Droidsound with added features and stuff. Below is a list of added features compared to Google Play version:
 
-Added features compared to Google Play version:
+ADDITIONAL DOWNLOAD LINK FOR LATEST BINARY:
+* https://www.dropbox.com/s/lr2n45tvajjpq5c/droidsound-debug.apk
+
  
 New Plugins:
 
@@ -49,5 +51,3 @@ Note about those MinixSF formats:
 
  * The above problem has been hopefully solved with the latest version of Droidsound. It can figure out the library name now automatically.
 
-ADDITIONAL DOWNLOAD LINK FOR LATEST BINARY:
-* https://www.dropbox.com/s/lr2n45tvajjpq5c/droidsound-debug.apk
