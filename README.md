@@ -1,9 +1,11 @@
 Droidsound-E 
 ============
 
-Droidsound with added features and stuff. 
+Droidsound with added features and stuff. Below is a list of added features compared to Google Play version:
 
-Added features compared to Google Play version:
+ADDITIONAL DOWNLOAD LINK FOR LATEST BINARY:
+* https://www.dropbox.com/s/lr2n45tvajjpq5c/droidsound-debug.apk
+
  
 New Plugins:
 
@@ -43,8 +45,9 @@ Other changes:
  * shoutCAST streaming works now also with Samsung devices
 
 --------------------------------------------------------------------------------------------
- Note about those MinixSF formats:
+Note about those MinixSF formats:
  
  * They usually need an additional file that has an extension .???lib. In some rare cases the .???lib filename have been changed causing the song fail to load. In order to fix this, you need to manually download the whole song and change the .???lib filename. The correct .???lib filename is always inside the .minixSF file. In most cases, only the case-sensitiveness is the problem.
 
  * The above problem has been hopefully solved with the latest version of Droidsound. It can figure out the library name now automatically.
+
