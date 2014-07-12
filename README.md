@@ -30,6 +30,9 @@ New Plugins:
  * FFmpeg plugin (Atrac1 (AT1), Atrac3(AT3), Atrac3Plus (AT3+), OMA)
  * MIDI plugins (Emu de MIDI and BASSMIDI)
  * OPUS support
+ * STSound plugin (.YM)
+ * BassZXTUNE plugin (numerous Spectrum formats)
+ * Improved NetRadio
 
 Other changes:
  
