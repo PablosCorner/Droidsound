@@ -5,7 +5,8 @@ Droidsound with added features and stuff. Below is a list of added features comp
 
 ADDITIONAL DOWNLOAD LINK FOR THE LATEST BINARY:
 * https://www.dropbox.com/s/lr2n45tvajjpq5c/droidsound-debug.apk
-* https://www.dropbox.com/s/qxoy7h864rwjsjq/droidsounde16_release.apk
+* https://www.dropbox.com/s/1xz1p3mzv2wt5ax/droidsounde-release.apk
+
 
  
 New Plugins:
