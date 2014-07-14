@@ -3,7 +3,7 @@ Droidsound-E
 
 Droidsound with added features and stuff. Below is a list of added features compared to Google Play version:
 
-DOWNLOAD LINKS FOR THE LATEST BINARY:
+DOWNLOAD LINKS:
 
 * https://www.dropbox.com/s/1xz1p3mzv2wt5ax/droidsounde-release.apk
 * https://play.google.com/store/apps/details?id=com.droidmjt.droidsounde
