@@ -7,6 +7,8 @@ ADDITIONAL DOWNLOAD LINK FOR THE LATEST BINARY:
 * https://www.dropbox.com/s/lr2n45tvajjpq5c/droidsound-debug.apk
 * https://www.dropbox.com/s/1xz1p3mzv2wt5ax/droidsounde-release.apk
 
+* https://play.google.com/store/apps/details?id=com.droidmjt.droidsounde
+
 
  
 New Plugins:
