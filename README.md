@@ -14,3 +14,4 @@ DOWNLOAD LINK FOR THE LATEST BETA VERSION:
 DOWNLOAD LINK FOR THE UNOFFICIAL RELEASE VERSION (signed, beta version uninstall needed):
 
 * https://www.dropbox.com/s/m1zqo3ix33fxevh/droidsounde1664.apk?dl=0
+* https://www.dropbox.com/s/4gjnar5fcit0zqv/droidsounde1664_15.apk?dl=0
