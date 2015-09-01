@@ -9,3 +9,4 @@ DOWNLOAD LINK FOR THE UNOFFICIAL RELEASE VERSION (signed binary):
 
 * https://www.dropbox.com/s/jpbob4oy3gmwldz/droidsounde1664_34.apk?dl=0
 * https://www.dropbox.com/s/dpfe39lhry997ve/droidsounde1664_39.apk?dl=0
+* https://www.dropbox.com/s/mhr23hh3uhwdd85/droidsounde1664_44.apk?dl=0
