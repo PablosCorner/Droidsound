@@ -7,4 +7,4 @@ DOWNLOAD LINK FOR THE LATEST RELEASE:
 
 DOWNLOAD LINK FOR THE UNOFFICIAL RELEASE VERSION (signed):
 
-* https://www.dropbox.com/s/1esl82pmpsk73lu/droidsounde1664_75.apk?dl=0
+* https://www.dropbox.com/s/mb3rcn3dr1ugx8u/droidsounde1664_76.apk?dl=0
