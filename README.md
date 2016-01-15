@@ -1,7 +1,7 @@
 Droidsound-E 
 ============
 
-DOWNLOAD LINK FOR THE LATEST RELEASE:
+DOWNLOAD LINK FOR THE OFFICIAL RELEASE:
 
 * https://play.google.com/store/apps/details?id=com.droidmjt.droidsounde
 
