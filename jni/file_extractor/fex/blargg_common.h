@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <limits.h>
+#include <stdio.h>
 
 typedef const char* blargg_err_t; // 0 on success, otherwise error string
 

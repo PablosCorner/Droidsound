@@ -93,6 +93,30 @@ inline unsigned get_be32( void const* p )
 			(unsigned) ((unsigned char const*) p) [3];
 }
 
+inline uint64_t get_le64(void const* p)
+{
+	return  (uint64_t)((unsigned char const*)p)[7] << (unsigned char)56 |
+		(uint64_t) ((unsigned char const*)p)[6] << 48 |
+		(uint64_t)((unsigned char const*)p)[5] << 40 |
+		(uint64_t)((unsigned char const*)p)[4] << 32 |
+		(uint64_t)((unsigned char const*)p)[3] << 24 |
+		(uint64_t)((unsigned char const*)p)[2] << 16 |
+		(uint64_t)((unsigned char const*)p)[1] << 8 |
+		(uint64_t)((unsigned char const*)p)[0];
+}
+
+inline uint64_t get_be64(void const* p)
+{
+	return  (uint64_t)((unsigned char const*)p)[0] << 56 |
+		(uint64_t)((unsigned char const*)p)[1] << 48 |
+		(uint64_t)((unsigned char const*)p)[2] << 40 |
+		(uint64_t)((unsigned char const*)p)[3] << 32 |
+		(uint64_t)((unsigned char const*)p)[4] << 24 |
+		(uint64_t)((unsigned char const*)p)[5] << 16 |
+		(uint64_t)((unsigned char const*)p)[6] << 8 |
+		(uint64_t)((unsigned char const*)p)[7];
+}
+
 inline void set_le16( void* p, unsigned n )
 {
 	((unsigned char*) p) [1] = (unsigned char) (n >> 8);
@@ -113,12 +137,36 @@ inline void set_le32( void* p, unsigned n )
 	((unsigned char*) p) [3] = (unsigned char) (n >> 24);
 }
 
+inline void set_le64(void* p, uint64_t n)
+{
+	((unsigned char*)p)[0] = (unsigned char)n;
+	((unsigned char*)p)[1] = (unsigned char)(n >> 8);
+	((unsigned char*)p)[2] = (unsigned char)(n >> 16);
+	((unsigned char*)p)[3] = (unsigned char)(n >> 24);
+	((unsigned char*)p)[4] = (unsigned char)(n >> 32);
+	((unsigned char*)p)[5] = (unsigned char)(n >> 40);
+	((unsigned char*)p)[6] = (unsigned char)(n >> 48);
+	((unsigned char*)p)[7] = (unsigned char)(n >> 56);
+}
+
 inline void set_be32( void* p, unsigned n )
 {
 	((unsigned char*) p) [3] = (unsigned char) n;
 	((unsigned char*) p) [2] = (unsigned char) (n >> 8);
 	((unsigned char*) p) [1] = (unsigned char) (n >> 16);
 	((unsigned char*) p) [0] = (unsigned char) (n >> 24);
+}
+
+inline void set_be64(void* p, uint64_t n)
+{
+	((unsigned char*) p) [7] = (unsigned char) n;
+	((unsigned char*) p) [6] = (unsigned char) (n >> 8);
+	((unsigned char*) p) [5] = (unsigned char) (n >> 16);
+	((unsigned char*) p) [4] = (unsigned char) (n >> 24);
+	((unsigned char*) p) [3] = (unsigned char) (n >> 32);
+	((unsigned char*) p) [2] = (unsigned char) (n >> 40);
+	((unsigned char*) p) [1] = (unsigned char) (n >> 48);
+	((unsigned char*) p) [0] = (unsigned char) (n >> 56);
 }
 
 #if BLARGG_NONPORTABLE
@@ -161,6 +209,11 @@ inline void set_be32( void* p, unsigned n )
 	#define SET_LE32( addr, data )  set_le32( addr, data )
 #endif
 
+#ifndef GET_LE64
+#define GET_LE64( addr )        get_le64( addr )
+#define SET_LE64( addr, data )  set_le64( addr, data )
+#endif
+
 #ifndef GET_BE16
 	#define GET_BE16( addr )        get_be16( addr )
 	#define SET_BE16( addr, data )  set_be16( addr, data )
@@ -171,15 +224,24 @@ inline void set_be32( void* p, unsigned n )
 	#define SET_BE32( addr, data )  set_be32( addr, data )
 #endif
 
+#ifndef GET_BE64
+#define GET_BE64( addr )        get_be64( addr )
+#define SET_BE64( addr, data )  set_be64( addr, data )
+#endif
+
 // auto-selecting versions
 
 inline void set_le( BOOST::uint16_t* p, unsigned n ) { SET_LE16( p, n ); }
 inline void set_le( BOOST::uint32_t* p, unsigned n ) { SET_LE32( p, n ); }
-inline void set_be( BOOST::uint16_t* p, unsigned n ) { SET_BE16( p, n ); }
+inline void set_le(BOOST::uint64_t* p, unsigned n) { SET_LE64(p, n); }
+inline void set_be(BOOST::uint16_t* p, unsigned n) { SET_BE16(p, n); }
 inline void set_be( BOOST::uint32_t* p, unsigned n ) { SET_BE32( p, n ); }
-inline unsigned get_le( BOOST::uint16_t const* p ) { return GET_LE16( p ); }
+inline void set_be(BOOST::uint64_t* p, unsigned n) { SET_BE64(p, n); }
+inline unsigned get_le(BOOST::uint16_t const* p) { return GET_LE16(p); }
 inline unsigned get_le( BOOST::uint32_t const* p ) { return GET_LE32( p ); }
+inline unsigned get_le( BOOST::uint64_t const* p ) { return GET_LE64( p ); }
 inline unsigned get_be( BOOST::uint16_t const* p ) { return GET_BE16( p ); }
 inline unsigned get_be( BOOST::uint32_t const* p ) { return GET_BE32( p ); }
+inline unsigned get_be( BOOST::uint64_t const* p)  { return GET_BE64( p ); }
 
 #endif

@@ -130,7 +130,7 @@ protected:
 	virtual blargg_err_t seek_v( BOOST::uint64_t );
 
 private:
-	void* file_;
+	FILE * file_;
 };
 
 

@@ -84,8 +84,9 @@ blargg_err_t File_Extractor::open_arc_file( bool unbuffered )
 	{
 		reader_ = in;
 		own_file();
-		if ( unbuffered )
-			make_unbuffered( in );
+		//if ( unbuffered )
+		//	make_unbuffered( in );
+		make_unbuffered(in);
 	}
 	
 	return err;
@@ -313,7 +314,7 @@ blargg_err_t File_Extractor::data( const void** data_out )
 
 blargg_err_t File_Extractor::data_v( void const** out )
 {
-	RETURN_ERR( own_data_.resize( size() ) );
+	RETURN_ERR( own_data_.resize( (size_t) size() ) );
 	*out = own_data_.begin();
 	
 	blargg_err_t err = extract_v( own_data_.begin(), own_data_.size() );

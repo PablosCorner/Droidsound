@@ -6,6 +6,17 @@
 #include <stdio.h>
 #include <errno.h>
 
+#ifdef ANDROID
+
+#define _LARGEFILE_SOURCE
+#define _LARGEFILE64_SOURCE
+#define _FILE_OFFSET_BITS 64
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
 /* Copyright (C) 2005-2009 Shay Green. This module is free software; you
 can redistribute it and/or modify it under the terms of the GNU Lesser
 General Public License as published by the Free Software Foundation; either
@@ -45,7 +56,7 @@ blargg_err_t Data_Reader::read_avail( void* p, int* n_ )
 {
 	assert( *n_ >= 0 );
 	
-	long n = min( (BOOST::uint64_t)(*n_), remain() );
+	long n = (long) min( (BOOST::uint64_t)(*n_), remain() );
 	*n_ = 0;
 	
 	if ( n < 0 )
@@ -79,7 +90,7 @@ blargg_err_t Data_Reader::skip_v( BOOST::uint64_t count )
 	{
         BOOST::uint64_t n = min( count, (BOOST::uint64_t) sizeof buf );
 		count -= n;
-		RETURN_ERR( read_v( buf, n ) );
+		RETURN_ERR( read_v( buf, (long)n ) );
 	}
 	return blargg_ok;
 }
@@ -501,8 +512,12 @@ static FILE* blargg_fopen( const char path [], const char mode [] )
 	if ( wpath )
 	{
 		wmode = blargg_to_wide( mode );
-		if ( wmode )
+		if (wmode)
+#if _MSC_VER >= 1300
+			errno = _wfopen_s(&file, wpath, wmode);
+#else
 			file = _wfopen( wpath, wmode );
+#endif
 	}
 	
 	// Save and restore errno in case free() clears it
@@ -556,8 +571,41 @@ static blargg_err_t blargg_fopen( FILE** out, const char path [] )
 	return blargg_ok;
 }
 
+static blargg_err_t blargg_fsize(FILE* f, uint64_t* out)
+{
+	off64_t res = lseek64(fileno(f), 0, SEEK_END);
+	if (res < 0)
+		return blargg_err_file_io;
+
+	*out = res;
+
+	off64_t res1 = lseek64(fileno(f), 0, SEEK_SET);
+	if (res1 < 0)
+		return blargg_err_file_io;
+
+	return blargg_ok;
+
+}
+
 static blargg_err_t blargg_fsize( FILE* f, long* out )
 {
+
+#ifdef ANDROID
+	
+	off64_t res = lseek64(fileno(f), 0, SEEK_END);
+	if (res < 0)
+		return blargg_err_file_io;
+
+	*out = res;
+	
+	off64_t res1 = lseek64(fileno(f), 0, SEEK_SET);
+	if (res1 < 0)
+		return blargg_err_file_io;
+
+	return blargg_ok;
+
+#else
+
 	if ( fseek( f, 0, SEEK_END ) )
 		return blargg_err_file_io;
 	
@@ -569,6 +617,7 @@ static blargg_err_t blargg_fsize( FILE* f, long* out )
 		return blargg_err_file_io;
 	
 	return blargg_ok;
+#endif
 }
 
 blargg_err_t Std_File_Reader::open( const char path [] )
@@ -578,7 +627,11 @@ blargg_err_t Std_File_Reader::open( const char path [] )
 	FILE* f;
 	RETURN_ERR( blargg_fopen( &f, path ) );
 	
+#ifdef ANDROID
+	uint64_t s;
+#else
 	long s;
+#endif
 	blargg_err_t err = blargg_fsize( f, &s );
 	if ( err )
 	{
@@ -596,15 +649,24 @@ void Std_File_Reader::make_unbuffered()
 {
 #ifdef _WIN32
     BOOST::uint64_t offset = _ftelli64( STATIC_CAST(FILE*, file_) );
+#elif ANDROID
+	BOOST::uint64_t offset = lseek64( fileno(file_), 0, SEEK_CUR);
 #else
     BOOST::uint64_t offset = ftello( STATIC_CAST(FILE*, file_) );
 #endif
+
 	if ( setvbuf( STATIC_CAST(FILE*, file_), NULL, _IONBF, 0 ) )
 		check( false ); // shouldn't fail, but OK if it does
+
 #ifdef _WIN32
     _fseeki64( STATIC_CAST(FILE*, file_), offset, SEEK_SET );
+
+#elif ANDROID
+	lseek64( fileno(file_), offset, SEEK_SET);
+
 #else
     fseeko( STATIC_CAST(FILE*, file_), offset, SEEK_SET );
+
 #endif
 }
 
@@ -625,6 +687,10 @@ blargg_err_t Std_File_Reader::seek_v( BOOST::uint64_t n )
 {
 #ifdef _WIN32
 	if ( _fseeki64( STATIC_CAST(FILE*, file_), n, SEEK_SET ) )
+
+#elif ANDROID
+	off64_t temp = lseek64( fileno((FILE*)file_), (off64_t)n, SEEK_SET);
+	if (temp < 0)
 #else
     if ( fseeko( STATIC_CAST(FILE*, file_), n, SEEK_SET ) )
 #endif
@@ -668,7 +734,7 @@ static const char* get_gzip_eof( const char path [], long* eof )
 		// Not gzipped
 		if ( ferror( file ) )
 			return blargg_err_file_io;
-		
+
 		if ( fseek( file, 0, SEEK_END ) )
 			return blargg_err_file_io;
 		
@@ -681,8 +747,8 @@ static const char* get_gzip_eof( const char path [], long* eof )
 		// Gzipped; get uncompressed size from end
 		if ( fseek( file, -h_size, SEEK_END ) )
 			return blargg_err_file_io;
-		
-		if ( fread( h, 1, h_size, file ) != (size_t) h_size )
+
+			if ( fread( h, 1, h_size, file ) != (size_t) h_size )
 			return blargg_err_file_io;
 		
 		*eof = get_le32( h );
@@ -709,7 +775,7 @@ blargg_err_t Gzip_File_Reader::open( const char path [] )
 	close();
 	
 	long s;
-	RETURN_ERR( get_gzip_eof( path, &s ) );
+	RETURN_ERR( get_gzip_eof( path, &s ));
 
 	file_ = gzopen( path, "rb" );
 	if ( !file_ )
@@ -756,7 +822,7 @@ blargg_err_t Gzip_File_Reader::read_v( void* p, long s )
 
 blargg_err_t Gzip_File_Reader::seek_v( BOOST::uint64_t n )
 {
-    if ( gzseek( (gzFile) file_, n, SEEK_SET ) < 0 )
+    if ( gzseek( (gzFile) file_, (long)n, SEEK_SET ) < 0 )
         return convert_gz_error( (gzFile) file_ );
 
 	return blargg_ok;

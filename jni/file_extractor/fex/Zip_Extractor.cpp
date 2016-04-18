@@ -34,6 +34,8 @@ int const disk_block_size = 4 * 1024;
 // Read buffer used for extracting file data
 int const read_buf_size = 16 * 1024;
 
+bool isZIP64 = false;
+
 struct header_t
 {
 	char type [4];
@@ -70,8 +72,8 @@ struct entry_t
 	byte ext_attrib [4];
 	byte file_offset [4];
 	char filename [2]; // [filename_len]
-	//char extra [extra_len];
-	//char comment [comment_len];
+	//char extra [2];
+	//char comment [2];
 };
 int const entry_size = 46;
 
@@ -88,6 +90,32 @@ struct end_entry_t
 	char comment [2]; // [comment_len]
 };
 int const end_entry_size = 22;
+
+struct end64_entry_t
+{
+	char type[4]; //(0x06064b50)
+	byte end64_dir_size[8];
+	byte made_by[2];
+	byte vers[2];
+	byte disk[4];
+	byte first_disk[4];
+	byte disk_entry_count[8];
+	byte entry_count[8];
+	byte dir_size[8];
+	byte dir_offset[8];
+	//byte data_sector[variable];
+};
+int const end64_entry_size = 56;
+
+struct end64_locator_entry_t
+{
+	char type[4]; //(0x07064b50)
+	byte first_disk[4];
+	byte dir_offset[8];
+	byte disk_entry_count[4];
+};
+int const end64_locator_entry_size = 20;
+
 
 static blargg_err_t init_zip()
 {
@@ -140,39 +168,65 @@ blargg_err_t Zip_Extractor::open_v()
 {
 	if ( arc().size() < end_entry_size )
 		return blargg_err_file_type;
+	
+	isZIP64 = false;
+	if (arc().size() > 0xffffffff)
+		isZIP64 = true;
 
 	// Read final end_read_size bytes of file
-	BOOST::uint64_t file_pos = max( (BOOST::uint64_t) 0, arc().size() - end_read_size );
+	//BOOST::uint64_t file_pos = max( (BOOST::uint64_t) 0, arc().size() - end_read_size );
+    BOOST::int64_t file_pos = max( (BOOST::int64_t) 0, (BOOST::int64_t) arc().size() - end_read_size );
 	file_pos -= file_pos % disk_block_size;
-	RETURN_ERR( catalog.resize( arc().size() - file_pos ) );
+	RETURN_ERR( catalog.resize( (size_t)(arc().size() - file_pos) ) );
 	RETURN_ERR( arc().seek( file_pos ) );
 	RETURN_ERR( arc().read( catalog.begin(), catalog.size() ) );
+	
+	BOOST::int64_t end_pos = 0;
+	
+	if (!isZIP64)
+	{
+		// Find end-of-catalog entry
+		end_pos = catalog.size() - end_entry_size;
+		while (end_pos >= 0 && memcmp(&catalog[(size_t)end_pos], "PK\5\6", 4))
+			end_pos--;
+		if (end_pos < 0)
+			return blargg_err_file_type;
+		end_entry_t const& end_entry = (end_entry_t&)catalog[(size_t)end_pos];
+		catalog_begin = get_le32(end_entry.dir_offset);
+	}
 
-	// Find end-of-catalog entry
-	BOOST::int64_t end_pos = catalog.size() - end_entry_size;
-	while ( end_pos >= 0 && memcmp( &catalog [end_pos], "PK\5\6", 4 ) )
-		end_pos--;
-	if ( end_pos < 0 )
-		return blargg_err_file_type;
-	end_entry_t const& end_entry = (end_entry_t&) catalog [end_pos];
+	if (isZIP64)
+	{
+		// Find end64-of-catalog entry
+		end_pos = catalog.size() - end64_entry_size;
+		while (end_pos >= 0 && memcmp(&catalog[(size_t)end_pos], "PK\6\6", 4))
+			end_pos--;
+		if (end_pos < 0)
+			return blargg_err_file_type;
+		end64_entry_t const& end_entry = (end64_entry_t&)catalog[(size_t)end_pos];
+		catalog_begin = get_le64(end_entry.dir_offset);
+	}
+
 	end_pos += file_pos;
 
 	// some idiotic zip compressors add data to end of zip without setting comment len
-//  check( arc().size() == end_pos + end_entry_size + get_le16( end_entry.comment_len ) );
-
-	// Find file offset of beginning of catalog
-	catalog_begin = get_le32( end_entry.dir_offset );
+	//  check( arc().size() == end_pos + end_entry_size + get_le16( end_entry.comment_len ) );
+	
     BOOST::int64_t catalog_size = end_pos - catalog_begin;
 	if ( catalog_size < 0 )
 		return blargg_err_file_corrupt;
-	catalog_size += end_entry_size;
+
+	if (isZIP64)
+		catalog_size += end64_entry_size;
+	else
+		catalog_size += end_entry_size;
 
 	// See if catalog is entirely contained in bytes already read
 	BOOST::int64_t begin_offset = catalog_begin - file_pos;
 	if ( begin_offset >= 0 )
-		memmove( catalog.begin(), &catalog [begin_offset], catalog_size );
+		memmove( catalog.begin(), &catalog [(size_t)begin_offset], (size_t)catalog_size );
 
-	RETURN_ERR( catalog.resize( catalog_size ) );
+	RETURN_ERR( catalog.resize( (size_t)catalog_size ) );
 	if ( begin_offset < 0 )
 	{
 		// Catalog begins before bytes read, so it needs to be read
@@ -228,7 +282,7 @@ blargg_err_t Zip_Extractor::update_info( bool advance_first )
 {
 	while ( 1 )
 	{
-		entry_t& e = (entry_t&) catalog [catalog_pos];
+		entry_t& e = (entry_t&) catalog [(size_t)catalog_pos];
 
 		if ( memcmp( e.type, "\0K\1\2P", 5 ) && memcmp( e.type, "PK\1\2", 4 ) )
 		{
@@ -237,13 +291,21 @@ blargg_err_t Zip_Extractor::update_info( bool advance_first )
 		}
 
 		unsigned len = get_le16( e.filename_len );
-        BOOST::int64_t next_offset = catalog_pos + entry_size + len + get_le16( e.extra_len ) +
-				get_le16( e.comment_len );
-		if ( (unsigned) next_offset > catalog.size() - end_entry_size )
-			return blargg_err_file_corrupt;
+        BOOST::int64_t next_offset = catalog_pos + entry_size + len + get_le16( e.extra_len ) +	get_le16( e.comment_len );
+
+		if (isZIP64)
+		{
+			if ((unsigned)next_offset > catalog.size() - end64_entry_size)
+				return blargg_err_file_corrupt;
+		}
+		else
+		{
+			if ((unsigned)next_offset > catalog.size() - end_entry_size)
+				return blargg_err_file_corrupt;
+		}
 		
-		if ( catalog [next_offset] == 'P' )
-			reorder_entry_header( next_offset );
+		if ( catalog [(size_t)next_offset] == 'P' )
+			reorder_entry_header( (long)next_offset );
 
 		if ( !advance_first )
 		{
@@ -281,7 +343,10 @@ fex_pos_t Zip_Extractor::tell_arc_v() const
 
 blargg_err_t Zip_Extractor::seek_arc_v( fex_pos_t pos )
 {
-	assert( 0 <= pos && (size_t) pos <= catalog.size() - end_entry_size );
+	if (isZIP64)
+		assert( 0 <= pos && (size_t) pos <= catalog.size() - end64_entry_size );
+	else
+		assert(0 <= pos && (size_t)pos <= catalog.size() - end_entry_size);
 	
 	catalog_pos = pos;
 	return update_info( false );
@@ -299,14 +364,14 @@ blargg_err_t Zip_Extractor::inflater_read( void* data, void* out, long* count )
 	Zip_Extractor& self = *STATIC_CAST(Zip_Extractor*,data);
 	
 	if ( *count > self.raw_remain )
-		*count = self.raw_remain;
+		*count = (long)self.raw_remain;
 	
 	self.raw_remain -= *count;
 	
 	return self.arc().read( out, *count );
 }
 
-blargg_err_t Zip_Extractor::fill_buf( long offset, long buf_size, long initial_read )
+blargg_err_t Zip_Extractor::fill_buf( uint64_t offset, long buf_size, long initial_read )
 {
 	raw_remain = arc().size() - offset;
 	RETURN_ERR( arc().seek( offset ) );
@@ -315,20 +380,23 @@ blargg_err_t Zip_Extractor::fill_buf( long offset, long buf_size, long initial_r
 
 blargg_err_t Zip_Extractor::first_read( long count )
 {
-	entry_t const& e = (entry_t&) catalog [catalog_pos];
+	entry_t const& e = (entry_t&) catalog [(size_t)catalog_pos];
 	
 	// Determine compression
 	{
 		int method = get_le16( e.method );
-		if ( (method && method != Z_DEFLATED) || get_le16( e.vers ) > 20 )
+		if ((method && method != Z_DEFLATED) || get_le16(e.vers) > 45 ) // 45 is for ZIP64 stuff
 			return BLARGG_ERR( BLARGG_ERR_FILE_FEATURE, "compression method" );
 		file_deflated = (method != 0);
 	}
 	
-	int raw_size = get_le32( e.raw_size );
-
-	int file_offset = get_le32( e.file_offset );
-	int align = file_offset % disk_block_size;
+	uint64_t raw_size = get_le32( e.raw_size );
+	uint64_t file_offset = get_le32( e.file_offset );
+	int filename_len = get_le16(e.filename_len);
+	if (file_offset == 0xffffffff)
+		file_offset = get_le64(e.type + entry_size + filename_len + 4);
+			
+	uint64_t align = file_offset % disk_block_size;
 	{
 		// read header
 		int buf_size = 3 * disk_block_size - 1 + raw_size; // space for all raw data
@@ -354,13 +422,13 @@ blargg_err_t Zip_Extractor::first_read( long count )
 	crc = ::crc32( 0, NULL, 0 );
 
 	// Data offset
-	int data_offset = file_offset + header_size +
+	uint64_t data_offset = file_offset + header_size +
 			get_le16( h.filename_len ) + get_le16( h.extra_len );
 	if ( data_offset + raw_size > catalog_begin )
 		return blargg_err_file_corrupt;
 
 	// Refill buffer if there's lots of extra data after header
-	int buf_offset = data_offset - file_offset + align;
+	uint64_t buf_offset = data_offset - file_offset + align;
 	if ( buf_offset > buf.filled() )
 	{
 		// TODO: this will almost never occur, making it a good place for bugs
