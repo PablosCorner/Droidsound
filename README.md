@@ -3,7 +3,7 @@ Droidsound-E
 
 DOWNLOAD LINK FOR THE UNOFFICIAL RELEASE VERSION (signed):
 
-* https://www.dropbox.com/s/yjrmn0twdcmw6au/droidsounde16647_75.apk?dl=0
+* https://www.dropbox.com/s/8a3waysemto28ye/droidsounde16647_76.apk?dl=0
 
 
 
