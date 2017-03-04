@@ -2,4 +2,4 @@ Droidsound-E
 ============
 
 DOWNLOAD LINK FOR THE APPLICATION (signed):
-* https://www.dropbox.com/s/hekad11du8abfac/droidsounde167_20.apk?dl=1
+* https://www.dropbox.com/s/lkz8hl6ksif10n8/droidsounde167_22.apk?dl=1
