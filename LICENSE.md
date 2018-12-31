@@ -1,3 +1,3 @@
 LICENSE
 -----------------------
-Copyright 2018 droidmjt
+Copyright 2019 droidmjt
