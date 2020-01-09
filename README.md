@@ -1,4 +1,3 @@
 Droidsound-E 
 ============
-* https://www.dropbox.com/s/7lk28a1xrdvvwy8/droidsounde167_195.apk?dl=1
-* https://www.dropbox.com/s/bvuubzhkarywvti/droidsounde167_196.apk?dl=1
+* https://www.dropbox.com/s/xtxc3l9o8cm5w9d/droidsounde167_197.apk?dl=1
