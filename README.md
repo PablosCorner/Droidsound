@@ -1,7 +1,9 @@
 Droidsound-E 
 ============
 * https://www.dropbox.com/s/if06w4joc7dlnly/droidsounde167_221.apk?dl=1
-=============================================================================
+* https://www.dropbox.com/s/pd58uezhthotlpt/droidsounde167_222_32.apk?dl=1
+* https://www.dropbox.com/s/m8nn3rurtr3izub/droidsounde167_222_64.apk?dl=1
+==========================================================================
 
 Permissions explained:
 * Record audio is needed for this: https://developer.android.com/reference/android/media/audiofx/Visualizer
