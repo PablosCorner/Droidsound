@@ -1,7 +1,7 @@
 Droidsound-E 
 ============
-* https://www.dropbox.com/s/yydmpm92x7jp5zv/droidsounde167_223_32bit.apk?dl=1
-* https://www.dropbox.com/s/9hz9h8wuif7pgj9/droidsounde167_223_64bit.apk?dl=1
+* https://www.dropbox.com/s/h6matkpts0k6cje/droidsounde167_224_32bit.apk?dl=1
+* https://www.dropbox.com/s/t3gg5a6j8qa9wiw/droidsounde167_224_64bit.apk?dl=1
 ========================================================================
 
 Permissions explained:
