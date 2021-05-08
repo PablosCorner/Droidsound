@@ -1,8 +1,8 @@
 Droidsound-E 
 ============
 * https://www.dropbox.com/s/n2wcd8t2ikwe8az/droidsounde_legacy.apk?dl=1
-* https://www.dropbox.com/s/bpc11qcp5so2kyy/droidsounde167_252_32bit.apk?dl=1
-* https://www.dropbox.com/s/dzymyc1zoxxyou8/droidsounde167_252_64bit.apk?dl=1
+* https://www.dropbox.com/s/u3hb5mz9mlnj8bf/droidsounde167_253_32bit.apk?dl=1
+* https://www.dropbox.com/s/xmi5k3x5wn7cugg/droidsounde167_253_64bit.apk?dl=1
 
 
 
